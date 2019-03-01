@@ -20,6 +20,9 @@ public:
 	void init();
 	void sendByte(uint16_t data);
 	uint16_t receiveData();
+	void assert();
+	void deassert();
+
 
 };
 

@@ -9,16 +9,16 @@
 #define ISPI_HPP_
 
 
-#include "iport.hpp"
-
-class ISPI : public IPort
+class ISPI
 {
 public:
 
-	virtual ~ISPI();
+	virtual ~ISPI(){}
 	virtual void init() =0;
 	virtual void sendByte(uint16_t data) =0;
 	virtual uint16_t receiveData() =0;
+	virtual void assert() =0;
+	virtual void deassert() =0;
 };
 
 
