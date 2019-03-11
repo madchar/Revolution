@@ -17,7 +17,9 @@ class SPIMUX{
 
 	SPIMUX();
 	~SPIMUX();
-	void sendData(uint16_t data);
+	void init();
+	void sendData(uint16_t *data);
+	void setControlDataLatch(); // Datasheet p.20
 
 private:
 	STM32SPI1 spi1;

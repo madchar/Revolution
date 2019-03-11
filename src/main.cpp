@@ -36,7 +36,7 @@ int main(void)
 	{
 
 		spiFlash.getDeviceID(buffer);
-		sprintf(dataToSend,"Test: %s \r\n",buffer);
+		sprintf(dataToSend,"Test: % \r\n",buffer);
 		printf(dataToSend);
 
 
