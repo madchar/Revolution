@@ -67,7 +67,8 @@ void STM32SPI3::sendByte(uint16_t data)
 
 uint16_t STM32SPI3::receiveData()
 {
-	return uint16_t;
+
+	return 0;
 }
 
 void STM32SPI3::assert()
