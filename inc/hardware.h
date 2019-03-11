@@ -53,7 +53,7 @@
 #define SPI4_CLK_PinSource			GPIO_PinSource13
 #define SPI4_CLK_Pin				GPIO_Pin_13
 //-------------------------SPI5----------------------
-#define SPI5_ALTERNATE_FUNCTION		GPIO_AF_SPI5
+#define SPI5_ALTERNATE_FUNCTION		GPIO_AF6_SPI5
 
 #define SPI5_MOSI_GPIO				GPIOA
 #define SPI5_MOSI_PinSource			GPIO_PinSource10
@@ -65,7 +65,7 @@
 
 #define SPI5_CLK_GPIO				GPIOB
 #define SPI5_CLK_PinSource			GPIO_PinSource0
-#define SPI5_CLK_Pin				GPIO_Pin_10
+#define SPI5_CLK_Pin				GPIO_Pin_0
 
 #define SPI5_NSS_GPIO				GPIOB
 #define SPI5_NSS_PinSource			GPIO_PinSource1

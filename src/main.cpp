@@ -8,10 +8,11 @@
  ******************************************************************************
  */
 
-
+#include <cstdio>
 #include "stm32f4xx.h"
 #include "hardware.h"
 #include "stm32spi1.hpp"
+#include "stm32spi5.hpp"
 
 int main(void)
 {
@@ -25,13 +26,19 @@ int main(void)
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
 
-
+	uint8_t buffer[16];
+	char dataToSend[64];
 	STM32SPI1 spi1;
-	spi1.init();
+	STM32SPI5 spiFlash;
+	//spi1.init();
+	spiFlash.init();
 	while(1)
 	{
 
-		spi1.sendByte(0b10101010);
+		spiFlash.getDeviceID(buffer);
+		sprintf(dataToSend,"Test: %s \r\n",buffer);
+		printf(dataToSend);
+
 
 
 	}

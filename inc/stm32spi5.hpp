@@ -11,6 +11,8 @@
 #include "stm32f4xx_spi.h"
 #include "hardware.h"
 #include "ispi.hpp"
+#include <stdio.h>
+
 
 class STM32SPI5 : public ISPI {
 public:
@@ -19,9 +21,24 @@ public:
 	~STM32SPI5();
 	void init();
 	void sendByte(uint16_t data);
-	uint16_t receiveData();
+	void setCS(bool state);
+	uint8_t receiveData();
 	void assert();
 	void deassert();
+
+	void formatData();
+	void writePage(uint32_t address,uint32_t nPage, uint16_t data);
+	void readPage(uint32_t address,uint32_t nPage,uint8_t *buffer);
+	void writeBlock(uint8_t blockNum, uint16_t data);
+	void readBlock(uint8_t blockNum,uint8_t *buffer);
+	void getDeviceID(uint8_t *buffer);
+
+private:
+
+	static constexpr uint8_t PageRead 		= 0xD2;
+	static constexpr uint8_t WritePage 		= 0x82;
+	static constexpr uint8_t DeviceID		= 0x9F;
+
 
 };
 

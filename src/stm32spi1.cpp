@@ -58,7 +58,7 @@ void STM32SPI1::sendByte(uint16_t data)
 	deassert();
 }
 
-uint16_t STM32SPI1::receiveData()
+uint8_t STM32SPI1::receiveData()
 {
 	assert();
 	uint16_t temp;
