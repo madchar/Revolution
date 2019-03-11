@@ -71,13 +71,5 @@
 #define SPI5_NSS_PinSource			GPIO_PinSource1
 #define SPI5_NSS_Pin				GPIO_Pin_1
 
-void gpio_init();
-void spi1_init();
-void spi2_init();
-void spi3_init();
-void spi4_init();
-void spi5_init();
-
-void clock_init();
 
 #endif /* HARDWARE_H_ */
