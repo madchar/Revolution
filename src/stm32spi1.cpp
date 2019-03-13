@@ -75,3 +75,25 @@ void STM32SPI1::deassert()
 {
 	SPI_Cmd(SPI1,DISABLE);
 }
+
+void STM32SPI1::setGPIO(bool spi)
+{
+	if (spi)
+	{
+		GPIO_InitTypeDef GPIO_InitStructure;
+		GPIO_InitStructure.GPIO_Pin = SPI1_MOSI_Pin | SPI1_CLK_Pin;
+		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+		GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+		GPIO_PinAFConfig(SPI1_CLK_GPIO,SPI1_CLK_PinSource,SPI1_ALTERNATE_FUNCTION);
+		GPIO_PinAFConfig(SPI1_MOSI_GPIO,SPI1_MOSI_PinSource,SPI1_ALTERNATE_FUNCTION);
+	}
+	else
+	{
+		GPIO_InitTypeDef GPIO_InitStructure;
+		GPIO_InitStructure.GPIO_Pin = SPI1_MOSI_Pin | SPI1_CLK_Pin;
+		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+		GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+	}
+}

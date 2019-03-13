@@ -89,12 +89,29 @@ void TLC5955::updateLeds(SPIMUX* spimux)
 
 	  if (debug >= 2)
 	  {
-	    Serial.println(F("End LED Update String (All Chips)"));
+	    printf("End LED Update String (All Chips)");
 	  }
 	  //latch();
 }
 
-void TLC5955::latch() {
+void TLC5955::latch(bool lat)
+{
+	if (lat)
+	{
+		GPIO_ResetBits(TLC_LAT1_GPIO,TLC_LAT1_Pin);
+		// Delay...
+		GPIO_SetBits(TLC_LAT1_GPIO,TLC_LAT1_Pin);
+		// Delay...
+		GPIO_ResetBits(TLC_LAT1_GPIO,TLC_LAT1_Pin);
+	}
+	else
+	{
+		GPIO_ResetBits(TLC_LAT2_GPIO,TLC_LAT2_Pin);
+		// Delay...
+		GPIO_SetBits(TLC_LAT2_GPIO,TLC_LAT2_Pin);
+		// Delay...
+		GPIO_ResetBits(TLC_LAT2_GPIO,TLC_LAT2_Pin);
+	}
 }
 
 void TLC5955::setBuffer(uint8_t bit)

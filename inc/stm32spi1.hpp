@@ -22,7 +22,7 @@ public:
 	uint8_t receiveData();
 	void assert();
 	void deassert();
-
+	void setGPIO(bool spi);
 
 };
 

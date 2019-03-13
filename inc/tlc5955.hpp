@@ -37,7 +37,7 @@ static const char LINE_ENDING[] = "\n";
 class TLC5955: public ILedDriver {
 
 	TLC5955::TLC5955(SPIMUX *mux);
-	TLC5955::~TLC5955();
+	TLC5955::~TLC595GPIO_SetBits()5();
 
 	//-------------Initialization---------------------------------------------------------------------------------
 	void init();
@@ -46,7 +46,7 @@ class TLC5955: public ILedDriver {
 	//-------------Send data to device(update, flush,latch)-------------------------------------------------------
 	void updateControl(SPIMUX *spimux);
 	void updateLeds(SPIMUX *spimux);
-	void latch();
+	void latch(bool lat);
 	void setBuffer(uint8_t bit);
 	void setControlModeBit(bool isControlMode);
 	void flushBuffer();

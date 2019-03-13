@@ -26,17 +26,18 @@ int main(void)
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
 
-	uint8_t buffer[16];
+	uint8_t buffer[64];
 	char dataToSend[64];
 	STM32SPI1 spi1;
 	STM32SPI5 spiFlash;
-	//spi1.init();
+	spi1.init();
 	spiFlash.init();
 	while(1)
 	{
 
+
 		spiFlash.getDeviceID(buffer);
-		sprintf(dataToSend,"Test: % \r\n",buffer);
+		sprintf(dataToSend,"Test: 0x%04x \r\n",buffer);
 		printf(dataToSend);
 
 
