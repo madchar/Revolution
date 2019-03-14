@@ -55,28 +55,50 @@ void STM32SPI3::init()
 		SPI_Init(SPI3,&SPI_InitStruct);
 }
 
+void STM32SPI3::setBitBang()
+{
+	//------------------------GPIOB------------------------------------------
+		GPIO_InitTypeDef GPIOB_InitStructure;
+		GPIOB_InitStructure.GPIO_Pin = SPI3_CLK_Pin;
+		GPIOB_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+		GPIOB_InitStructure.GPIO_OType = GPIO_OType_PP;
+		GPIOB_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+		GPIOB_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
+		GPIO_Init(SPI3_CLK_GPIO, &GPIOB_InitStructure);
+
+		//------------------------GPIOC------------------------------------------
+		GPIO_InitTypeDef GPIOC_InitStructure;
+		GPIOC_InitStructure.GPIO_Pin = SPI3_MOSI_Pin;
+		GPIOC_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+		GPIOC_InitStructure.GPIO_OType = GPIO_OType_PP;
+		GPIOC_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+		GPIOC_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
+		GPIO_Init(SPI3_MOSI_GPIO, &GPIOC_InitStructure);
+}
+
 void STM32SPI3::sendByte(uint16_t data)
 {
-	assert();
-	SPI_NSSInternalSoftwareConfig(SPI3,SPI_NSSInternalSoft_Set);
 	SPI_SendData(SPI3,data);
 	while(SPI_GetFlagStatus(SPI3,SPI_FLAG_TXE)==RESET);
-	SPI_NSSInternalSoftwareConfig(SPI3,SPI_NSSInternalSoft_Reset);
-	deassert();
 }
 
 uint16_t STM32SPI3::receiveData()
 {
-
-	return 0;
+	assert();
+	uint16_t temp;
+	temp = SPI_I2S_ReceiveData(SPI3);
+	deassert();
+	return temp;
 }
 
 void STM32SPI3::assert()
 {
 	SPI_Cmd(SPI3,ENABLE);
+	SPI_NSSInternalSoftwareConfig(SPI3,SPI_NSSInternalSoft_Set);
 }
 void STM32SPI3::deassert()
 {
+	SPI_NSSInternalSoftwareConfig(SPI3,SPI_NSSInternalSoft_Reset);
 	SPI_Cmd(SPI3,DISABLE);
 }
 

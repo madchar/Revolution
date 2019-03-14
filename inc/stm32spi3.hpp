@@ -18,8 +18,9 @@ public:
 	STM32SPI3();
 	~STM32SPI3();
 	void init();
+	void setBitBang();
 	void sendByte(uint16_t data);
-	uint8_t receiveData();
+	uint16_t receiveData();
 	void assert();
 	void deassert();
 };

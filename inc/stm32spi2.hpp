@@ -18,6 +18,7 @@ public:
 	STM32SPI2();
 	~STM32SPI2();
 	void init();
+	void setBitBang();
 	void sendByte(uint16_t data);
 	uint16_t receiveData();
 	void assert();

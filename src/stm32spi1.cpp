@@ -50,15 +50,11 @@ void STM32SPI1::init()
 
 void STM32SPI1::sendByte(uint16_t data)
 {
-	assert();
-	SPI_NSSInternalSoftwareConfig(SPI1,SPI_NSSInternalSoft_Set);
 	SPI_SendData(SPI1,data);
 	while(SPI_GetFlagStatus(SPI1,SPI_FLAG_TXE)==RESET);
-	SPI_NSSInternalSoftwareConfig(SPI1,SPI_NSSInternalSoft_Reset);
-	deassert();
 }
 
-uint8_t STM32SPI1::receiveData()
+uint16_t STM32SPI1::receiveData()
 {
 	assert();
 	uint16_t temp;
@@ -70,30 +66,21 @@ uint8_t STM32SPI1::receiveData()
 void STM32SPI1::assert()
 {
 	SPI_Cmd(SPI1,ENABLE);
+	SPI_NSSInternalSoftwareConfig(SPI1,SPI_NSSInternalSoft_Set);
 }
 void STM32SPI1::deassert()
 {
+	SPI_NSSInternalSoftwareConfig(SPI1,SPI_NSSInternalSoft_Reset);
 	SPI_Cmd(SPI1,DISABLE);
 }
 
-void STM32SPI1::setGPIO(bool spi)
+void STM32SPI1::setBitBang()
 {
-	if (spi)
-	{
-		GPIO_InitTypeDef GPIO_InitStructure;
-		GPIO_InitStructure.GPIO_Pin = SPI1_MOSI_Pin | SPI1_CLK_Pin;
-		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-		GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-		GPIO_PinAFConfig(SPI1_CLK_GPIO,SPI1_CLK_PinSource,SPI1_ALTERNATE_FUNCTION);
-		GPIO_PinAFConfig(SPI1_MOSI_GPIO,SPI1_MOSI_PinSource,SPI1_ALTERNATE_FUNCTION);
-	}
-	else
-	{
-		GPIO_InitTypeDef GPIO_InitStructure;
-		GPIO_InitStructure.GPIO_Pin = SPI1_MOSI_Pin | SPI1_CLK_Pin;
-		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-		GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-	}
+	GPIO_InitTypeDef GPIO_InitStructure;
+	GPIO_InitStructure.GPIO_Pin = SPI1_MOSI_Pin | SPI1_CLK_Pin;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
 }

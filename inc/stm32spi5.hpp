@@ -22,7 +22,7 @@ public:
 	void init();
 	void sendByte(uint16_t data);
 	void setCS(bool state);
-	uint8_t receiveData();
+	uint16_t receiveData();
 	void assert();
 	void deassert();
 

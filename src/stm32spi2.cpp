@@ -57,12 +57,8 @@ void STM32SPI2::init()
 
 void STM32SPI2::sendByte(uint16_t data)
 {
-	assert();
-	SPI_NSSInternalSoftwareConfig(SPI2,SPI_NSSInternalSoft_Set);
 	SPI_SendData(SPI2,data);
 	while(SPI_GetFlagStatus(SPI2,SPI_FLAG_TXE)==RESET);
-	SPI_NSSInternalSoftwareConfig(SPI2,SPI_NSSInternalSoft_Reset);
-	deassert();
 }
 
 uint16_t STM32SPI2::receiveData()
@@ -77,10 +73,33 @@ uint16_t STM32SPI2::receiveData()
 void STM32SPI2::assert()
 {
 	SPI_Cmd(SPI2,ENABLE);
+	SPI_NSSInternalSoftwareConfig(SPI2,SPI_NSSInternalSoft_Set);
 }
 void STM32SPI2::deassert()
 {
+	SPI_NSSInternalSoftwareConfig(SPI2,SPI_NSSInternalSoft_Reset);
 	SPI_Cmd(SPI2,DISABLE);
 }
 
+void STM32SPI2::setBitBang()
+{
+	//------------------------GPIOB------------------------------------------
+	GPIO_InitTypeDef GPIOB_InitStructure;
+	GPIOB_InitStructure.GPIO_Pin = SPI2_CLK_Pin;
+	GPIOB_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIOB_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIOB_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIOB_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
+	GPIO_Init(SPI2_CLK_GPIO, &GPIOB_InitStructure);
+
+	//------------------------GPIOC------------------------------------------
+	GPIO_InitTypeDef GPIOC_InitStructure;
+	GPIOC_InitStructure.GPIO_Pin = SPI2_MOSI_Pin;
+	GPIOC_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIOC_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIOC_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIOC_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
+	GPIO_Init(SPI2_MOSI_GPIO, &GPIOC_InitStructure);
+
+}
 

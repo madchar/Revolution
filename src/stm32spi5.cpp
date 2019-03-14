@@ -87,7 +87,7 @@ void STM32SPI5::sendByte(uint16_t data)
 	deassert();
 }
 
-uint8_t STM32SPI5::receiveData()
+uint16_t STM32SPI5::receiveData()
 {
 	uint16_t result = 0;
 	while(SPI_GetFlagStatus(SPI5,SPI_FLAG_RXNE)==RESET)
@@ -130,10 +130,11 @@ void STM32SPI5::getDeviceID(uint8_t *buffer)
 
 void STM32SPI5::writePage(uint16_t address, uint16_t nPage, uint16_t *data)
 {
-	assert();
+	/*assert();
 
 	SPI_NSSInternalSoftwareConfig(SPI1,SPI_NSSInternalSoft_Set);
 	setCS(false);
+
 	SPI5->DR = WritePage;
 	while(SPI_GetFlagStatus(SPI5,SPI_FLAG_TXE)==RESET);
 	SPI5->DR = address;
@@ -145,7 +146,7 @@ void STM32SPI5::writePage(uint16_t address, uint16_t nPage, uint16_t *data)
 	setCS(true);
 	SPI_NSSInternalSoftwareConfig(SPI1,SPI_NSSInternalSoft_Reset);
 
-	deassert();
+	deassert();*/
 }
 
 void STM32SPI5::formatData()
