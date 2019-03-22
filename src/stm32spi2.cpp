@@ -55,7 +55,7 @@ void STM32SPI2::init()
 	SPI_Init(SPI2,&SPI_InitStruct);
 }
 
-void STM32SPI2::sendByte(uint16_t data)
+void STM32SPI2::sendByte8(uint8_t data)
 {
 	SPI_SendData(SPI2,data);
 	while(SPI_GetFlagStatus(SPI2,SPI_FLAG_TXE)==RESET);
@@ -68,6 +68,36 @@ uint16_t STM32SPI2::receiveData()
 	temp = SPI_ReceiveData(SPI2);
 	deassert();
 	return temp;
+}
+
+void STM32SPI2::sendControlBits()
+{
+	uint8_t data = ControlDataByte;
+	GPIO_SetBits(SPI2_MOSI_GPIO,SPI2_MOSI_Pin);
+
+	GPIO_ResetBits(SPI2_CLK_GPIO,SPI2_CLK_Pin);
+
+	GPIO_SetBits(SPI2_CLK_GPIO,SPI2_CLK_Pin);
+
+	GPIO_ResetBits(SPI2_CLK_GPIO,SPI2_CLK_Pin);
+
+	for (uint8_t i = 0; i < 8; i++)
+	{
+		// consider leftmost bit
+		// set line high if bit is 1, low if bit is 0
+		if (data & 0x80)
+			GPIO_SetBits(SPI2_MOSI_GPIO,SPI2_MOSI_Pin);
+		else
+			GPIO_ResetBits(SPI2_MOSI_GPIO,SPI2_MOSI_Pin);
+
+		// pulse clock to indicate that bit value should be read
+		GPIO_ResetBits(SPI2_CLK_GPIO,SPI2_CLK_Pin);
+
+		GPIO_SetBits(SPI2_CLK_GPIO,SPI2_CLK_Pin);
+
+		// shift byte left so next bit will be leftmost
+		data <<= 1;
+	}
 }
 
 void STM32SPI2::assert()

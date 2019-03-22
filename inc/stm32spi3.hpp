@@ -19,10 +19,14 @@ public:
 	~STM32SPI3();
 	void init();
 	void setBitBang();
-	void sendByte(uint16_t data);
+	void sendControlBits();
+	void sendByte8(uint8_t data);
 	uint16_t receiveData();
 	void assert();
 	void deassert();
+
+private:
+	static constexpr uint8_t ControlDataByte	= 0x96;
 };
 
 

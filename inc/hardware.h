@@ -78,4 +78,6 @@
 #define TLC_LAT2_GPIO				GPIOC
 #define TLC_LAT2_Pin				GPIO_Pin_10
 
+#define GSCLK_GPIO					GPIOA
+#define GSCLK_Pin					GPIO_Pin_0
 #endif /* HARDWARE_H_ */

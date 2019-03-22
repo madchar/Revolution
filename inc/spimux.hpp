@@ -18,9 +18,11 @@ class SPIMUX{
 	SPIMUX();
 	~SPIMUX();
 	void initSPI();
-	void sendData(uint16_t *data);
+	void sendData(uint16_t data);
+	void sendData(uint16_t data1,uint16_t data2, uint16_t data3, uint16_t data4);
 	void setControlDataLatch(bool control_mode_state); // Datasheet p.20
 	void deassertAll();
+	void assertAll();
 	void setBitBangConfig();
 
 private:

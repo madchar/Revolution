@@ -76,10 +76,40 @@ void STM32SPI3::setBitBang()
 		GPIO_Init(SPI3_MOSI_GPIO, &GPIOC_InitStructure);
 }
 
-void STM32SPI3::sendByte(uint16_t data)
+void STM32SPI3::sendByte8(uint8_t data)
 {
 	SPI_SendData(SPI3,data);
 	while(SPI_GetFlagStatus(SPI3,SPI_FLAG_TXE)==RESET);
+}
+
+void STM32SPI3::sendControlBits()
+{
+	uint8_t data = ControlDataByte;
+	GPIO_SetBits(SPI3_MOSI_GPIO,SPI3_MOSI_Pin);
+
+	GPIO_ResetBits(SPI3_CLK_GPIO,SPI3_CLK_Pin);
+
+	GPIO_SetBits(SPI3_CLK_GPIO,SPI3_CLK_Pin);
+
+	GPIO_ResetBits(SPI3_CLK_GPIO,SPI3_CLK_Pin);
+
+	for (uint8_t i = 0; i < 8; i++)
+	{
+		// consider leftmost bit
+		// set line high if bit is 1, low if bit is 0
+		if (data & 0x80)
+			GPIO_SetBits(SPI3_MOSI_GPIO,SPI3_MOSI_Pin);
+		else
+			GPIO_ResetBits(SPI3_MOSI_GPIO,SPI3_MOSI_Pin);
+
+		// pulse clock to indicate that bit value should be read
+		GPIO_ResetBits(SPI3_CLK_GPIO,SPI3_CLK_Pin);
+
+		GPIO_SetBits(SPI3_CLK_GPIO,SPI3_CLK_Pin);
+
+		// shift byte left so next bit will be leftmost
+		data <<= 1;
+	}
 }
 
 uint16_t STM32SPI3::receiveData()
