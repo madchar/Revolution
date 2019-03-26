@@ -34,9 +34,6 @@
 #define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
 #define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
 
-// Serial baud rate
-#define SPI_BAUD_RATE 2000000
-
 // LED Current OUTPUT
 static const float LED_CURRENT_AMPS = 0.020;
 
@@ -86,7 +83,7 @@ public:
 	void assertAll();
 	void setBitBangConfig();
 
-	static const uint8_t tlc_count = 12; // This
+	static const uint8_t tlc_count = 3; // This
 	static const uint8_t COLOR_CHANNEL_COUNT = 3;
 	static const uint8_t LEDS_PER_CHIP = 16;
 	static bool force_max_current;
@@ -100,20 +97,20 @@ public:
 
 private:
 	int debug = 0;
-	uint8_t _gslat;
-	uint8_t _spi_mosi;
-	uint8_t _spi_clk;
+	//uint8_t _gslat;
+	//uint8_t _spi_mosi;
+	//uint8_t _spi_clk;
 
 	uint8_t _function_data;
-	uint16_t _bright_red = 0;
-	uint16_t _bright_green = 0;
-	uint16_t _bright_blue = 0;
-	uint8_t _Max_Current_Red = 0;
-	uint8_t _Max_Current_Green = 0;
-	uint8_t _Max_Current_Blue = 0;
+	uint16_t _bright_red;
+	uint16_t _bright_green;
+	uint16_t _bright_blue;
+	uint8_t _Max_Current_Red = 127;
+	uint8_t _Max_Current_Green = 127;
+	uint8_t _Max_Current_Blue = 127;
 
 	/* SPI */
-	uint16_t _buffer;
+	uint8_t _buffer;
 	int8_t _buffer_count = 7;
 	STM32SPI1 spi1;
 	STM32SPI2 spi2;

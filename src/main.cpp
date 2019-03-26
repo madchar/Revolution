@@ -13,8 +13,8 @@
 #include "hardware.h"
 #include "tlc5955.hpp"
 #include "stm32spi5.hpp"
-#include "stm32spi1.hpp"
 #include <stdio.h>
+
 
 int main(void)
 {
@@ -29,38 +29,30 @@ int main(void)
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
 
 
-	//uint8_t buffer[64];
-	//char dataToSend[64];
-	STM32SPI1 spi1;
-	//TLC5955 tlc;
-//	printf("TLC created \n\r");
-//	tlc.init();
-//	tlc.setAllDcData(127);
-	//tlc.setMaxCurrent(0,0,0);
-//	tlc.setFunctionControlData(true, true, true, true, true);
-//	tlc.updateControl();
-	spi1.init();
-	//tlc.setRGBPinOrder(0,1,2);
-	uint8_t data = 0x11;
-	//spi1.setBitBang();
-	spi1.assert();
+	TLC5955 tlc;
+
+	tlc.init();
+
+
+	//spi1.init();
+
+	tlc.setRGBPinOrder(0,1,2);
+
+	tlc.setAllDcData(127);
+	tlc.setMaxCurrent(3,3,3);
+	tlc.setFunctionControlData(true, true, true, true, true);
+	tlc.setBrightnessCurrent(127,127,127);
+	tlc.updateControl();
+
+
+
 	while(1)
 	{
+		tlc.setAllLedsRGB(50000,0,0);
+		tlc.updateLeds();
 
-		spi1.sendByte8(data);
-
-		//spi1.deassert();
-	/*	for(int i = 0;i<10000;i++)
-		{
-			asm("nop");
-		}
-		data++;*/
-		//spi1.sendControlBits();
-		//tlc.setAllLed(50000);
-		//tlc.updateLeds();
-		//tlc.latch(false);
-
-
+		tlc.latch(false);
+		tlc.latch(true);
 
 
 	}
