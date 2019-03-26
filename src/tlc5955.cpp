@@ -123,6 +123,7 @@ void TLC5955::updateLeds()
 	  }*/
 
 	// uint32_t power_output_counts = 0;
+
 	for (int16_t chip = (int8_t)tlc_count - 1; chip >= 0; chip--)
 	{
 		setControlModeBit(CONTROL_MODE_OFF);
@@ -133,8 +134,8 @@ void TLC5955::updateLeds()
 			for (int8_t color_channel_index = (int8_t)COLOR_CHANNEL_COUNT - 1; color_channel_index >= 0; color_channel_index--)
 			{
 				color_channel_ordered = rgb_order[chip][led_channel_index][(uint8_t) color_channel_index];
+				spi1.sendByte16(grayscale_data[chip][led_channel_index][color_channel_ordered]);
 
-				spi1.sendByte16((char)(grayscale_data[chip][led_channel_index][color_channel_ordered]));
 				//spi1.sendByte8((char)(grayscale_data[chip][led_channel_index][color_channel_ordered] >> 8));		// Output MSB first
 				//spi1.sendByte8((char)(grayscale_data[chip][led_channel_index][color_channel_ordered] & 0xFF));	// Followed by LSB
 
@@ -156,6 +157,7 @@ void TLC5955::updateLeds()
 	    printf("End LED Update String (All Chips)");
 	  }*/
 	//latch(true);
+
 
 
 }

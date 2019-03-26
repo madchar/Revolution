@@ -15,7 +15,7 @@
 #include "stm32spi5.hpp"
 #include <stdio.h>
 
-
+uint16_t buffer_spi[2304];
 int main(void)
 {
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1,ENABLE);
@@ -39,7 +39,7 @@ int main(void)
 	tlc.setRGBPinOrder(0,1,2);
 
 	tlc.setAllDcData(127);
-	tlc.setMaxCurrent(3,3,3);
+	tlc.setMaxCurrent(0,0,0);
 	tlc.setFunctionControlData(true, true, true, true, true);
 	tlc.setBrightnessCurrent(127,127,127);
 	tlc.updateControl();
