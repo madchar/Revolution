@@ -11,9 +11,11 @@
 #include <cstdio>
 #include "stm32f4xx.h"
 #include "hardware.h"
+
 #include "tlc5955.hpp"
 #include "stm32spi5.hpp"
 #include <stdio.h>
+
 
 uint16_t buffer_spi[2304];
 int main(void)
@@ -27,6 +29,7 @@ int main(void)
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+
 
 
 	TLC5955 tlc;
@@ -46,6 +49,7 @@ int main(void)
 
 
 
+
 	while(1)
 	{
 		tlc.setAllLedsRGB(50000,0,0);
@@ -53,6 +57,7 @@ int main(void)
 
 		tlc.latch(false);
 		tlc.latch(true);
+
 
 
 	}

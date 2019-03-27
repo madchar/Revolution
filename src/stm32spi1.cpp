@@ -119,7 +119,7 @@ void STM32SPI1::sendControlBits()
 	//GPIO_ResetBits(SPI1_MOSI_GPIO,SPI1_MOSI_Pin);
 }
 
-uint16_t STM32SPI1::receiveData()
+uint8_t STM32SPI1::receiveData()
 {
 	assert();
 	uint16_t temp;
