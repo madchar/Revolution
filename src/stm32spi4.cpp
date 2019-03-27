@@ -55,14 +55,61 @@ void STM32SPI4::init()
 		SPI_Init(SPI4,&SPI_InitStruct);
 }
 
-void STM32SPI4::sendByte(uint16_t data)
+void STM32SPI4::setBitBang()
 {
-	assert();
-	SPI_NSSInternalSoftwareConfig(SPI4,SPI_NSSInternalSoft_Set);
+	//------------------------GPIOA------------------------------------------
+		GPIO_InitTypeDef GPIOA_InitStructure;
+		GPIOA_InitStructure.GPIO_Pin = SPI4_MOSI_Pin;
+		GPIOA_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+		GPIOA_InitStructure.GPIO_OType = GPIO_OType_PP;
+		GPIOA_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+		GPIOA_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
+		GPIO_Init(SPI4_MOSI_GPIO, &GPIOA_InitStructure);
+
+		//------------------------GPIOB------------------------------------------
+		GPIO_InitTypeDef GPIOB_InitStructure;
+		GPIOB_InitStructure.GPIO_Pin = SPI4_CLK_Pin;
+		GPIOB_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+		GPIOB_InitStructure.GPIO_OType = GPIO_OType_PP;
+		GPIOB_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+		GPIOB_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
+		GPIO_Init(SPI4_CLK_GPIO, &GPIOB_InitStructure);
+}
+
+void STM32SPI4::sendByte8(uint8_t data)
+{
 	SPI_SendData(SPI4,data);
 	while(SPI_GetFlagStatus(SPI4,SPI_FLAG_TXE)==RESET);
-	SPI_NSSInternalSoftwareConfig(SPI4,SPI_NSSInternalSoft_Reset);
-	deassert();
+}
+
+void STM32SPI4::sendControlBits()
+{
+	uint8_t data = ControlDataByte;
+	GPIO_SetBits(SPI4_MOSI_GPIO,SPI4_MOSI_Pin);
+
+	GPIO_ResetBits(SPI4_CLK_GPIO,SPI4_CLK_Pin);
+
+	GPIO_SetBits(SPI4_CLK_GPIO,SPI4_CLK_Pin);
+
+	GPIO_ResetBits(SPI4_CLK_GPIO,SPI4_CLK_Pin);
+
+	for (uint8_t i = 0; i < 8; i++)
+	{
+		// consider leftmost bit
+		// set line high if bit is 1, low if bit is 0
+		if (data & 0x80)
+			GPIO_SetBits(SPI4_MOSI_GPIO,SPI4_MOSI_Pin);
+		else
+			GPIO_ResetBits(SPI4_MOSI_GPIO,SPI4_MOSI_Pin);
+
+		// pulse clock to indicate that bit value should be read
+		GPIO_ResetBits(SPI4_CLK_GPIO,SPI4_CLK_Pin);
+
+		GPIO_SetBits(SPI4_CLK_GPIO,SPI4_CLK_Pin);
+
+		// shift byte left so next bit will be leftmost
+		data <<= 1;
+	}
 }
 
 uint16_t STM32SPI4::receiveData()
@@ -77,9 +124,11 @@ uint16_t STM32SPI4::receiveData()
 void STM32SPI4::assert()
 {
 	SPI_Cmd(SPI4,ENABLE);
+	SPI_NSSInternalSoftwareConfig(SPI4,SPI_NSSInternalSoft_Set);
 }
 void STM32SPI4::deassert()
 {
+	SPI_NSSInternalSoftwareConfig(SPI4,SPI_NSSInternalSoft_Reset);
 	SPI_Cmd(SPI4,DISABLE);
 }
 

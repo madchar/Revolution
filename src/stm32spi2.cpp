@@ -55,14 +55,10 @@ void STM32SPI2::init()
 	SPI_Init(SPI2,&SPI_InitStruct);
 }
 
-void STM32SPI2::sendByte(uint16_t data)
+void STM32SPI2::sendByte8(uint8_t data)
 {
-	assert();
-	SPI_NSSInternalSoftwareConfig(SPI2,SPI_NSSInternalSoft_Set);
 	SPI_SendData(SPI2,data);
 	while(SPI_GetFlagStatus(SPI2,SPI_FLAG_TXE)==RESET);
-	SPI_NSSInternalSoftwareConfig(SPI2,SPI_NSSInternalSoft_Reset);
-	deassert();
 }
 
 uint16_t STM32SPI2::receiveData()
@@ -74,13 +70,66 @@ uint16_t STM32SPI2::receiveData()
 	return temp;
 }
 
+void STM32SPI2::sendControlBits()
+{
+	uint8_t data = ControlDataByte;
+	GPIO_SetBits(SPI2_MOSI_GPIO,SPI2_MOSI_Pin);
+
+	GPIO_ResetBits(SPI2_CLK_GPIO,SPI2_CLK_Pin);
+
+	GPIO_SetBits(SPI2_CLK_GPIO,SPI2_CLK_Pin);
+
+	GPIO_ResetBits(SPI2_CLK_GPIO,SPI2_CLK_Pin);
+
+	for (uint8_t i = 0; i < 8; i++)
+	{
+		// consider leftmost bit
+		// set line high if bit is 1, low if bit is 0
+		if (data & 0x80)
+			GPIO_SetBits(SPI2_MOSI_GPIO,SPI2_MOSI_Pin);
+		else
+			GPIO_ResetBits(SPI2_MOSI_GPIO,SPI2_MOSI_Pin);
+
+		// pulse clock to indicate that bit value should be read
+		GPIO_ResetBits(SPI2_CLK_GPIO,SPI2_CLK_Pin);
+
+		GPIO_SetBits(SPI2_CLK_GPIO,SPI2_CLK_Pin);
+
+		// shift byte left so next bit will be leftmost
+		data <<= 1;
+	}
+}
+
 void STM32SPI2::assert()
 {
 	SPI_Cmd(SPI2,ENABLE);
+	SPI_NSSInternalSoftwareConfig(SPI2,SPI_NSSInternalSoft_Set);
 }
 void STM32SPI2::deassert()
 {
+	SPI_NSSInternalSoftwareConfig(SPI2,SPI_NSSInternalSoft_Reset);
 	SPI_Cmd(SPI2,DISABLE);
 }
 
+void STM32SPI2::setBitBang()
+{
+	//------------------------GPIOB------------------------------------------
+	GPIO_InitTypeDef GPIOB_InitStructure;
+	GPIOB_InitStructure.GPIO_Pin = SPI2_CLK_Pin;
+	GPIOB_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIOB_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIOB_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIOB_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
+	GPIO_Init(SPI2_CLK_GPIO, &GPIOB_InitStructure);
+
+	//------------------------GPIOC------------------------------------------
+	GPIO_InitTypeDef GPIOC_InitStructure;
+	GPIOC_InitStructure.GPIO_Pin = SPI2_MOSI_Pin;
+	GPIOC_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIOC_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIOC_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIOC_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
+	GPIO_Init(SPI2_MOSI_GPIO, &GPIOC_InitStructure);
+
+}
 

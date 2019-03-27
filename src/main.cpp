@@ -11,9 +11,13 @@
 #include <cstdio>
 #include "stm32f4xx.h"
 #include "hardware.h"
-#include "stm32spi1.hpp"
-#include "stm32spi5.hpp"
 
+#include "tlc5955.hpp"
+#include "stm32spi5.hpp"
+#include <stdio.h>
+
+
+uint16_t buffer_spi[2304];
 int main(void)
 {
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1,ENABLE);
@@ -26,18 +30,33 @@ int main(void)
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
 
-	uint8_t buffer[16];
-	char dataToSend[64];
-	STM32SPI1 spi1;
-	STM32SPI5 spiFlash;
+
+
+	TLC5955 tlc;
+
+	tlc.init();
+
+
 	//spi1.init();
-	spiFlash.init();
+
+	tlc.setRGBPinOrder(0,1,2);
+
+	tlc.setAllDcData(127);
+	tlc.setMaxCurrent(0,0,0);
+	tlc.setFunctionControlData(true, true, true, true, true);
+	tlc.setBrightnessCurrent(127,127,127);
+	tlc.updateControl();
+
+
+
+
 	while(1)
 	{
+		tlc.setAllLedsRGB(50000,0,0);
+		tlc.updateLeds();
 
-		spiFlash.getDeviceID(buffer);
-		sprintf(dataToSend,"Test: %s \r\n",buffer);
-		printf(dataToSend);
+		tlc.latch(false);
+		tlc.latch(true);
 
 
 

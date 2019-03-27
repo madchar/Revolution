@@ -71,5 +71,13 @@
 #define SPI5_NSS_PinSource			GPIO_PinSource1
 #define SPI5_NSS_Pin				GPIO_Pin_1
 
+//*************************TLC5955*****************************
+#define TLC_LAT1_GPIO				GPIOA
+#define	TLC_LAT1_Pin				GPIO_Pin_15
 
+#define TLC_LAT2_GPIO				GPIOC
+#define TLC_LAT2_Pin				GPIO_Pin_10
+
+#define GSCLK_GPIO					GPIOA
+#define GSCLK_Pin					GPIO_Pin_0
 #endif /* HARDWARE_H_ */

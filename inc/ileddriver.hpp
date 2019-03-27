@@ -15,9 +15,9 @@ public:
 
 	virtual ~ILedDriver() {}
 	virtual void init() = 0;
-	virtual void latch() = 0;
-	virtual void updateConrol(SPIMUX *spimux) = 0;
-	virtual void updateLeds(SPIMUX *spimux) = 0;
+	virtual void latch(bool lat) = 0;
+	virtual void updateConrol() = 0;
+	virtual void updateLeds() = 0;
 	virtual void setLedRGB(uint16_t led_number,uint16_t red, uint16_t green, uint16_t blue) = 0;
 	virtual void setLedRGB(uint16_t led_number,uint16_t rgb) = 0;
 	virtual void setAllLedsRGB(uint16_t red, uint16_t green, uint16_t blue) = 0;

@@ -18,12 +18,21 @@ public:
 	STM32SPI1();
 	~STM32SPI1();
 	void init();
-	void sendByte(uint16_t data);
-	uint8_t receiveData();
+
+	void setBitBang();
+	void sendControlBits();
+	void sendManualByte(uint8_t data);
+	void sendByte8(uint8_t data);
+	void sendByte16(uint16_t data);
+	uint16_t receiveData();
+
 	void assert();
 	void deassert();
+	void setGPIO(bool spi);
 
-
+private:
+	static constexpr uint8_t ControlDataByte	= 0x96;
+	uint8_t test;
 };
 
 
