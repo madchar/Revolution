@@ -27,9 +27,9 @@ public:
 	uint16_t getDeviceID();
 
 private:
-	constexpr uint8_t PageRead 		= 0xD2;
-	constexpr uint8_t WritePage 	= 0x82;
-	constexpr uint8_t DeviceID		= 0x9F;
+	static constexpr uint8_t PageRead 		= 0xD2;
+	static constexpr uint8_t WritePage 	= 0x82;
+	static constexpr uint8_t DeviceID		= 0x9F;
 };
 
 
