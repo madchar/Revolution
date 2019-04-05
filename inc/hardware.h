@@ -74,10 +74,18 @@
 //*************************TLC5955*****************************
 #define TLC_LAT1_GPIO				GPIOA
 #define	TLC_LAT1_Pin				GPIO_Pin_15
+#define TLC_LAT1_PinSource			GPIO_PinSource15
 
 #define TLC_LAT2_GPIO				GPIOC
 #define TLC_LAT2_Pin				GPIO_Pin_10
+#define TLC_LAT2_PinSource			GPIO_PinSource10
 
 #define GSCLK_GPIO					GPIOA
 #define GSCLK_Pin					GPIO_Pin_0
+#define GSCLK_PinSource				GPIO_PinSource0
+
+//***********************FREQUENCY***********************************
+#define GSCLK_FREQ					1000000 //1MHZ
+
+
 #endif /* HARDWARE_H_ */

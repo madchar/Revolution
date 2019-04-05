@@ -26,7 +26,7 @@ void STM32SPI1::init()
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
 
 	GPIO_PinAFConfig(SPI1_CLK_GPIO,SPI1_CLK_PinSource,SPI1_ALTERNATE_FUNCTION);
@@ -37,12 +37,12 @@ void STM32SPI1::init()
 	SPI_InitTypeDef SPI_InitStruct;
 	SPI_InitStruct.SPI_Direction = SPI_Direction_1Line_Tx ;
 	SPI_InitStruct.SPI_Mode = SPI_Mode_Master;
-	SPI_InitStruct.SPI_DataSize = SPI_DataSize_16b;
+	SPI_InitStruct.SPI_DataSize = SPI_DataSize_8b;
 	SPI_InitStruct.SPI_CPOL = SPI_CPOL_Low;
 	SPI_InitStruct.SPI_CPHA = SPI_CPHA_1Edge;
-	SPI_InitStruct.SPI_CRCPolynomial = 7;
-	SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;
-	SPI_InitStruct.SPI_FirstBit = SPI_FirstBit_MSB ;
+	SPI_InitStruct.SPI_CRCPolynomial = 0;
+	SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4;
+	SPI_InitStruct.SPI_FirstBit = SPI_FirstBit_LSB ;
 	SPI_InitStruct.SPI_NSS = SPI_NSS_Soft;
 
 	SPI_Init(SPI1,&SPI_InitStruct);
@@ -82,9 +82,8 @@ void STM32SPI1::sendByte8(uint8_t data)
 
 void STM32SPI1::sendByte16(uint16_t data)
 {
-	SPI_I2S_SendData(SPI1,data);
-
 	while(SPI_I2S_GetFlagStatus(SPI1,SPI_FLAG_TXE)==RESET);
+	SPI1->DR = data;
 }
 
 void STM32SPI1::sendControlBits()
