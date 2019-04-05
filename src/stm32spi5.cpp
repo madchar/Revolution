@@ -54,18 +54,22 @@ void STM32SPI5::init()
 
 
 	SPI_InitTypeDef SPI_InitStruct;
-	SPI_InitStruct.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
+	SPI_InitStruct.SPI_Direction = SPI_Direction_1Line_Tx;
 	SPI_InitStruct.SPI_Mode = SPI_Mode_Master;
 	SPI_InitStruct.SPI_DataSize = SPI_DataSize_8b;
 	SPI_InitStruct.SPI_CPOL = SPI_CPOL_Low;
 	SPI_InitStruct.SPI_CPHA = SPI_CPHA_1Edge;
 	SPI_InitStruct.SPI_CRCPolynomial = 7;
-	SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_64;
+
+	SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;
+
 	SPI_InitStruct.SPI_FirstBit = SPI_FirstBit_MSB ;
 	SPI_InitStruct.SPI_NSS = SPI_NSS_Soft;
 
 	SPI_Init(SPI5,&SPI_InitStruct);
+
 	GPIO_Write(SPI5_NSS_GPIO,SPI5_NSS_Pin);
+
 
 }
 
@@ -87,7 +91,7 @@ void STM32SPI5::sendByte(uint16_t data)
 	deassert();
 }
 
-uint16_t STM32SPI5::receiveData()
+uint8_t STM32SPI5::receiveData()
 {
 	uint16_t result = 0;
 	while(SPI_GetFlagStatus(SPI5,SPI_FLAG_RXNE)==RESET)
@@ -106,6 +110,7 @@ void STM32SPI5::deassert()
 
 void STM32SPI5::readPage(uint32_t address, uint32_t nPage, uint8_t *buffer)
 {
+
 
 }
 
@@ -147,7 +152,7 @@ void STM32SPI5::writePage(uint16_t address, uint16_t nPage, uint16_t *data)
 	SPI_NSSInternalSoftwareConfig(SPI1,SPI_NSSInternalSoft_Reset);
 
 	deassert();*/
-}
+
 
 void STM32SPI5::formatData()
 {

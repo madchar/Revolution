@@ -1,3 +1,4 @@
+
 /**
  ******************************************************************************
  * @file    main.c
@@ -245,4 +246,3 @@ void bitShift(uint16_t *array, uint8_t chip_count) {
 	array[0] &= (0xFFFF << (bitToShift + 1));
 
 }
-
