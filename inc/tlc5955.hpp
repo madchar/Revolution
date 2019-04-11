@@ -51,7 +51,7 @@ public:
 
 	//-------------Send data to device(update, flush,latch)-------------------------------------------------------
 	void updateControl();
-	void updateLeds(uint16_t *buffer);
+	void updateLeds(uint8_t *buffer1,uint8_t *buffer2,uint8_t *buffer3,uint8_t *buffer4);
 	void latch(bool lat);
 	void setBuffer(uint8_t bit);
 	void setControlModeBit(bool isControlMode);
@@ -84,8 +84,8 @@ public:
 	void setBitBangConfig();
 
 	//-------------OTHER FUNCTIONS--------------------------------------------------------------------------------
-
-	static const uint8_t tlc_count = 3; // This
+	void setPixelMap(uint8_t *tab,uint16_t red, uint16_t green, uint16_t blue);
+	static const uint8_t tlc_count = 12; // This
 	static const uint8_t COLOR_CHANNEL_COUNT = 3;
 	static const uint8_t LEDS_PER_CHIP = 16;
 	static bool force_max_current;

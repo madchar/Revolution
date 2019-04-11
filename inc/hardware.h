@@ -33,7 +33,8 @@
 #define SPI2_CLK_PinSource			GPIO_PinSource10
 #define SPI2_CLK_Pin				GPIO_Pin_10
 //-------------------------SPI3----------------------
-#define SPI3_ALTERNATE_FUNCTION		GPIO_AF_SPI3
+#define SPI3_CLK_ALTERNATE_FUNCTION		0x07
+#define SPI3_MOSI_ALTERNATE_FUNCTION		0x06
 
 #define SPI3_MOSI_GPIO				GPIOC
 #define SPI3_MOSI_PinSource			GPIO_PinSource12
@@ -43,7 +44,8 @@
 #define SPI3_CLK_PinSource			GPIO_PinSource12
 #define SPI3_CLK_Pin				GPIO_Pin_12
 //-------------------------SPI4----------------------
-#define SPI4_ALTERNATE_FUNCTION		GPIO_AF_SPI4
+#define SPI4_MOSI_ALTERNATE_FUNCTION		0x05
+#define SPI4_CLK_ALTERNATE_FUNCTION			0x06
 
 #define SPI4_MOSI_GPIO				GPIOA
 #define SPI4_MOSI_PinSource			GPIO_PinSource1
@@ -84,6 +86,10 @@
 #define GSCLK_Pin					GPIO_Pin_0
 #define GSCLK_PinSource				GPIO_PinSource0
 
+//*************************OTHER*****************************
+#define PULSE_GPIO					GPIOB
+#define PULSE_Pin					GPIO_Pin_2
+#define PULSE_PinSource				GPIO_PinSource2
 //***********************FREQUENCY***********************************
 #define GSCLK_FREQ					1000000 //1MHZ
 

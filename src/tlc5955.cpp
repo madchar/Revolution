@@ -43,24 +43,25 @@ void TLC5955::init(STM32SPI1 *spi_1, STM32SPI2 *spi_2, STM32SPI3 *spi_3, STM32SP
 	spi2 = spi_2;
 	spi3 = spi_3;
 	spi4 = spi_4;
-	//spi1.init();
-	//spi1.setBitBang();
 
 }
 
 void TLC5955::updateControl()
 {
 	spi1->setBitBang();
+	spi2->setBitBang();
+	spi3->setBitBang();
+	spi4->setBitBang();
 
 	for (int8_t repeatCtr = 0; repeatCtr < CONTROL_WRITE_COUNT; repeatCtr++)
 	{
-		for (int8_t chip = tlc_count - 1; chip >= 0; chip--)
+		for (int8_t chip = (tlc_count - 1)/4; chip >= 0; chip--)
 		{
 			/*if (debug >= 2)
 	        Serial.println(F("Starting Control Mode... %s"));*/
 
 			_buffer_count = 7;
-			//resetAllLatch();
+
 			setControlModeBit(CONTROL_MODE_ON);
 
 			// Add CONTROL_ZERO_BITS blank bits to get to correct position for DC/FC
@@ -103,15 +104,18 @@ void TLC5955::updateControl()
 
 	}
 	spi1->init();
+	spi2->init();
+	spi3->init();
+	spi4->init();
 
 }
 
-void TLC5955::updateLeds(uint16_t *buffer)
+void TLC5955::updateLeds(uint8_t *buffer1,uint8_t *buffer2,uint8_t *buffer3,uint8_t *buffer4)
 {
 
 	// uint32_t power_output_counts = 0;
 uint16_t buffer_index = 0;
-	for (int16_t chip = (int8_t)tlc_count - 1; chip >= 0; chip--)
+	for (int16_t chip = 2; chip >= 0; chip--)
 	{
 		//setControlModeBit(CONTROL_MODE_OFF);
 
@@ -122,8 +126,15 @@ uint16_t buffer_index = 0;
 			{
 				color_channel_ordered = rgb_order[chip][led_channel_index][(uint8_t) color_channel_index];
 
-				buffer[buffer_index] = grayscale_data[chip][led_channel_index][color_channel_ordered];
-				buffer_index++;
+				buffer1[buffer_index] = (grayscale_data[chip][led_channel_index][color_channel_ordered] >> 8);
+				buffer1[buffer_index+1] = (grayscale_data[chip][led_channel_index][color_channel_ordered] & 0xFF);
+				buffer2[buffer_index] = (grayscale_data[chip+3][led_channel_index][color_channel_ordered] >> 8);
+				buffer2[buffer_index+1] = (grayscale_data[chip+3][led_channel_index][color_channel_ordered] & 0xFF);
+				buffer3[buffer_index] = (grayscale_data[chip+6][led_channel_index][color_channel_ordered] >> 8);
+				buffer3[buffer_index+1] = (grayscale_data[chip+6][led_channel_index][color_channel_ordered] & 0xFF);
+				buffer4[buffer_index] = (grayscale_data[chip+9][led_channel_index][color_channel_ordered] >> 8);
+				buffer4[buffer_index+1] = (grayscale_data[chip+9][led_channel_index][color_channel_ordered] & 0xFF);
+				buffer_index +=2;
 			}
 		}
 
@@ -163,9 +174,9 @@ void TLC5955::setBuffer(uint8_t bit)
 	      printf(_buffer);*/
 
 		spi1->sendManualByte(_buffer);
-		//spi2.sendByte(_buffer);
-		//spi3.sendByte(_buffer);
-		//spi4.sendByte(_buffer);
+		spi2->sendManualByte(_buffer);
+		spi3->sendManualByte(_buffer);
+		spi4->sendManualByte(_buffer);
 		_buffer_count = 7;
 		_buffer = 0;
 	}
@@ -175,23 +186,10 @@ void TLC5955::setControlModeBit(bool isControlMode)
 {
 	if (isControlMode)
 	{
-		//spi1.setBitBang();
-		//spi2.setBitBang();
-		//spi3.setBitBang();
-		//spi4.setBitBang();
-
-		//latch(true);
-		//latch(false);
-
 		spi1->sendControlBits();
-		//spi2.sendControlBits();
-		//spi3.sendControlBits();
-		//spi4.sendControlBits();
-
-		//spi1.init();
-		//spi2.init();
-		//spi3.init();
-		//spi4.init();
+		spi2->sendControlBits();
+		spi3->sendControlBits();
+		spi4->sendControlBits();
 
 	}
 	else
@@ -234,9 +232,9 @@ void TLC5955::assertAll()
 void TLC5955::setBitBangConfig()
 {
 	spi1->setBitBang();
-	//spi2.setBitBang();
-	//spi3.setBitBang();
-	//spi4.setBitBang();
+	spi2->setBitBang();
+	spi3->setBitBang();
+	spi4->setBitBang();
 }
 
 void TLC5955::setLedRGB(uint16_t led_number, uint16_t red, uint16_t green,uint16_t blue)
@@ -256,6 +254,8 @@ void TLC5955::setLedRGB(uint16_t led_number, uint16_t rgb)
 	grayscale_data[chip][channel][1] = rgb;
 	grayscale_data[chip][channel][0] = rgb;
 }
+
+
 
 void TLC5955::setAllLedsRGB(uint16_t red, uint16_t green, uint16_t blue)
 {

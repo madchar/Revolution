@@ -71,6 +71,11 @@ STM32F4Timer::STM32F4Timer(TIM_TypeDef *tmr, uint32_t frequency, uint16_t presca
 	}
 }
 
+void STM32F4Timer::enableITUpdate()
+{
+	TIM_ITConfig(timer,TIM_IT_Update,ENABLE);
+}
+
 void STM32F4Timer::enablePWM(uint8_t ch, uint32_t dutyCycle)
 {
 	stopTimer();

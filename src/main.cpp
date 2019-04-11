@@ -30,18 +30,16 @@
 #include "stm32spi5.hpp"
 #include "stm32f4timer.hpp"
 
-static uint16_t screenBuffer1[145];
-static uint16_t screenBuffer2[145];
-static uint16_t screenBuffer3[145];
-static uint16_t screenBuffer4[145];
+bool ledtoggle = false;
+bool flagRefresh = false;
+bool flagLatch = false;
 
-bool flagLatch1 = false;
-bool flagLatch2 = false;
 bool flagDMA_TX_Complete = false;
 
 //extern "C" void SysTick_Handler(void);
 extern "C" void DMA2_Stream2_IRQHandler(void);
-
+extern "C" void TIM4_IRQHandler(void);
+extern "C" void EXTI2_IRQHandler(void);
 
 
 void DMA2_Stream2_IRQHandler(void) {
@@ -53,9 +51,26 @@ void DMA2_Stream2_IRQHandler(void) {
 	}
 }
 
+void TIM4_IRQHandler(void)
+{
+	if (TIM_GetFlagStatus(TIM4,TIM_IT_Update) != RESET)
+	{
+		TIM_ClearITPendingBit(TIM4,TIM_IT_Update);
+		flagRefresh = true;
+	}
+
+}
+
+void EXTI2_IRQHandler(void)
+{
+	  if (EXTI_GetITStatus(EXTI_Line0) != RESET) {
+
+	        EXTI_ClearITPendingBit(EXTI_Line0);
+	    }
+}
 
 
-void bitShift(uint16_t *array, uint8_t chip_count);
+void bitShift(uint8_t *array, uint8_t chip_count);
 
 /*#define LED2_INIT RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN; \
 		GPIOA->MODER |= GPIO_MODER_MODER5_0
@@ -64,6 +79,10 @@ void bitShift(uint16_t *array, uint8_t chip_count);
 #define LED2_TOGGLE (GPIOA->ODR ^= 0x0020)*/
 
 int main(void) {
+	static uint8_t screenBuffer1[289];
+	static uint8_t screenBuffer2[289];
+	static uint8_t screenBuffer3[289];
+	static uint8_t screenBuffer4[289];
 
 	//Stm32f446Timer(TIM_TypeDef * tmr, uint32_t us,bool interruptEnable)
 	//	Stm32f446Timer tmr2(TIM2,1000,0);
@@ -94,6 +113,7 @@ int main(void) {
 
 	//Enable DMA clocks
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA1, ENABLE);
 
 	//Enable GPIO clocks
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
@@ -102,8 +122,11 @@ int main(void) {
 
 	//Enable Timers clocks
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2,ENABLE);
-	//RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3,ENABLE);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3,ENABLE);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4,ENABLE);
 
+	//Enable SYSCFG clock
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
 	//----------------------------------GSCLOCK INIT-----------------------------------------------------
 
 	GPIO_InitTypeDef GPIO_InitStructure;
@@ -116,43 +139,134 @@ int main(void) {
 
 	GPIO_PinAFConfig(GSCLK_GPIO, GSCLK_PinSource, GPIO_AF_TIM2);
 
+	GPIO_InitStructure.GPIO_Pin = PULSE_Pin;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(PULSE_GPIO, &GPIO_InitStructure);
+
 	//----------------------------------DMA INIT-----------------------------------------------------
 
-	DMA_InitTypeDef dma_spi1;
+	DMA_InitTypeDef dma_spi;
 
-	dma_spi1.DMA_Channel = DMA_Channel_2;
-	dma_spi1.DMA_Memory0BaseAddr = (uint32_t) &screenBuffer1;
-	dma_spi1.DMA_PeripheralBaseAddr = (uint32_t) (&(SPI1->DR));
-	dma_spi1.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
-	dma_spi1.DMA_PeripheralDataSize = DMA_MemoryDataSize_Byte;
-	dma_spi1.DMA_DIR = DMA_DIR_MemoryToPeripheral;
-	dma_spi1.DMA_Mode = DMA_Mode_Normal;
-	dma_spi1.DMA_MemoryInc = DMA_MemoryInc_Enable;
-	dma_spi1.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-	dma_spi1.DMA_BufferSize = sizeof(screenBuffer1);
-	dma_spi1.DMA_Priority = DMA_Priority_High;
-	dma_spi1.DMA_MemoryBurst = DMA_MemoryBurst_Single;
-	dma_spi1.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
-	dma_spi1.DMA_FIFOMode = DMA_FIFOMode_Disable;
+	//DMA SPI1
+	dma_spi.DMA_Channel = DMA_Channel_2;
+	dma_spi.DMA_Memory0BaseAddr = (uint32_t) &screenBuffer1;
+	dma_spi.DMA_PeripheralBaseAddr = (uint32_t) (&(SPI1->DR));
+	dma_spi.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+	dma_spi.DMA_PeripheralDataSize = DMA_MemoryDataSize_Byte;
+	dma_spi.DMA_DIR = DMA_DIR_MemoryToPeripheral;
+	dma_spi.DMA_Mode = DMA_Mode_Normal;
+	dma_spi.DMA_MemoryInc = DMA_MemoryInc_Enable;
+	dma_spi.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+	dma_spi.DMA_BufferSize = sizeof(screenBuffer1);
+	dma_spi.DMA_Priority = DMA_Priority_High;
+	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single;
+	dma_spi.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
+	dma_spi.DMA_FIFOMode = DMA_FIFOMode_Disable;
 
-	DMA_Init(DMA2_Stream2, &dma_spi1);
+	DMA_Init(DMA2_Stream2, &dma_spi);
+
+	//DMA SPI2
+	dma_spi.DMA_Channel = DMA_Channel_0;
+	dma_spi.DMA_Memory0BaseAddr = (uint32_t) &screenBuffer2;
+	dma_spi.DMA_PeripheralBaseAddr = (uint32_t) (&(SPI2->DR));
+	dma_spi.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+	dma_spi.DMA_PeripheralDataSize = DMA_MemoryDataSize_Byte;
+	dma_spi.DMA_DIR = DMA_DIR_MemoryToPeripheral;
+	dma_spi.DMA_Mode = DMA_Mode_Normal;
+	dma_spi.DMA_MemoryInc = DMA_MemoryInc_Enable;
+	dma_spi.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+	dma_spi.DMA_BufferSize = sizeof(screenBuffer2);
+	dma_spi.DMA_Priority = DMA_Priority_High;
+	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single;
+	dma_spi.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
+	dma_spi.DMA_FIFOMode = DMA_FIFOMode_Disable;
+
+	DMA_Init(DMA1_Stream4, &dma_spi);
+
+	//DMA SPI3
+	dma_spi.DMA_Channel = DMA_Channel_0;
+	dma_spi.DMA_Memory0BaseAddr = (uint32_t) &screenBuffer3;
+	dma_spi.DMA_PeripheralBaseAddr = (uint32_t) (&(SPI3->DR));
+	dma_spi.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+	dma_spi.DMA_PeripheralDataSize = DMA_MemoryDataSize_Byte;
+	dma_spi.DMA_DIR = DMA_DIR_MemoryToPeripheral;
+	dma_spi.DMA_Mode = DMA_Mode_Normal;
+	dma_spi.DMA_MemoryInc = DMA_MemoryInc_Enable;
+	dma_spi.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+	dma_spi.DMA_BufferSize = sizeof(screenBuffer3);
+	dma_spi.DMA_Priority = DMA_Priority_High;
+	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single;
+	dma_spi.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
+	dma_spi.DMA_FIFOMode = DMA_FIFOMode_Disable;
+
+	DMA_Init(DMA1_Stream5, &dma_spi);
+
+	//DMA SPI4
+	dma_spi.DMA_Channel = DMA_Channel_4;
+	dma_spi.DMA_Memory0BaseAddr = (uint32_t) &screenBuffer4;
+	dma_spi.DMA_PeripheralBaseAddr = (uint32_t) (&(SPI4->DR));
+	dma_spi.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+	dma_spi.DMA_PeripheralDataSize = DMA_MemoryDataSize_Byte;
+	dma_spi.DMA_DIR = DMA_DIR_MemoryToPeripheral;
+	dma_spi.DMA_Mode = DMA_Mode_Normal;
+	dma_spi.DMA_MemoryInc = DMA_MemoryInc_Enable;
+	dma_spi.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+	dma_spi.DMA_BufferSize = sizeof(screenBuffer4);
+	dma_spi.DMA_Priority = DMA_Priority_High;
+	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single;
+	dma_spi.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
+	dma_spi.DMA_FIFOMode = DMA_FIFOMode_Disable;
+
+	DMA_Init(DMA2_Stream1, &dma_spi);
 
 	//Enable the transfer complete interrupt
-	DMA_ITConfig(DMA2_Stream2,DMA_IT_TC,ENABLE);
+	//DMA_ITConfig(DMA2_Stream2,DMA_IT_TC,ENABLE);
 
+	//----------------------------------External Interrupt INIT-----------------------------------------------------
+	  EXTI_InitTypeDef EXTI_InitStruct;
+
+	//PULSE PB2 for EXTI_Line2
+	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOB, EXTI_PinSource2);
+
+    /* PB2 is connected to EXTI_Line0 */
+    EXTI_InitStruct.EXTI_Line = EXTI_Line2;
+    /* Enable interrupt */
+    EXTI_InitStruct.EXTI_LineCmd = ENABLE;
+    /* Interrupt mode */
+    EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;
+    /* Triggers on rising and falling edge */
+    EXTI_InitStruct.EXTI_Trigger = EXTI_Trigger_Rising;
+    /* Add to EXTI */
+    EXTI_Init(&EXTI_InitStruct);
 
 	//----------------------------------Nested Vectored Interrupt Controller INIT-----------------------------------------------------
 
 	NVIC_InitTypeDef NVIC_InitStructure;
 
 	//Enable the DMA2 Stream2 (SPI1_TX) Interrupt
-	NVIC_InitStructure.NVIC_IRQChannel = DMA2_Stream2_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStructure);
+//	NVIC_InitStructure.NVIC_IRQChannel = DMA2_Stream2_IRQn;
+//	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+//	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+//	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+//	NVIC_Init(&NVIC_InitStructure);
+	//NVIC_EnableIRQ(DMA2_Stream2_IRQn);
 
-	NVIC_EnableIRQ(DMA2_Stream2_IRQn);
+	// Enable Timer4 Interrupt
+    NVIC_InitStructure.NVIC_IRQChannel = TIM4_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
+
+    // Enable EXTI2 Interrupt
+    NVIC_InitStructure.NVIC_IRQChannel = EXTI2_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
 
 	//----------------------------------TIMER INIT-----------------------------------------------------
 
@@ -161,6 +275,11 @@ int main(void) {
 	gsclkTimer.enablePWM(1,50);
 	gsclkTimer.startTimer();
 
+	STM32F4Timer refreshRateTimer(TIM4,4000,32,true);
+	refreshRateTimer.enableITUpdate();
+	refreshRateTimer.startTimer();
+
+	STM32F4Timer latchTimer(TIM3)
 	//----------------------------------SPI INIT-----------------------------------------------------
 
 	STM32SPI1 spi1;
@@ -186,63 +305,152 @@ int main(void) {
 	tlc.setFunctionControlData(true, true, true, true, true);
 	tlc.setBrightnessCurrent(127, 127, 127);
 	tlc.updateControl();
-	tlc.setAllLedsRGB(0,0,10000);
-	tlc.updateLeds(screenBuffer1);
+
+	uint16_t lednum = 0;
+	tlc.setLedRGB(lednum,65535,0,0);
+	tlc.updateLeds(screenBuffer1,screenBuffer2,screenBuffer3,screenBuffer4);
 
 	bitShift(screenBuffer1, 3);
+	bitShift(screenBuffer2, 3);
+	bitShift(screenBuffer3, 3);
+	bitShift(screenBuffer4, 3);
 
+	//Start DMA2 Stream2
 	SPI_I2S_DMACmd(SPI1, SPI_I2S_DMAReq_Tx, ENABLE);
 	DMA_Cmd(DMA2_Stream2, ENABLE);
+
+	//Start DMA1 Stream4
+	SPI_I2S_DMACmd(SPI2, SPI_I2S_DMAReq_Tx, ENABLE);
+	DMA_Cmd(DMA1_Stream4, ENABLE);
+
+	SPI_I2S_DMACmd(SPI3, SPI_I2S_DMAReq_Tx, ENABLE);
+	DMA_Cmd(DMA1_Stream5, ENABLE);
+
+	SPI_I2S_DMACmd(SPI4, SPI_I2S_DMAReq_Tx, ENABLE);
+	DMA_Cmd(DMA2_Stream1, ENABLE);
+
+
+
+
 	while (1) {
-//
-//		SPI_I2S_DMACmd(SPI1, SPI_I2S_DMAReq_Tx, ENABLE);
-//		DMA_Cmd(DMA2_Stream2, ENABLE);
-//		while (DMA_GetFlagStatus(DMA2_Stream2, DMA_FLAG_TCIF2) == RESET);
-//		DMA_ClearFlag(DMA2_Stream2, DMA_FLAG_TCIF2);
-//		tlc.latch(false);
-//		tlc.latch(true);
 
-		if (flagDMA_TX_Complete)
+		if(flagRefresh)
 		{
-			tlc.latch(false);
-			tlc.latch(true);
-			flagDMA_TX_Complete = false;
-			SPI_I2S_DMACmd(SPI1, SPI_I2S_DMAReq_Tx, ENABLE);
-			DMA_Cmd(DMA2_Stream2, ENABLE);
+			tlc.setLedRGB(lednum,0,0,0);
+			if(ledtoggle)lednum--;
+			else lednum++;
+			tlc.setLedRGB(lednum,65535,0,0);
+			tlc.updateLeds(screenBuffer1,screenBuffer2,screenBuffer3,screenBuffer4);
+			bitShift(screenBuffer1, 3);
+			bitShift(screenBuffer2, 3);
+			bitShift(screenBuffer3, 3);
+			bitShift(screenBuffer4, 3);
+			flagRefresh = false;
+			if (lednum>=192) ledtoggle = true;
+			if (lednum==0) ledtoggle = false;
 		}
+		SPI_I2S_DMACmd(SPI1, SPI_I2S_DMAReq_Tx, ENABLE);
+		DMA_Cmd(DMA2_Stream2, ENABLE);
 
+		SPI_I2S_DMACmd(SPI2, SPI_I2S_DMAReq_Tx, ENABLE);
+		DMA_Cmd(DMA1_Stream4, ENABLE);
+
+		SPI_I2S_DMACmd(SPI3, SPI_I2S_DMAReq_Tx, ENABLE);
+		DMA_Cmd(DMA1_Stream5, ENABLE);
+
+		SPI_I2S_DMACmd(SPI4, SPI_I2S_DMAReq_Tx, ENABLE);
+		DMA_Cmd(DMA2_Stream1, ENABLE);
+
+		while ((DMA_GetFlagStatus(DMA2_Stream2, DMA_FLAG_TCIF2) == RESET)&&(DMA_GetFlagStatus(DMA1_Stream4, DMA_FLAG_TCIF4) == RESET)&&(DMA_GetFlagStatus(DMA1_Stream5, DMA_FLAG_TCIF5) == RESET)&&(DMA_GetFlagStatus(DMA2_Stream1, DMA_FLAG_TCIF1) == RESET));
+	//	while ((DMA_GetFlagStatus(DMA1_Stream5, DMA_FLAG_TCIF5) == RESET)&&(DMA_GetFlagStatus(DMA2_Stream1, DMA_FLAG_TCIF1) == RESET));
+		for(int i = 0;i<100;i++)
+		{
+			asm("nop");
+		}
+		tlc.latch(false);
+		tlc.latch(true);
+
+		DMA_ClearFlag(DMA2_Stream2, DMA_FLAG_TCIF2);
+		DMA_ClearFlag(DMA1_Stream4, DMA_FLAG_TCIF4);
+		DMA_ClearFlag(DMA1_Stream5, DMA_FLAG_TCIF5);
+		DMA_ClearFlag(DMA2_Stream1, DMA_FLAG_TCIF1);
+
+
+
+		//		if (flagDMA_TX_Complete)
+		//		{
+		//			tlc.latch(false);
+		//			tlc.latch(true);
+		//			flagDMA_TX_Complete = false;
+		//			SPI_I2S_DMACmd(SPI1, SPI_I2S_DMAReq_Tx, ENABLE);
+		//			DMA_Cmd(DMA2_Stream2, ENABLE);
+		//			SPI_I2S_DMACmd(SPI2, SPI_I2S_DMAReq_Tx, ENABLE);
+		//			DMA_Cmd(DMA1_Stream4, ENABLE);
+		//		}
 
 	}
 
 }
 
-void bitShift(uint16_t *array, uint8_t chip_count) {
-	uint8_t chips = chip_count;
-	uint8_t bitToShift = 16;
+void bitShift(uint8_t *array, uint8_t chip_count) {
 
-	for (uint8_t h = 0; h < chip_count; h++) {
-		uint16_t arraySize = (48 * chips);
+//	uint8_t chips = chip_count;
+//	uint8_t bitToShift = 7;
+//
+//	for (uint8_t h = 0; h < chip_count; h++) {
+//		uint16_t arraySize = (96 * chips);
+//
+//		uint8_t last = 0;
+//		uint8_t next = 0;
+//		for (uint8_t i = 0; i <= bitToShift; i++)
+//		{
+//			for (uint16_t j = arraySize; j > (arraySize - 96); j--)
+//			{
+//				next = (array[j] >> 1);
+//				last = (0x01 & array[j-1]);
+//				array[j] = (next | (last << 7));
+//			}
+//		}
+//		array[(96*(chips-1))] &= ~(0x80 >> (bitToShift));
+//		chips--;
+//		bitToShift--;
+//	}
+////	for (uint8_t k = 1; k <= chip_count; k++) {
+////		array[(96 * k)] &= ~(0x80 >>(bitToShift + 1));
+////	}
+//	array[0] &= (0xFF >> (bitToShift-1));
 
-		uint16_t last = 0;
-		uint16_t next = 0;
-		for (uint8_t i = 0; i < bitToShift; i++)
-		{
-			for (uint16_t j = arraySize; j > (arraySize - 48); j--)
-			{
-				next = (array[j] << 1);
-				last = (0x8000 & array[j-1]);
-				array[j] = (next | (last >> 15));
 
-			}
-		}
-		//array[(48*(chips-1))] &= ~(0x0001 << (bitToShift+1));
-		chips--;
-		bitToShift--;
-	}
 
-	for (uint8_t k = 1; k <= chip_count; k++) {
-		array[(48 * (k-1))] &= ~(0x0001 << (bitToShift + k));
-	}
-	array[0] &= (0xFFFF << (bitToShift + 1));
+	for (uint8_t i = 0; i < chip_count; i++) {
+	    if (i == 0) {
+	      for (int j = 288; j > (288 - 96); j--) {
+	        array[j] = array[j - 1];
+	      }
+
+	    }
+	    if (i == 1) {
+	      array[192] = 0;
+	      for (int j = (288 - 96); j > (288 - 96) - 96; j--) {
+
+	        array[j] &= 0x01;
+	        array[j] |= (array[j - 1] << 1);
+	        array[j - 1] = array[j - 1] >> 7;
+
+	      }
+    }
+	    if (i == 2) {
+	      array[96] &= 0xffffd;
+	      for (int j = (288 - 96 - 96); j > ((288 - 96 - 96) - 96); j--) {
+
+	        array[j] &= 0x03;
+	        array[j] |= (array[j - 1] << 2);
+	        array[j - 1] = array[j - 1] >> 6;
+
+	      }
+
+	    }
+	  }
+	  array[0] &= 0b00000011;
 
 }

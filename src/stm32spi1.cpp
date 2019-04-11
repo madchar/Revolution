@@ -42,7 +42,7 @@ void STM32SPI1::init()
 	SPI_InitStruct.SPI_CPHA = SPI_CPHA_1Edge;
 	SPI_InitStruct.SPI_CRCPolynomial = 0;
 	SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4;
-	SPI_InitStruct.SPI_FirstBit = SPI_FirstBit_LSB ;
+	SPI_InitStruct.SPI_FirstBit = SPI_FirstBit_MSB ;
 	SPI_InitStruct.SPI_NSS = SPI_NSS_Soft;
 
 	SPI_Init(SPI1,&SPI_InitStruct);
@@ -115,10 +115,10 @@ void STM32SPI1::sendControlBits()
 		// shift byte left so next bit will be leftmost
 		data <<= 1;
 	}
-	//GPIO_ResetBits(SPI1_MOSI_GPIO,SPI1_MOSI_Pin);
+
 }
 
-uint8_t STM32SPI1::receiveData()
+uint16_t STM32SPI1::receiveData()
 {
 	assert();
 	uint16_t temp;

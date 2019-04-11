@@ -25,6 +25,7 @@ public:
 	~STM32F4Timer() {}
 
 	void enablePWM(uint8_t ch, uint32_t dutyCycle);
+	void enableITUpdate();
 	void startTimer();
 	void stopTimer();
 

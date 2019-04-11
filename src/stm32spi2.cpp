@@ -47,12 +47,13 @@ void STM32SPI2::init()
 	SPI_InitStruct.SPI_DataSize = SPI_DataSize_8b;
 	SPI_InitStruct.SPI_CPOL = SPI_CPOL_Low;
 	SPI_InitStruct.SPI_CPHA = SPI_CPHA_1Edge;
-	SPI_InitStruct.SPI_CRCPolynomial = 10;
+	SPI_InitStruct.SPI_CRCPolynomial = 0;
 	SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;
 	SPI_InitStruct.SPI_FirstBit = SPI_FirstBit_MSB ;
 	SPI_InitStruct.SPI_NSS = SPI_NSS_Soft;
 
 	SPI_Init(SPI2,&SPI_InitStruct);
+	SPI_Cmd(SPI2,ENABLE);
 }
 
 void STM32SPI2::sendByte8(uint8_t data)
@@ -130,13 +131,13 @@ void STM32SPI2::sendControlBits()
 
 void STM32SPI2::assert()
 {
-	SPI_Cmd(SPI2,ENABLE);
+	//SPI_Cmd(SPI2,ENABLE);
 	SPI_NSSInternalSoftwareConfig(SPI2,SPI_NSSInternalSoft_Set);
 }
 void STM32SPI2::deassert()
 {
 	SPI_NSSInternalSoftwareConfig(SPI2,SPI_NSSInternalSoft_Reset);
-	SPI_Cmd(SPI2,DISABLE);
+	//SPI_Cmd(SPI2,DISABLE);
 }
 
 void STM32SPI2::setBitBang()
