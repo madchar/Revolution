@@ -20,6 +20,8 @@ public:
 	void init();
 	void setBitBang();
 	void sendControlBits();
+	void sendManualByte(uint8_t data);
+	void sendByte16(uint16_t data);
 	void sendByte8(uint8_t data);
 	uint16_t receiveData();
 	void assert();

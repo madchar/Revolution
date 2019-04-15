@@ -7,8 +7,7 @@
 
 #ifndef ILEDDRIVER_HPP_
 #define ILEDDRIVER_HPP_
-
-#include "spimux.hpp"
+#include <stdint-gcc.h>
 
 class ILedDriver {
 public:
