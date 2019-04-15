@@ -1,4 +1,5 @@
 
+
 /**
  ******************************************************************************
  * @file    main.c
@@ -28,8 +29,24 @@
 #include "stm32spi2.hpp"
 #include "stm32spi3.hpp"
 #include "stm32spi4.hpp"
-#include "stm32spi5.hpp"
 #include "stm32f4timer.hpp"
+
+/**
+ ******************************************************************************
+ * @file    main.c
+ * @author  Ac6
+ * @version V1.0
+ * @date    01-December-2013
+ * @brief   Default main function.
+ ******************************************************************************
+ */
+
+#include <com1.hpp>
+#include <cstdio>
+#include "stm32f4xx.h"
+#include "hardware.h"
+#include "buffer.hpp"
+
 
 constexpr uint8_t PIXELMAP[] = PIXEL_ARRAY;
 
@@ -54,6 +71,7 @@ static uint8_t pixelMapBuffer4[2][289];
 
 
 
+
 //extern "C" void SysTick_Handler(void);
 extern "C" void DMA2_Stream2_IRQHandler(void);
 extern "C" void DMA1_Stream4_IRQHandler(void);
@@ -70,6 +88,8 @@ void DMA2_Stream2_IRQHandler(void) {
 		DMA_ClearFlag(DMA2_Stream2, DMA_FLAG_TCIF2);
 		flagDMA_TX_Complete1 = true;
 		DMA2_Stream2->CR &= ~(uint32_t)DMA_SxCR_EN;
+
+
 
 
 		if (flagDMA_TX_Complete1&&flagDMA_TX_Complete2&&flagDMA_TX_Complete3&&flagDMA_TX_Complete4)
@@ -230,8 +250,8 @@ void TIM4_IRQHandler(void)
 		DMA2_Stream1->CR |= (uint32_t)DMA_SxCR_EN;
 
 		flagRefresh = true;
-
-	}
+  }
+}
 
 }
 
@@ -241,6 +261,7 @@ void EXTI2_IRQHandler(void)
 
 		EXTI_ClearITPendingBit(EXTI_Line0);
 	}
+
 }
 
 
@@ -550,51 +571,17 @@ int main(void) {
 	SPI_I2S_DMACmd(SPI4, SPI_I2S_DMAReq_Tx, ENABLE);
 	DMA_Cmd(DMA2_Stream1, ENABLE);
 
+	Com1* com1 = Com1::getInstance();
 
+	com1->sendString("\nRévolution v1.0\nCommunication : En ligne\n");
 
 
 	while (1) {
 
-		if(flagRefresh)
-		{
-
-
-			//				if(ledtoggle) lednum++;
-			//				else lednum--;
-			//				if(lednum==192) ledtoggle = false;
-			//				if(lednum==0) ledtoggle = true;
-			//				tlc.setAllLedsRGB(0,0,0);
-			//				if (lednum>=0 && lednum<48) tlc.setLedRGB((PIXELMAP[lednum]),10000,0,0);
-			//				if (lednum>=48 && lednum<96) tlc.setLedRGB((PIXELMAP[lednum]+48),10000,0,0);
-			//				if (lednum>=96 && lednum<144) tlc.setLedRGB((PIXELMAP[lednum]+96),10000,0,0);
-			//				if (lednum>=144 && lednum<192) tlc.setLedRGB((PIXELMAP[lednum]+144),10000,0,0);
-			//
-			//				tlc.updateLeds(screenBuffer1,screenBuffer2,screenBuffer3,screenBuffer4);
-			//				bitShift(screenBuffer1, 3);
-			//				bitShift(screenBuffer2, 3);
-			//				bitShift(screenBuffer3, 3);
-			//				bitShift(screenBuffer4, 3);
-
-			SPI_I2S_DMACmd(SPI1, SPI_I2S_DMAReq_Tx, ENABLE);
-			DMA_Cmd(DMA2_Stream2, ENABLE);
-
-			//Start DMA1 Stream4
-			SPI_I2S_DMACmd(SPI2, SPI_I2S_DMAReq_Tx, ENABLE);
-			DMA_Cmd(DMA1_Stream4, ENABLE);
-
-			//Start DMA1 Stream5
-			SPI_I2S_DMACmd(SPI3, SPI_I2S_DMAReq_Tx, ENABLE);
-			DMA_Cmd(DMA1_Stream5, ENABLE);
-
-			//Start DMA2 Stream1
-			SPI_I2S_DMACmd(SPI4, SPI_I2S_DMAReq_Tx, ENABLE);
-			DMA_Cmd(DMA2_Stream1, ENABLE);
-			flagRefresh = false;
-
+    		if (com1->dataAvailable()) {
+			com1->write(com1->read());
 		}
-
-
-
+    
 	}
 
 }

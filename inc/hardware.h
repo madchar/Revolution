@@ -94,4 +94,26 @@
 #define GSCLK_FREQ					1000000 //1MHZ
 
 
+
+
+//**************************USART1*****************************
+#define USART1_ALTERNATE_FUNCTION	GPIO_AF_USART1
+
+#define USART1_TX_GPIO				GPIOA
+#define USART1_TX_PinSource			GPIO_PinSource9
+#define USART1_TX_Pin				GPIO_Pin_9
+#define USART1_RX_GPIO				GPIOA
+#define USART1_RX_PinSource			GPIO_PinSource10
+#define USART1_RX_Pin				GPIO_Pin_10
+
+//**************************USART2*****************************
+#define USART2_ALTERNATE_FUNCTION	GPIO_AF_USART2
+
+#define USART2_TX_GPIO				GPIOA
+#define USART2_TX_PinSource			GPIO_PinSource2
+#define USART2_TX_Pin				GPIO_Pin_2
+#define USART2_RX_GPIO				GPIOA
+#define USART2_RX_PinSource			GPIO_PinSource3
+#define USART2_RX_Pin				GPIO_Pin_3
+
 #endif /* HARDWARE_H_ */

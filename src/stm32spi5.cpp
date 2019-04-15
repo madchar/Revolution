@@ -79,7 +79,7 @@ void STM32SPI5::setCS(bool state)
 	else GPIO_ResetBits(SPI5_NSS_GPIO,SPI5_NSS_Pin);
 }
 
-void STM32SPI5::sendByte(uint16_t data)
+void STM32SPI5::sendByte(uint16_t data) // To verify
 {
 	assert();
 	setCS(true);
@@ -91,7 +91,7 @@ void STM32SPI5::sendByte(uint16_t data)
 	deassert();
 }
 
-uint8_t STM32SPI5::receiveData()
+uint16_t STM32SPI5::receiveData()
 {
 	uint16_t result = 0;
 	while(SPI_GetFlagStatus(SPI5,SPI_FLAG_RXNE)==RESET)
@@ -152,7 +152,7 @@ void STM32SPI5::writePage(uint16_t address, uint16_t nPage, uint16_t *data)
 	SPI_NSSInternalSoftwareConfig(SPI1,SPI_NSSInternalSoft_Reset);
 
 	deassert();*/
-
+}
 
 void STM32SPI5::formatData()
 {
