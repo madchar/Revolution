@@ -10,7 +10,7 @@
 
 #include "ileddriver.hpp"
 #include "hardware.h"
-#include "spimux.hpp"
+
 #include "stm32spi1.hpp"
 #include "stm32spi2.hpp"
 #include "stm32spi3.hpp"
@@ -46,12 +46,12 @@ public:
 	~TLC5955();
 
 	//-------------Initialization---------------------------------------------------------------------------------
-	void init();
+	void init(STM32SPI1 *spi_1, STM32SPI2 *spi_2, STM32SPI3 *spi_3, STM32SPI4 *spi_4);
 
 
 	//-------------Send data to device(update, flush,latch)-------------------------------------------------------
 	void updateControl();
-	void updateLeds();
+	void updateLeds(uint8_t *buffer1,uint8_t *buffer2,uint8_t *buffer3,uint8_t *buffer4);
 	void latch(bool lat);
 	void setBuffer(uint8_t bit);
 	void setControlModeBit(bool isControlMode);
@@ -83,9 +83,12 @@ public:
 	void assertAll();
 	void setBitBangConfig();
 
-	static const uint8_t tlc_count = 3; // This
+	//-------------OTHER FUNCTIONS--------------------------------------------------------------------------------
+	void setPixelMap(uint16_t lednumber,uint16_t red, uint16_t green, uint16_t blue, uint8_t *buffer1,uint8_t *buffer2,uint8_t *buffer3,uint8_t *buffer4);
+	static const uint8_t tlc_count = 12; // This
 	static const uint8_t COLOR_CHANNEL_COUNT = 3;
 	static const uint8_t LEDS_PER_CHIP = 16;
+	static const uint8_t SPI_COUNT = 4;
 	static bool force_max_current;
 	static float max_current_amps;
 
@@ -112,10 +115,10 @@ private:
 	/* SPI */
 	uint8_t _buffer;
 	int8_t _buffer_count = 7;
-	STM32SPI1 spi1;
-	STM32SPI2 spi2;
-	STM32SPI3 spi3;
-	STM32SPI4 spi4;
+	STM32SPI1 *spi1;
+	STM32SPI2 *spi2;
+	STM32SPI3 *spi3;
+	STM32SPI4 *spi4;
 };
 
 
