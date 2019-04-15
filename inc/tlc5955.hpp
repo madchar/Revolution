@@ -84,10 +84,11 @@ public:
 	void setBitBangConfig();
 
 	//-------------OTHER FUNCTIONS--------------------------------------------------------------------------------
-	void setPixelMap(uint8_t *tab,uint16_t red, uint16_t green, uint16_t blue);
+	void setPixelMap(uint16_t lednumber,uint16_t red, uint16_t green, uint16_t blue, uint8_t *buffer1,uint8_t *buffer2,uint8_t *buffer3,uint8_t *buffer4);
 	static const uint8_t tlc_count = 12; // This
 	static const uint8_t COLOR_CHANNEL_COUNT = 3;
 	static const uint8_t LEDS_PER_CHIP = 16;
+	static const uint8_t SPI_COUNT = 4;
 	static bool force_max_current;
 	static float max_current_amps;
 

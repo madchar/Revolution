@@ -20,21 +20,7 @@ TLC5955::~TLC5955() {
 
 void TLC5955::init(STM32SPI1 *spi_1, STM32SPI2 *spi_2, STM32SPI3 *spi_3, STM32SPI4 *spi_4)
 {
-	//---------------LATCH 1------------------------
-	GPIO_InitTypeDef GPIO_InitStructure;
-	GPIO_InitStructure.GPIO_Pin = TLC_LAT1_Pin;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
-	GPIO_Init(TLC_LAT1_GPIO, &GPIO_InitStructure);
-	//---------------LATCH 2------------------------
-	GPIO_InitStructure.GPIO_Pin = TLC_LAT2_Pin;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
-	GPIO_Init(TLC_LAT2_GPIO, &GPIO_InitStructure);
+
 
 	// Set default color channel indicies
 	setRGBPinOrder(rgb_order_default[0], rgb_order_default[1], rgb_order_default[2]);
@@ -114,7 +100,7 @@ void TLC5955::updateLeds(uint8_t *buffer1,uint8_t *buffer2,uint8_t *buffer3,uint
 {
 
 	// uint32_t power_output_counts = 0;
-uint16_t buffer_index = 0;
+	uint16_t buffer_index = 0;
 	for (int16_t chip = 2; chip >= 0; chip--)
 	{
 		//setControlModeBit(CONTROL_MODE_OFF);
@@ -237,6 +223,59 @@ void TLC5955::setBitBangConfig()
 	spi4->setBitBang();
 }
 
+void TLC5955::setPixelMap(uint16_t lednumber,uint16_t red, uint16_t green, uint16_t blue, uint8_t *buffer1,uint8_t *buffer2,uint8_t *buffer3,uint8_t *buffer4)
+{
+	uint8_t chip = (uint16_t)floor(lednumber / LEDS_PER_CHIP);
+	uint8_t spiNum = ceil((lednumber*3)/SPI_COUNT);
+	uint16_t ledPos = (floor(lednumber-(48*(spiNum-1))))*3;
+	uint8_t bufferIndex = (ledPos-1)*2;
+	if(spiNum==1)
+	{
+		buffer1[(ledPos-3)*2] = (red >> 8);
+		buffer1[((ledPos-3)*2)+1] = (red&0xFF);
+
+		buffer1[(ledPos-2)*2] = (green >> 8);
+		buffer1[((ledPos-2)*2)+1] = (green&0xFF);
+
+		buffer1[(ledPos-1)*2] = (blue >> 8);
+		buffer1[((ledPos-1)*2)+1] = (blue&0xFF);
+	}
+	if(spiNum==2)
+	{
+		buffer2[(ledPos-3)*2] = (red >> 8);
+		buffer2[((ledPos-3)*2)+1] = (red&0xFF);
+
+		buffer2[(ledPos-2)*2] = (green >> 8);
+		buffer2[((ledPos-2)*2)+1] = (green&0xFF);
+
+		buffer2[(ledPos-1)*2] = (blue >> 8);
+		buffer2[((ledPos-1)*2)+1] = (blue&0xFF);
+	}
+	if(spiNum==3)
+	{
+		buffer3[(ledPos-3)*2] = (red >> 8);
+		buffer3[((ledPos-3)*2)+1] = (red&0xFF);
+
+		buffer3[(ledPos-2)*2] = (green >> 8);
+		buffer3[((ledPos-2)*2)+1] = (green&0xFF);
+
+		buffer3[(ledPos-1)*2] = (blue >> 8);
+		buffer3[((ledPos-1)*2)+1] = (blue&0xFF);
+	}
+	if(spiNum==4)
+	{
+		buffer4[(ledPos-3)*2] = (red >> 8);
+		buffer4[((ledPos-3)*2)+1] = (red&0xFF);
+
+		buffer4[(ledPos-2)*2] = (green >> 8);
+		buffer4[((ledPos-2)*2)+1] = (green&0xFF);
+
+		buffer4[(ledPos-1)*2] = (blue >> 8);
+		buffer4[((ledPos-1)*2)+1] = (blue&0xFF);
+	}
+
+}
+
 void TLC5955::setLedRGB(uint16_t led_number, uint16_t red, uint16_t green,uint16_t blue)
 {
 	uint8_t chip = (uint16_t)floor(led_number / LEDS_PER_CHIP);
@@ -271,7 +310,7 @@ void TLC5955::setAllLedsRGB(uint16_t red, uint16_t green, uint16_t blue)
 			}
 		}
 	}// else
-		//printf("ERROR (TLC5955::setAllLedRgb): Color channel count is not 3");
+	//printf("ERROR (TLC5955::setAllLedRgb): Color channel count is not 3");
 }
 
 void TLC5955::setAllLed(uint16_t gsvalue)
@@ -389,7 +428,7 @@ void TLC5955::setRGBPinOrder(uint8_t red_pos, uint8_t green_pos,uint8_t blue_pos
 			}
 		}
 	} //else
-		//printf("ERROR (TLC5955::setRgbPinOrder): Color channel count is not 3");
+	//printf("ERROR (TLC5955::setRgbPinOrder): Color channel count is not 3");
 }
 
 void TLC5955::setSinglePinOrder(uint16_t led_number, uint8_t color_channel_index,uint8_t position)
@@ -410,12 +449,12 @@ void TLC5955::setSingleRGBPinOrder(uint16_t led_number, uint8_t red_pos,uint8_t 
 
 void TLC5955::setAllDcData(uint8_t dcvalue)
 {
-  for (int8_t chip = tlc_count - 1; chip >= 0; chip--)
-  {
-    for (int8_t a = LEDS_PER_CHIP - 1; a >= 0; a--)
-    {
-      for (int8_t b = COLOR_CHANNEL_COUNT - 1; b >= 0; b--)
-        dot_correction_data[chip][a][b] = dcvalue;
-    }
-  }
+	for (int8_t chip = tlc_count - 1; chip >= 0; chip--)
+	{
+		for (int8_t a = LEDS_PER_CHIP - 1; a >= 0; a--)
+		{
+			for (int8_t b = COLOR_CHANNEL_COUNT - 1; b >= 0; b--)
+				dot_correction_data[chip][a][b] = dcvalue;
+		}
+	}
 }
