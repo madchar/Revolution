@@ -13,7 +13,7 @@
 
 //*************************SPI****************************************
 //-------------------------SPI1----------------------
-#define SPI1_ALTERNATE_FUNCTION		GPIO_AF_SPI1
+/*#define SPI1_ALTERNATE_FUNCTION		GPIO_AF_SPI1
 
 #define SPI1_MOSI_GPIO				GPIOA
 #define SPI1_MOSI_PinSource			GPIO_PinSource7
@@ -54,24 +54,26 @@
 #define SPI4_CLK_GPIO				GPIOB
 #define SPI4_CLK_PinSource			GPIO_PinSource13
 #define SPI4_CLK_Pin				GPIO_Pin_13
+*/
 //-------------------------SPI5----------------------
-#define SPI5_ALTERNATE_FUNCTION		GPIO_AF6_SPI5
+
+#define SPI5_ALTERNATE_FUNCTION		GPIO_AF_SPI1
 
 #define SPI5_MOSI_GPIO				GPIOA
-#define SPI5_MOSI_PinSource			GPIO_PinSource10
-#define SPI5_MOSI_Pin				GPIO_Pin_10
+#define SPI5_MOSI_PinSource			GPIO_PinSource6
+#define SPI5_MOSI_Pin				GPIO_Pin_6
 
 #define SPI5_MISO_GPIO				GPIOA
-#define SPI5_MISO_PinSource			GPIO_PinSource12
-#define SPI5_MISO_Pin				GPIO_Pin_12
+#define SPI5_MISO_PinSource			GPIO_PinSource7
+#define SPI5_MISO_Pin				GPIO_Pin_7
 
-#define SPI5_CLK_GPIO				GPIOB
-#define SPI5_CLK_PinSource			GPIO_PinSource0
-#define SPI5_CLK_Pin				GPIO_Pin_0
+#define SPI5_CLK_GPIO				GPIOA
+#define SPI5_CLK_PinSource			GPIO_PinSource5
+#define SPI5_CLK_Pin				GPIO_Pin_5
 
-#define SPI5_NSS_GPIO				GPIOB
-#define SPI5_NSS_PinSource			GPIO_PinSource1
-#define SPI5_NSS_Pin				GPIO_Pin_1
+#define SPI5_NSS_GPIO				GPIOA
+#define SPI5_NSS_PinSource			GPIO_PinSource4
+#define SPI5_NSS_Pin				GPIO_Pin_4
 
 //*************************TLC5955*****************************
 #define TLC_LAT1_GPIO				GPIOA

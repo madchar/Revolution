@@ -8,7 +8,7 @@
 #ifndef FLASHMANAGER_HPP_
 #define FLASHMANAGER_HPP_
 
-#include "stm32spi5.hpp"
+#include <flash.hpp>
 
 class FlashManager
 {

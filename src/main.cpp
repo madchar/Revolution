@@ -42,10 +42,20 @@
  */
 
 #include <com1.hpp>
+#include <flash.hpp>
 #include <cstdio>
 #include "stm32f4xx.h"
 #include "hardware.h"
 #include "buffer.hpp"
+
+
+#include "tlc5955.hpp"
+#include <stdio.h>
+#include <string.h>
+
+uint8_t bufferSpiTx[1156];
+
+uint8_t bufferSpiRx[1156];
 
 
 constexpr uint8_t PIXELMAP[] = PIXEL_ARRAY;
@@ -269,8 +279,11 @@ void bitShift(uint8_t *array, uint8_t chip_count);
 
 int main(void) {
 
+  Com1* com1 = Com1::getInstance();
+  
 	//----------------------------------RCC INIT-----------------------------------------------------
 	//Enable SPIs clocks
+
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI3, ENABLE);
@@ -285,6 +298,12 @@ int main(void) {
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+
+
+	
+
+	/*
+	 TLC5955 tlc;
 
 	//Enable Timers clocks
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2,ENABLE);
@@ -469,6 +488,7 @@ int main(void) {
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
 
+
 	// Enable EXTI2 Interrupt
 	NVIC_InitStructure.NVIC_IRQChannel = EXTI2_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
@@ -573,7 +593,19 @@ int main(void) {
 
 	Com1* com1 = Com1::getInstance();
 
+	 */
+
+	Flash *flash = Flash::getInstance(true);
+	flash->init();
+
 	com1->sendString("\nRévolution v1.0\nCommunication : En ligne\n");
+
+
+	flash->resetImageCount();
+
+
+
+
 
 
 	while (1) {

@@ -27,7 +27,7 @@ uint16_t FlashManager::getDeviceID()
 	uint16_t result = 0;
 	spi->assert();
 	spi->setCS(false);
-	spi->sendByte(DeviceID);
+	spi->sendByte8(DeviceID);
 	for (int i = 0;i<5; i++)
 	{
 		buffer[i] = spi->receiveData();
