@@ -10,10 +10,15 @@
 
 #include "stm32f4xx_gpio.h"
 #include "stm32f4xx_rcc.h"
+#include "stm32f4xx.h"
+#include "stm32f4xx_dma.h"
+#include "stm32f4xx_tim.h"
+
+#include "stm32f4timer.hpp"
 
 //*************************SPI****************************************
 //-------------------------SPI1----------------------
-/*#define SPI1_ALTERNATE_FUNCTION		GPIO_AF_SPI1
+#define SPI1_ALTERNATE_FUNCTION		GPIO_AF_SPI1
 
 #define SPI1_MOSI_GPIO				GPIOA
 #define SPI1_MOSI_PinSource			GPIO_PinSource7
@@ -54,9 +59,9 @@
 #define SPI4_CLK_GPIO				GPIOB
 #define SPI4_CLK_PinSource			GPIO_PinSource13
 #define SPI4_CLK_Pin				GPIO_Pin_13
-*/
-//-------------------------SPI5----------------------
 
+//-------------------------SPI5----------------------
+/*
 #define SPI5_ALTERNATE_FUNCTION		GPIO_AF_SPI1
 
 #define SPI5_MOSI_GPIO				GPIOA
@@ -73,7 +78,7 @@
 
 #define SPI5_NSS_GPIO				GPIOA
 #define SPI5_NSS_PinSource			GPIO_PinSource4
-#define SPI5_NSS_Pin				GPIO_Pin_4
+#define SPI5_NSS_Pin				GPIO_Pin_4*/
 
 //*************************TLC5955*****************************
 #define TLC_LAT1_GPIO				GPIOA
@@ -98,24 +103,40 @@
 
 
 
-//**************************USART1*****************************
-#define USART1_ALTERNATE_FUNCTION	GPIO_AF_USART1
+////**************************USART1*****************************
+//#define USART1_ALTERNATE_FUNCTION	GPIO_AF_USART1
+//
+//#define USART1_TX_GPIO				GPIOA
+//#define USART1_TX_PinSource			GPIO_PinSource9
+//#define USART1_TX_Pin				GPIO_Pin_9
+//#define USART1_RX_GPIO				GPIOA
+//#define USART1_RX_PinSource			GPIO_PinSource10
+//#define USART1_RX_Pin				GPIO_Pin_10
+//
+////**************************USART2*****************************
+//#define USART2_ALTERNATE_FUNCTION	GPIO_AF_USART2
+//
+//#define USART2_TX_GPIO				GPIOA
+//#define USART2_TX_PinSource			GPIO_PinSource2
+//#define USART2_TX_Pin				GPIO_Pin_2
+//#define USART2_RX_GPIO				GPIOA
+//#define USART2_RX_PinSource			GPIO_PinSource3
+//#define USART2_RX_Pin				GPIO_Pin_3
 
-#define USART1_TX_GPIO				GPIOA
-#define USART1_TX_PinSource			GPIO_PinSource9
-#define USART1_TX_Pin				GPIO_Pin_9
-#define USART1_RX_GPIO				GPIOA
-#define USART1_RX_PinSource			GPIO_PinSource10
-#define USART1_RX_Pin				GPIO_Pin_10
+//*************GLOBAL VARIABLEs********************************
+//static uint8_t screenBuffer1[289];
+//static uint8_t screenBuffer2[289];
+//static uint8_t screenBuffer3[289];
+//static uint8_t screenBuffer4[289];
+//static uint8_t screenBuffer5[289];
 
-//**************************USART2*****************************
-#define USART2_ALTERNATE_FUNCTION	GPIO_AF_USART2
+//******************GLOBAL FUNCTIONS***************************
+void initGPIO();
+void initDMA();
+void initRCC();
+void initEXTI();
+void initNVIC();
+void initTIM();
 
-#define USART2_TX_GPIO				GPIOA
-#define USART2_TX_PinSource			GPIO_PinSource2
-#define USART2_TX_Pin				GPIO_Pin_2
-#define USART2_RX_GPIO				GPIOA
-#define USART2_RX_PinSource			GPIO_PinSource3
-#define USART2_RX_Pin				GPIO_Pin_3
 
 #endif /* HARDWARE_H_ */
