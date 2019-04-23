@@ -539,10 +539,10 @@ int main(void) {
 
 	tlc.setRGBPinOrder(0, 1, 2);
 
-	tlc.setAllDcData(127);
+	tlc.setAllDcData(10);
 	tlc.setMaxCurrent(0, 0, 0);
 	tlc.setFunctionControlData(true, true, true, true, true);
-	tlc.setBrightnessCurrent(127, 127, 127);
+	tlc.setBrightnessCurrent(127, 5, 10);
 	tlc.updateControl();
 
 	//----------------------------------DMA INIT-----------------------------------------------------
@@ -747,12 +747,12 @@ int main(void) {
 
 	while (1) {
 
-		if(flagRefreshBuffer)
-		{
-			if (bufferIndex==0) Flash::getInstance()->getPixelColumn(0,rowCounter,pixelMapBuffer1[1],pixelMapBuffer2[1],pixelMapBuffer3[1],pixelMapBuffer4[1]);
-			else if(bufferIndex==1) Flash::getInstance()->getPixelColumn(0,rowCounter,pixelMapBuffer1[0],pixelMapBuffer2[0],pixelMapBuffer3[0],pixelMapBuffer4[0]);
-			flagRefreshBuffer = false;
-		}
+//		if(flagRefreshBuffer)
+//		{
+//			if (bufferIndex==0) Flash::getInstance()->getPixelColumn(0,rowCounter,pixelMapBuffer1[1],pixelMapBuffer2[1],pixelMapBuffer3[1],pixelMapBuffer4[1]);
+//			else if(bufferIndex==1) Flash::getInstance()->getPixelColumn(0,rowCounter,pixelMapBuffer1[0],pixelMapBuffer2[0],pixelMapBuffer3[0],pixelMapBuffer4[0]);
+//			flagRefreshBuffer = false;
+//		}
 	}
 
 }
