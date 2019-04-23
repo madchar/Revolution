@@ -34,18 +34,32 @@ public:
 	void incommingDataDecoder(Flash* flash);
 	bool dataAvailable();
 	void setBaudeRate(uint32_t baudrate);
+	void setEcho(bool state);
+	void resetTram();
 
 
 private:
 
 	Com1();
-
-	bool 					isTransmitting;
-	uint8_t 				pixelColumn[1156];
-	Buffer<uint8_t, 1024> 	rxBuffer;
-	Buffer<uint8_t, 1024> 	txBuffer;
-	static Com1*			instance;
+	bool 						binaryTransferMode;
+	uint8_t						tramPosition;
+	bool 						tramSynched;
+	char 						tram[16];
+	static constexpr uint8_t	tramSize = 16;
+	uint8_t						pixelColumnBuffer[1156];
+	uint16_t					pixelColumnBufferCntr;
+	bool 						echo;
+	bool 						isTransmitting;
+	uint8_t 					pixelColumn[1156];
+	Buffer<uint8_t, 4096>	 	rxBuffer;
+	Buffer<uint8_t, 4096> 		txBuffer;
+	static Com1*				instance;
 	friend void USART1_IRQHandler(void);
+
+	enum comMode_e {LISTENING, SORT_COMMAND, BINARY_TRANSFER};
+	comMode_e comMode;
+
+	const char				CMD_ImageReadyToTransfer[7]={"imgrdy"};
 
 
 };
