@@ -7,6 +7,7 @@
 #include <flash.hpp>
 #include "com1.hpp"
 #include <string.h>
+#include <math.h>
 
 Flash* Flash::instance = 0;
 
@@ -352,7 +353,7 @@ void Flash::writeByte(const address_t* add, uint32_t byte) {
 		;
 }
 
-void Flash::writeByte(const address_t *add, uint8_t *byte, uint16_t nByte) {
+void Flash::writeByte(const address_t *add, uint8_t *byte, uint16_t nByte, uint16_t offsetByte) {
 	uint32_t address = 0;
 	address = add->page;
 	address = address << 9;
@@ -364,7 +365,7 @@ void Flash::writeByte(const address_t *add, uint8_t *byte, uint16_t nByte) {
 	spiTransfer((address & 0x0000FF00) >> 8);
 	spiTransfer((address & 0x000000FF));
 	for (uint16_t i = 0; i < nByte; i++) {
-		spiTransfer(byte[i]);
+		spiTransfer(byte[i + offsetByte]);
 	}
 	setCS(false);
 
@@ -448,27 +449,73 @@ uint8_t Flash::getNumberOfImagesInCarrousel() {
 	return countSetBits(positionOfPresentImages);
 }
 
+bool Flash::savePixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* source) {
+	if (debug)
+		Com1::getInstance()->sendString("Saving pixel column to flash...\n");
+
+	imageNo = imageNo % MaxImageStored;
+
+	uint32_t imageColumnStartPage = FirstImagePageAddress + ((imageNo - 1) * PagesPerImage);
+	uint32_t pixelColumnStartPage = imageColumnStartPage
+			+ (floor((columnNo * ColumnPixelArraySize) / PageSize));
+	uint32_t pixelColumnStartByte = (columnNo * ColumnPixelArraySize) % PageSize;
+
+	if (debug) {
+		Com1::getInstance()->sendString("\npixelColumnPageOffset :");
+		Com1::getInstance()->sendByte32ToBinaryString(pixelColumnStartPage);
+		Com1::getInstance()->sendString("pixelColumnStartPage :");
+		Com1::getInstance()->sendByte32ToBinaryString(imageColumnStartPage);
+		Com1::getInstance()->sendString("pixelColumnStartByte :");
+		Com1::getInstance()->sendByte32ToBinaryString(pixelColumnStartByte);
+	}
+
+	address_t add;
+	add.page = pixelColumnStartPage;
+	add.byte = pixelColumnStartByte;
+
+	uint16_t payloadSize = ColumnPixelArraySize;
+
+	writeByte(&add, source, PageSize-pixelColumnStartByte);
+	payloadSize -= (PageSize-pixelColumnStartByte);
+
+	for(uint8_t i = 0; i < (ceil(payloadSize/PageSize)); i++) {
+		add.page++;
+		add.byte = 0;
+		writeByte(&add, source, PageSize, ColumnPixelArraySize-payloadSize);
+		payloadSize -= PageSize;
+		}
+
+	writeByte(&add, source, payloadSize, ColumnPixelArraySize-payloadSize);
+	payloadSize -= (ColumnPixelArraySize-payloadSize);
+
+	if (debug)
+			Com1::getInstance()->sendString("Pixel column saved to flash...\n");
+
+	return !payloadSize;
+}
+
 bool Flash::getPixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* spiBuffer1, uint8_t* spiBuffer2, uint8_t* spiBuffer3, uint8_t* spiBuffer4) {
 	if (debug)
 		Com1::getInstance()->sendString("Loading pixel column from flash...\n");
 
 	imageNo = imageNo % MaxImageStored;
 
-	uint32_t pixelColumnPageOffset = (columnNo * ColumnPixelArraySize) / PageSize;
-	uint32_t pixelColumnStartPage = FirstImagePageAddress + ((imageNo - 1) * ImagePages);
+	uint32_t imageColumnStartPage = FirstImagePageAddress + ((imageNo - 1) * PagesPerImage);
+	uint32_t pixelColumnStartPage = imageColumnStartPage
+			+ (floor((columnNo * ColumnPixelArraySize) / PageSize));
 	uint32_t pixelColumnStartByte = (columnNo * ColumnPixelArraySize) % PageSize;
 
 	if (debug) {
 		Com1::getInstance()->sendString("\npixelColumnPageOffset :");
-		Com1::getInstance()->sendByte32ToBinaryString(pixelColumnPageOffset);
-		Com1::getInstance()->sendString("pixelColumnStartPage :");
 		Com1::getInstance()->sendByte32ToBinaryString(pixelColumnStartPage);
+		Com1::getInstance()->sendString("pixelColumnStartPage :");
+		Com1::getInstance()->sendByte32ToBinaryString(imageColumnStartPage);
 		Com1::getInstance()->sendString("pixelColumnStartByte :");
 		Com1::getInstance()->sendByte32ToBinaryString(pixelColumnStartByte);
 	}
 
 	address_t add;
-	add.page = pixelColumnStartPage + pixelColumnPageOffset;
+	add.page = pixelColumnStartPage;
 	add.byte = pixelColumnStartByte;
 
 	uint32_t address = 0;
@@ -498,43 +545,13 @@ bool Flash::getPixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* spiBuffer
 	return true;
 }
 
-bool Flash::saveImageToFlash(uint8_t imageNo, const char* filename, uint8_t* source) {
-	if (debug)
-		Com1::getInstance()->sendString("Writing image to flash...\n");
-
-	// Save BMP RAW Data to flash
-	imageNo = imageNo % MaxImageStored;
-	address_t add;
-	add.byte = 0;
-	for (int i = 0; i < ImagePages; i++) {
-		add.page = (FirstImagePageAddress + ((imageNo - 1) * ImagePages)) + i;
-		writeByte(&add, source, PageSize);
-		while (isBusy())
-			;
-	}
-
-	// Save image position flag to flash
-	positionOfPresentImages |= 1 << (imageNo - 1);
-	writeByte(&PositionOfPresentImagesInCarrouselAddress, positionOfPresentImages);
-
-	//Save filename to flash
-	add = FilenamePage;
-	add.byte = (imageNo - 1) * FilenameSize;
-	writeByte(&add, filename, FilenameSize);
-
-	if (debug)
-		Com1::getInstance()->sendString("Image written to flash...\n");
-
-	return true;
-}
-
 bool Flash::loadImageFromFlash(uint8_t imageNo, uint8_t* destination) {
 	if (debug)
 		Com1::getInstance()->sendString("Loading image from flash...\n");
 	imageNo = imageNo % MaxImageStored;
 	address_t add;
 	add.byte = 0;
-	add.page = FirstImagePageAddress + ((imageNo - 1) * ImagePages);
+	add.page = FirstImagePageAddress + ((imageNo - 1) * PagesPerImage);
 	readPageArray(&add, destination, ImageFileSize);
 	if (debug)
 		Com1::getInstance()->sendString("Image loaded from flash...\n");
@@ -576,3 +593,11 @@ void Flash::resetImageCount() {
 		Com1::getInstance()->sendString("Reset completed...\n");
 }
 
+uint8_t Flash::getNextFreeImageSlot() {
+	uint8_t counter = 0;
+	while ((positionOfPresentImages >> counter++) & 0x01)
+		;
+	if (counter > MaxImageStored)
+		counter = 1;
+	return counter;
+}

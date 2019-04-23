@@ -9,7 +9,7 @@
 
 #include <stdint-gcc.h>
 
-template<class T, int nSize>
+template<class T, uint16_t nSize>
 class Buffer {
 public:
 	/**

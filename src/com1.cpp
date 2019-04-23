@@ -5,11 +5,19 @@
  *      Author: rev
  */
 #include <com1.hpp>
+#include <string.h>
 
 Com1* Com1::instance = 0;
 
 Com1::Com1() {
-
+	comMode = LISTENING;
+	pixelColumnBufferCntr = 0;
+	memset(pixelColumnBuffer, 0, sizeof(tram));
+	binaryTransferMode = 0;
+	tramPosition = 0;
+	tramSynched = false;
+	memset(tram, 0, sizeof(tram));
+	echo = false;
 	isTransmitting = false;
 
 	GPIO_InitTypeDef GPIO_InitStruct;
@@ -26,7 +34,7 @@ Com1::Com1() {
 	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
 	GPIO_Init(USART1_TX_GPIO, &GPIO_InitStruct);
 	GPIO_PinAFConfig(USART1_TX_GPIO, USART1_TX_PinSource,
-			USART1_ALTERNATE_FUNCTION);
+	USART1_ALTERNATE_FUNCTION);
 
 	// Initialize pins as alternating function
 	GPIO_InitStruct.GPIO_Pin = USART1_RX_Pin;
@@ -36,7 +44,7 @@ Com1::Com1() {
 	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
 	GPIO_Init(USART1_RX_GPIO, &GPIO_InitStruct);
 	GPIO_PinAFConfig(USART1_RX_GPIO, USART1_RX_PinSource,
-			USART1_ALTERNATE_FUNCTION);
+	USART1_ALTERNATE_FUNCTION);
 
 	USART_InitTypeDef USART_InitStruct;
 	NVIC_InitTypeDef NVIC_InitStruct;
@@ -55,6 +63,7 @@ Com1::Com1() {
 	 * Activate USART1
 	 */
 	USART_InitStruct.USART_BaudRate = 921600;
+	//USART_InitStruct.USART_BaudRate = 115200;
 	USART_InitStruct.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
 	USART_InitStruct.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
 	USART_InitStruct.USART_Parity = USART_Parity_No;
@@ -97,6 +106,10 @@ void Com1::setBaudeRate(uint32_t baudrate) {
 
 bool Com1::dataAvailable() {
 	return !rxBuffer.isEmpty();
+}
+
+void Com1::setEcho(bool state) {
+	echo = state;
 }
 
 uint8_t Com1::read() {
@@ -156,20 +169,89 @@ void Com1::sendByte32ToBinaryString(uint32_t data) {
 }
 
 void Com1::incommingDataDecoder(Flash* flash) {
-	if (1);
+	uint8_t car;
+
+	if (dataAvailable()) {
+		car = read();
+		if (echo)
+			write(car);
+	}
+
+	switch (comMode) {
+
+	case LISTENING:
+		if (car && car == '<') {
+			tramSynched = true;
+			sendString(" - tramSyched - ");
+			car = 0;
+
+		} else if (car && tramSynched && car != '>' ) {
+			tram[tramPosition] = car;
+			tramPosition++;
+			car = 0;
+
+		} else if (car && tramSynched && car == '>') {
+			sendString(" - tramReceived - ");
+			comMode = SORT_COMMAND;
+			tramPosition = 0;
+			tramSynched = false;
+			rxBuffer.reset();
+			//car = 0;
+
+		} else {
+			//rxBuffer.reset();
+			//resetTram();
+			//car = 0;
+		}
+		break;
+
+	case SORT_COMMAND:
+		sendString("Command : ");
+		sendString(tram);
+		//sendString("\n");
+		resetTram();
+
+		if (!strcmp(CMD_ImageReadyToTransfer, tram)) {
+			memset(tram, 0, sizeof(tram));
+			comMode = BINARY_TRANSFER;
+			sendString("<col0>");
+		}
+		break;
+
+	case BINARY_TRANSFER:
+		pixelColumnBuffer[pixelColumnBufferCntr] = read();
+		pixelColumnBufferCntr++;
+
+		//comMode = LISTENING;		//tests
+		//pixelColumnBufferCntr = 0;	//tests
+
+		if (pixelColumnBufferCntr == Flash::ColumnPixelArraySize) {
+			sendString("1156 byte received!");
+			//flash->savePixelColumn(0, 0, pixelColumnBuffer);
+			pixelColumnBufferCntr = 0;
+			binaryTransferMode = false;
+		}
+		break;
+
+	}
 }
 
-
+void Com1::resetTram() {
+	memset(tram, 0, sizeof(tram));
+	comMode = LISTENING;
+	tramPosition = 0;
+	tramSynched = false;
+}
 extern "C" {
 void USART1_IRQHandler(void) {
 	volatile unsigned int isr;
 	isr = USART1->SR;
-	// RX Data
+// RX Data
 	if (isr & USART_SR_RXNE) {
 		USART1->SR &= ~USART_SR_RXNE;
 		Com1::instance->rxBuffer.add(USART1->DR);
 	}
-	// TX Done
+// TX Done
 	if ((isr & USART_SR_TXE)) {
 		USART1->SR &= ~USART_SR_TXE;
 		if (Com1::instance->txBuffer.isEmpty()) {
