@@ -25,7 +25,7 @@ public:
 	static constexpr uint16_t PagesPerImage = 578;						//Flash memory pages per image
 	static constexpr uint8_t FirstImagePageAddress = 99;		//First age where image are stored
 	static constexpr uint16_t PageSize = 512;			//Physical flash memory page size in bytes
-
+	static constexpr uint16_t MaxColumnCount = 256;
 
 	Flash(bool debugEnable) :
 			debug(debugEnable) {
@@ -84,6 +84,7 @@ public:
 	void readPageArray(const address_t *add, uint8_t *buffer, uint32_t nByte);
 	void erasePage(const address_t *add);
 	void eraseChip();
+	void disableSectorProtection();
 	void getDeviceID(uint8_t *buffer);
 	void setPageSizeBinary();
 
@@ -110,7 +111,7 @@ private:
 	 * Flash read/write and SPI command
 	 */
 
-	static constexpr uint16_t BusyFlag = 0x8000;
+	static constexpr uint16_t BusyFlag = 0x8080;
 	static constexpr uint16_t ReadWriteErrorFlag = 0x0020;
 
 	static constexpr uint8_t DummyByte = 0x00;
@@ -127,6 +128,7 @@ private:
 
 	uint8_t BinaryPageSize[4] = { 0x3D, 0x2A, 0x80, 0xA6 };
 	uint8_t ChipErase[4] = { 0xC7, 0x94, 0x80, 0x9A };
+	uint8_t DisableSectorProtect[4] = {0x3D, 0x2A, 0x7F, 0x9A};
 
 	/**
 	 * Static configuration addresses

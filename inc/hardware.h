@@ -61,24 +61,24 @@
 #define SPI4_CLK_Pin				GPIO_Pin_13
 
 //-------------------------SPI5----------------------
-/*
-#define SPI5_ALTERNATE_FUNCTION		GPIO_AF_SPI1
+
+#define SPI5_ALTERNATE_FUNCTION		0x06
 
 #define SPI5_MOSI_GPIO				GPIOA
-#define SPI5_MOSI_PinSource			GPIO_PinSource6
-#define SPI5_MOSI_Pin				GPIO_Pin_6
+#define SPI5_MOSI_PinSource			GPIO_PinSource10
+#define SPI5_MOSI_Pin				GPIO_Pin_10
 
 #define SPI5_MISO_GPIO				GPIOA
-#define SPI5_MISO_PinSource			GPIO_PinSource7
-#define SPI5_MISO_Pin				GPIO_Pin_7
+#define SPI5_MISO_PinSource			GPIO_PinSource12
+#define SPI5_MISO_Pin				GPIO_Pin_12
 
-#define SPI5_CLK_GPIO				GPIOA
-#define SPI5_CLK_PinSource			GPIO_PinSource5
-#define SPI5_CLK_Pin				GPIO_Pin_5
+#define SPI5_CLK_GPIO				GPIOB
+#define SPI5_CLK_PinSource			GPIO_PinSource0
+#define SPI5_CLK_Pin				GPIO_Pin_0
 
-#define SPI5_NSS_GPIO				GPIOA
-#define SPI5_NSS_PinSource			GPIO_PinSource4
-#define SPI5_NSS_Pin				GPIO_Pin_4*/
+#define SPI5_NSS_GPIO				GPIOB
+#define SPI5_NSS_PinSource			GPIO_PinSource1
+#define SPI5_NSS_Pin				GPIO_Pin_1
 
 //*************************TLC5955*****************************
 #define TLC_LAT1_GPIO				GPIOA
@@ -103,7 +103,7 @@
 
 
 
-////**************************USART1*****************************
+//**************************USART1*****************************
 //#define USART1_ALTERNATE_FUNCTION	GPIO_AF_USART1
 //
 //#define USART1_TX_GPIO				GPIOA
@@ -112,16 +112,16 @@
 //#define USART1_RX_GPIO				GPIOA
 //#define USART1_RX_PinSource			GPIO_PinSource10
 //#define USART1_RX_Pin				GPIO_Pin_10
-//
-////**************************USART2*****************************
-//#define USART2_ALTERNATE_FUNCTION	GPIO_AF_USART2
-//
-//#define USART2_TX_GPIO				GPIOA
-//#define USART2_TX_PinSource			GPIO_PinSource2
-//#define USART2_TX_Pin				GPIO_Pin_2
-//#define USART2_RX_GPIO				GPIOA
-//#define USART2_RX_PinSource			GPIO_PinSource3
-//#define USART2_RX_Pin				GPIO_Pin_3
+
+//**************************USART2*****************************
+#define USART2_ALTERNATE_FUNCTION	GPIO_AF_USART2
+
+#define USART2_TX_GPIO				GPIOA
+#define USART2_TX_PinSource			GPIO_PinSource2
+#define USART2_TX_Pin				GPIO_Pin_2
+#define USART2_RX_GPIO				GPIOA
+#define USART2_RX_PinSource			GPIO_PinSource3
+#define USART2_RX_Pin				GPIO_Pin_3
 
 //*************GLOBAL VARIABLEs********************************
 //static uint8_t screenBuffer1[289];

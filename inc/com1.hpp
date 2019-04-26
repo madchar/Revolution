@@ -14,7 +14,7 @@
 #include "flash.hpp"
 
 extern "C" {
-void USART1_IRQHandler(void);
+void USART2_IRQHandler(void);
 }
 
 class Com1
@@ -54,7 +54,7 @@ private:
 	Buffer<uint8_t, 4096>	 	rxBuffer;
 	Buffer<uint8_t, 4096> 		txBuffer;
 	static Com1*				instance;
-	friend void USART1_IRQHandler(void);
+	friend void USART2_IRQHandler(void);
 
 	enum comMode_e {LISTENING, SORT_COMMAND, BINARY_TRANSFER};
 	comMode_e comMode;
