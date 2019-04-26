@@ -14,7 +14,7 @@
 #include "flash.hpp"
 
 extern "C" {
-void USART1_IRQHandler(void);
+void USART2_IRQHandler(void);
 }
 
 class Com1 {
@@ -41,7 +41,6 @@ public:
 private:
 
 	Com1();
-
 	bool echo;
 	bool isTransmitting;
 	Buffer<uint8_t, 4096> rxBuffer;
