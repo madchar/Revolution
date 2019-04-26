@@ -458,3 +458,17 @@ void TLC5955::setAllDcData(uint8_t dcvalue)
 		}
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
