@@ -1,5 +1,5 @@
 /*
- * hardware.h
+sd eh7 * hardware.h
  *
  *  Created on: Feb 28, 2019
  *      Author: Zandwich
@@ -21,7 +21,7 @@
 
 #define SPI1_CLK_GPIO				GPIOA
 #define SPI1_CLK_PinSource			GPIO_PinSource5
-#define SPI1_CLK_Pin				GPIO_Pin_5
+#defitj*ne SPI1_CLK_Pin				GPIO_Pin_5
 //-------------------------SPI2----------------------
 #define SPI2_ALTERNATE_FUNCTION		GPIO_AF_SPI2
 
