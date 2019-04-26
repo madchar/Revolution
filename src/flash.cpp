@@ -50,6 +50,10 @@ void Flash::init() {
 	 */
 
 	//------------------------GPIOA MOSI MISO SCLK------------------------------------------
+
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+
 	GPIO_InitTypeDef GPIOA_InitStructure;
 	GPIOA_InitStructure.GPIO_Pin = SPI5_MOSI_Pin | SPI5_MISO_Pin | SPI5_CLK_Pin;
 	GPIOA_InitStructure.GPIO_Mode = GPIO_Mode_AF;
@@ -95,7 +99,7 @@ void Flash::init() {
 	while (isBusy())
 		;
 	if (debug)
-		Com1::getInstance()->sendString("\nFlash initialization completed.\n");
+		Com1::getInstance()->sendString("\rFlash initialization completed.\r");
 
 }
 
@@ -125,7 +129,7 @@ void Flash::getDeviceID(uint8_t *buffer) {
 		buffer[i] = spiTransfer(DummyByte);
 		if (debug) {
 			Com1::getInstance()->sendByte8ToBinaryString(buffer[i]);
-			Com1::getInstance()->sendString("\n");
+			Com1::getInstance()->sendString("\r");
 		}
 	}
 	setCS(false);
@@ -150,44 +154,44 @@ void Flash::readStatusRegisterToString() {
 	setCS(false);
 	if (debug) {
 		(a & 0b10000000) ?
-				Com1::getInstance()->sendString("b7 : RDY/BUSY Ready\n") :
-				Com1::getInstance()->sendString("b7 : RDY/BUSY Busy\n");
+				Com1::getInstance()->sendString("b7 : RDY/BUSY Ready\r") :
+				Com1::getInstance()->sendString("b7 : RDY/BUSY Busy\r");
 		(a & 0b01000000) ?
-				Com1::getInstance()->sendString("b6 : COMP Flase\n") :
-				Com1::getInstance()->sendString("b6 : COMP true\n");
+				Com1::getInstance()->sendString("b6 : COMP False\r") :
+				Com1::getInstance()->sendString("b6 : COMP true\r");
 		(a & 0b00110100) ?
-				Com1::getInstance()->sendString("b5:2 : DENSITY 32-Mbit\n") :
-				Com1::getInstance()->sendString("b5:2 : DENSITY ???\n");
+				Com1::getInstance()->sendString("b5:2 : DENSITY 32-Mbit\r") :
+				Com1::getInstance()->sendString("b5:2 : DENSITY ???\r");
 		(a & 0b00000010) ?
-				Com1::getInstance()->sendString("b1 : PROTECT enable\n") :
-				Com1::getInstance()->sendString("b1 : PROTECT disable\n");
+				Com1::getInstance()->sendString("b1 : PROTECT enable\r") :
+				Com1::getInstance()->sendString("b1 : PROTECT disable\r");
 		(a & 0b00000001) ?
-				Com1::getInstance()->sendString("b0 : PAGE SIZE 512B\n") :
-				Com1::getInstance()->sendString("b0 : PAGE SIZE 528B\n");
+				Com1::getInstance()->sendString("b0 : PAGE SIZE 512B\r") :
+				Com1::getInstance()->sendString("b0 : PAGE SIZE 528B\r");
 		(b & 0b10000000) ?
-				Com1::getInstance()->sendString("b7 : RDY/BUSY Ready\n") :
-				Com1::getInstance()->sendString("b7 : RDY/BUSY Busy\n");
+				Com1::getInstance()->sendString("b7 : RDY/BUSY Ready\r") :
+				Com1::getInstance()->sendString("b7 : RDY/BUSY Busy\r");
 		(b & 0b01000000) ?
-				Com1::getInstance()->sendString("b6 : RES\n") :
-				Com1::getInstance()->sendString("b6 : RES\n");
+				Com1::getInstance()->sendString("b6 : RES\r") :
+				Com1::getInstance()->sendString("b6 : RES\r");
 		(b & 0b00100000) ?
-				Com1::getInstance()->sendString("b5 : EPE Detected\n") :
-				Com1::getInstance()->sendString("b5 : EPE Ok\n");
+				Com1::getInstance()->sendString("b5 : EPE Detected\r") :
+				Com1::getInstance()->sendString("b5 : EPE Ok\r");
 		(b & 0b00100000) ?
-				Com1::getInstance()->sendString("b4 : RES\n") :
-				Com1::getInstance()->sendString("b4 : RES\n");
+				Com1::getInstance()->sendString("b4 : RES\r") :
+				Com1::getInstance()->sendString("b4 : RES\r");
 		(b & 0b00100000) ?
-				Com1::getInstance()->sendString("b3 : SLE Enable\n") :
-				Com1::getInstance()->sendString("b3 : SLE Disable\n");
+				Com1::getInstance()->sendString("b3 : SLE Enable\r") :
+				Com1::getInstance()->sendString("b3 : SLE Disable\r");
 		(b & 0b00100000) ?
-				Com1::getInstance()->sendString("b2 : PS2 Is\n") :
-				Com1::getInstance()->sendString("b2 : PS2 Not\n");
+				Com1::getInstance()->sendString("b2 : PS2 Is\r") :
+				Com1::getInstance()->sendString("b2 : PS2 Not\r");
 		(b & 0b00000010) ?
-				Com1::getInstance()->sendString("b1 : PS1 Is\n") :
-				Com1::getInstance()->sendString("b1 : PS2 Not\n");
+				Com1::getInstance()->sendString("b1 : PS1 Is\r") :
+				Com1::getInstance()->sendString("b1 : PS2 Not\r");
 		(b & 0b00000001) ?
-				Com1::getInstance()->sendString("b0 : ES Is\n") :
-				Com1::getInstance()->sendString("b0 : ES Not\n");
+				Com1::getInstance()->sendString("b0 : ES Is\r") :
+				Com1::getInstance()->sendString("b0 : ES Not\r");
 	}
 }
 
@@ -203,7 +207,7 @@ uint8_t Flash::readConfigurationRegister() {
 void Flash::setPageSizeBinary() {
 	if (debug)
 		Com1::getInstance()->sendString(
-				"Configuring page size of 512 bytes (power of 2 adresses)\n");
+				"Configuring page size of 512 bytes (power of 2 adresses)\r");
 	setCS(true);
 	for (int i = 0; i < 4; i++) {
 		spiTransfer(BinaryPageSize[i]);
@@ -212,7 +216,7 @@ void Flash::setPageSizeBinary() {
 	while (isBusy())
 		;
 	if (debug)
-		Com1::getInstance()->sendString("Configuration completed\n");
+		Com1::getInstance()->sendString("Configuration completed\r");
 }
 
 bool Flash::isBusy() {
@@ -398,7 +402,7 @@ void Flash::erasePage(const address_t *add) {
 	address = address << 9;
 
 	if (debug)
-		Com1::getInstance()->sendString("Erasing page...\n");
+		Com1::getInstance()->sendString("Erasing page...\r");
 
 	setCS(true);
 	spiTransfer(MainMemmoryPageRead);
@@ -410,12 +414,12 @@ void Flash::erasePage(const address_t *add) {
 		;
 
 	if (debug)
-		Com1::getInstance()->sendString("Erase successful...\n");
+		Com1::getInstance()->sendString("Erase successful...\r");
 }
 
 void Flash::eraseChip() {
 	if (debug)
-		Com1::getInstance()->sendString("Erasing Chip...\n");
+		Com1::getInstance()->sendString("Erasing Chip...\r");
 
 	setCS(true);
 	spiTransfer(ChipErase[0]);
@@ -426,7 +430,7 @@ void Flash::eraseChip() {
 	while (!(readStatusRegister() & BusyFlag))
 		;
 	if (debug)
-		Com1::getInstance()->sendString("Erase successful...\n");
+		Com1::getInstance()->sendString("Erase successful...\r");
 
 }
 
@@ -451,7 +455,7 @@ uint8_t Flash::getNumberOfImagesInCarrousel() {
 
 bool Flash::savePixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* source) {
 	if (debug)
-		Com1::getInstance()->sendString("Saving pixel column to flash...\n");
+		Com1::getInstance()->sendString("Saving pixel column to flash...\r");
 
 	imageNo = imageNo % MaxImageStored;
 
@@ -461,11 +465,11 @@ bool Flash::savePixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* source) 
 	uint32_t pixelColumnStartByte = (columnNo * ColumnPixelArraySize) % PageSize;
 
 	if (debug) {
-		Com1::getInstance()->sendString("\npixelColumnPageOffset :");
+		Com1::getInstance()->sendString("\rpixelColumnPageOffset :");
 		Com1::getInstance()->sendByte32ToBinaryString(pixelColumnStartPage);
-		Com1::getInstance()->sendString("pixelColumnStartPage :");
+		Com1::getInstance()->sendString("\rpixelColumnStartPage :");
 		Com1::getInstance()->sendByte32ToBinaryString(imageColumnStartPage);
-		Com1::getInstance()->sendString("pixelColumnStartByte :");
+		Com1::getInstance()->sendString("\rpixelColumnStartByte :");
 		Com1::getInstance()->sendByte32ToBinaryString(pixelColumnStartByte);
 	}
 
@@ -489,14 +493,14 @@ bool Flash::savePixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* source) 
 	payloadSize -= (ColumnPixelArraySize-payloadSize);
 
 	if (debug)
-			Com1::getInstance()->sendString("Pixel column saved to flash...\n");
+			Com1::getInstance()->sendString("Pixel column saved to flash...\r");
 
 	return !payloadSize;
 }
 
 bool Flash::getPixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* spiBuffer1, uint8_t* spiBuffer2, uint8_t* spiBuffer3, uint8_t* spiBuffer4) {
 	if (debug)
-		Com1::getInstance()->sendString("Loading pixel column from flash...\n");
+		Com1::getInstance()->sendString("Loading pixel column from flash...\r");
 
 	imageNo = imageNo % MaxImageStored;
 
@@ -506,7 +510,7 @@ bool Flash::getPixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* spiBuffer
 	uint32_t pixelColumnStartByte = (columnNo * ColumnPixelArraySize) % PageSize;
 
 	if (debug) {
-		Com1::getInstance()->sendString("\npixelColumnPageOffset :");
+		Com1::getInstance()->sendString("\rpixelColumnPageOffset :");
 		Com1::getInstance()->sendByte32ToBinaryString(pixelColumnStartPage);
 		Com1::getInstance()->sendString("pixelColumnStartPage :");
 		Com1::getInstance()->sendByte32ToBinaryString(imageColumnStartPage);
@@ -541,20 +545,7 @@ bool Flash::getPixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* spiBuffer
 	setCS(false);
 
 	if (debug)
-		Com1::getInstance()->sendString("Column loaded from flash...\n");
-	return true;
-}
-
-bool Flash::loadImageFromFlash(uint8_t imageNo, uint8_t* destination) {
-	if (debug)
-		Com1::getInstance()->sendString("Loading image from flash...\n");
-	imageNo = imageNo % MaxImageStored;
-	address_t add;
-	add.byte = 0;
-	add.page = FirstImagePageAddress + ((imageNo - 1) * PagesPerImage);
-	readPageArray(&add, destination, ImageFileSize);
-	if (debug)
-		Com1::getInstance()->sendString("Image loaded from flash...\n");
+		Com1::getInstance()->sendString("Column loaded from flash...\r");
 	return true;
 }
 
@@ -586,11 +577,11 @@ void Flash::getFilename(uint8_t imageNo, uint8_t *destination) {
 
 void Flash::resetImageCount() {
 	if (debug)
-		Com1::getInstance()->sendString("Resetting number of images...\n");
+		Com1::getInstance()->sendString("Resetting number of images...\r");
 	positionOfPresentImages = 0;
 	savePositionOfPresentImagesInCarrousel();
 	if (debug)
-		Com1::getInstance()->sendString("Reset completed...\n");
+		Com1::getInstance()->sendString("Reset completed...\r");
 }
 
 uint8_t Flash::getNextFreeImageSlot() {

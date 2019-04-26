@@ -10,6 +10,7 @@
  */
 
 #include "stdint-gcc.h"
+
 #include <cstdio>
 #include <stdio.h>
 
@@ -27,18 +28,8 @@
 #include "stm32f4timer.hpp"
 #include "flash.hpp"
 
-#include <com1.hpp>
-#include <flash.hpp>
-#include <cstdio>
-#include "stm32f4xx.h"
-#include "hardware.h"
-#include "buffer.hpp"
 
-#include "tlc5955.hpp"
-#include <stdio.h>
-#include <string.h>
-
-
+int main(void) {
 
 uint8_t bufferSpiTx[1156];
 
@@ -756,47 +747,30 @@ int main(void) {
 
 }
 
-void bitShift(uint8_t *array, uint8_t chip_count) {
-
-	for (uint8_t i = 0; i < chip_count; i++) {
-		if (i == 0) {
-			for (int j = 288; j > (288 - 96); j--) {
-				array[j] = array[j - 1];
-			}
-
-		}
-		if (i == 1) {
-			array[192] = 0;
-			for (int j = (288 - 96); j > (288 - 96) - 96; j--) {
-
-				array[j] &= 0x01;
-				array[j] |= (array[j - 1] << 1);
-				array[j - 1] = array[j - 1] >> 7;
-
 	Com1* com1 = Com1::getInstance();
 	com1->setEcho(false);
+
 	Flash::address_t add;
 	add.byte = 0;
 	add.page = 99;
 
 	Flash *flash = Flash::getInstance(true);
-	flash->init();
-	//flash->resetImageCount();
+	//flash->init();
+	//flash->readStatusRegisterToString();
+	//flash->writeByte(&add,"Hello world!", 12);
 
-	com1->sendString("\nRévolution v3.0\nCommunication : En ligne\n");
+	com1->sendString("\rRévolution v3.0\rCommunication : En ligne\r");
 
+	com1->sendString(bufferSpiRx);
 
-	//com1->sendByte8ToBinaryString(flash->getNextFreeImageSlot());
-	for (int i = 0; i < 32; i++)
-		//com1->sendByte8ToBinaryString(flash->readByte(&add));
-		while (1) {
-			com1->incommingDataDecoder(flash);
+	while (1) {
 
-			/*
-			if (com1->dataAvailable()) {
-				com1->write(com1->read());
-			}
-			*/
-		}
+		com1->incommingDataDecoder(flash);
+/*
+		 if (com1->dataAvailable()) {
+		 com1->write(com1->read());
+		 }
+*/
+	}
 }
 
