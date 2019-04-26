@@ -10,6 +10,7 @@
  */
 
 #include "stdint-gcc.h"
+
 #include <cstdio>
 #include <stdio.h>
 #include <string.h>
@@ -30,6 +31,8 @@
 #include "flash.hpp"
 #include "com1.hpp"
 
+
+int main(void) {
 
 uint8_t bufferSpiTx[1156];
 uint8_t bufferSpiRx[1156];
@@ -648,6 +651,7 @@ int main(void) {
 	if(debug) console->sendString("All systems nominal.\n\r");
 
 
+
 	while (1) {
 
 		if (console->dataAvailable())
@@ -717,8 +721,6 @@ int main(void) {
 			if (testCount==16) testCount = 0;
 			flagRefreshBuffer = false;
 		}
-
-
 	}
 
 }

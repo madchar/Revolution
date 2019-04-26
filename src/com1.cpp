@@ -6,25 +6,29 @@
  */
 #include <com1.hpp>
 #include <string.h>
+#include <cstdlib>
 
 Com1* Com1::instance = 0;
 
 Com1::Com1() {
-	comMode = LISTENING;
+
+	commRxCnt = 0;
+	commState = WAIT;
 	pixelColumnBufferCntr = 0;
-	memset(pixelColumnBuffer, 0, sizeof(tram));
-	binaryTransferMode = 0;
-	tramPosition = 0;
-	tramSynched = false;
+	memset(pixelColumnBuffer, 0, sizeof(pixelColumnBuffer));
 	memset(tram, 0, sizeof(tram));
 	echo = false;
+
 	isTransmitting = false;
 
 	GPIO_InitTypeDef GPIO_InitStruct;
 
 	// Enable clock for GPIOA
+ 
 
-	RCC_APB2PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
+
 
 	// Initialize pins as alternating function
 	GPIO_InitStruct.GPIO_Pin = USART2_TX_Pin;
@@ -73,8 +77,8 @@ Com1::Com1() {
 	 * Initialize USART2
 	 * Activate USART2
 	 */
-	//USART_InitStruct.USART_BaudRate = 921600;
-	USART_InitStruct.USART_BaudRate = 9600;
+
+	USART_InitStruct.USART_BaudRate = 921600;
 	USART_InitStruct.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
 	USART_InitStruct.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
 	USART_InitStruct.USART_Parity = USART_Parity_No;
@@ -85,13 +89,22 @@ Com1::Com1() {
 	/**
 	 * Enable RX interrupt
 	 */
-	USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
 
-	USART_Cmd(USART2, ENABLE);
+	USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
 
-
-
-
+	/**
+	 * Set Channel to USART1
+	 * Set Channel Cmd to enable. That will enable USART1 channel in NVIC
+	 * Set Both priorities to 0. This means high priority
+	 *
+	 * Initialize NVIC
+	 */
+	NVIC_InitStruct.NVIC_IRQChannel = USART1_IRQn;
+	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
+	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
+	NVIC_Init(&NVIC_InitStruct);
+	NVIC_EnableIRQ(USART1_IRQn);
 
 }
 Com1::~Com1() {
@@ -103,8 +116,10 @@ Com1* Com1::getInstance() {
 		instance = new Com1();
 	return instance;
 }
-void Com1::setBaudeRate(uint32_t baudrate) {
-	USART2->BRR = (SystemCoreClock >> 2) / baudrate;
+
+void Com1::setBaudRate(uint32_t baudrate) {
+USART1->BRR = (SystemCoreClock >> 2) / baudrate;
+
 }
 
 bool Com1::dataAvailable() {
@@ -116,33 +131,41 @@ void Com1::setEcho(bool state) {
 }
 
 uint8_t Com1::read() {
-	return rxBuffer.rem();
+	uint8_t tmp;
+	USART1->CR1 &= ~USART_CR1_RXNEIE;
+	tmp = rxBuffer.rem();
+	USART1->CR1 |= USART_CR1_RXNEIE;
+
+	return tmp;
 }
 
 void Com1::write(uint8_t data) {
-	txBuffer.add(data);
-	if (!isTransmitting) {
+	if (isTransmitting) {
+		USART1->CR1 &= ~USART_CR1_TXEIE;
+		txBuffer.add(data);
+	} else {
+		txBuffer.add(data);
 		isTransmitting = true;
-		USART2->CR1 |= USART_CR1_TXEIE; // active l'interruption.
+
 	}
+	USART1->CR1 |= USART_CR1_TXEIE;
 }
 void Com1::sendBytes(uint8_t* data, uint32_t nBytes) {
 	for (uint32_t i = 0; i < nBytes; i++) {
 		write(*data++);
 	}
 }
-void Com1::sendString(const char *s) {
-	while (*s) {
-		write(*s++); // Send Char
-	}
+void Com1::sendByteToString(uint8_t byte) {
+	char buffer[33];
+	itoa((int) byte, buffer, 10);
+	sendString(buffer);
 }
 
-void Com1::sendString(uint8_t *u) {
-	while (*u) {
-		write(*u++); // Send Char
-	}
+void Com1::sendbyteToString(uint16_t byte) {
+	char buffer[33];
+	itoa(byte, buffer, 10);
+	sendString(buffer);
 }
-
 void Com1::sendByte8ToBinaryString(uint8_t data) {
 	for (int i = 0; i < 8; i++) {
 		((data >> (7 - i)) & 0x01) ?
@@ -171,6 +194,18 @@ void Com1::sendByte32ToBinaryString(uint32_t data) {
 	Com1::getInstance()->write('\n');
 }
 
+void Com1::sendString(const char *s) {
+	while (*s) {
+		write(*s++); // Send Char
+	}
+}
+
+void Com1::sendString(uint8_t *u) {
+	while (*u) {
+		write(*u++); // Send Char
+	}
+}
+
 void Com1::incommingDataDecoder(Flash* flash) {
 	uint8_t car;
 
@@ -178,75 +213,56 @@ void Com1::incommingDataDecoder(Flash* flash) {
 		car = read();
 		if (echo)
 			write(car);
-	}
 
-	switch (comMode) {
+		switch (commState) {
+		//WAIT
+		case WAIT:
+			if (car == '<') {
+				commState = RXPAYLOAD;
+				commRxCnt = 0;
+			}
+			break;
 
-	case LISTENING:
-		if (car && car == '<') {
-			tramSynched = true;
-			sendString(" - tramSyched - ");
-			car = 0;
+		case RXPAYLOAD:
+			tram[commRxCnt++] = car;
+			if (commRxCnt >= TRAM_SIZE)
+				commState = VALIDATE;
+			break;
 
-		} else if (car && tramSynched && car != '>' ) {
-			tram[tramPosition] = car;
-			tramPosition++;
-			car = 0;
+		case VALIDATE:
+			if (car == '>') {
+				// parseDATA
+				parseTram();
+			} else
+				sendString("TR::ERROR\r");
 
-		} else if (car && tramSynched && car == '>') {
-			sendString(" - tramReceived - ");
-			comMode = SORT_COMMAND;
-			tramPosition = 0;
-			tramSynched = false;
-			rxBuffer.reset();
-			//car = 0;
+			if (commState != FILE_TRANSFER)
+				commState = WAIT;
+			break;
 
-		} else {
-			//rxBuffer.reset();
-			//resetTram();
-			//car = 0;
+		case FILE_TRANSFER:
+			write(car);
+			if (car == 'q') {
+				commState = WAIT;
+				sendString("Quitting mode");
+			}
+
+			break;
 		}
-		break;
+	}
+}
 
-	case SORT_COMMAND:
-		sendString("Command : ");
+void Com1::parseTram() {
+
+	if (!strcmp(tram, CMD_ImageReadyToTransfer)) {
+		commState = FILE_TRANSFER;
+		sendString("Entering file transfer mode\r");
+	} else
 		sendString(tram);
-		//sendString("\n");
-		resetTram();
-
-		if (!strcmp(CMD_ImageReadyToTransfer, tram)) {
-			memset(tram, 0, sizeof(tram));
-			comMode = BINARY_TRANSFER;
-			sendString("<col0>");
-		}
-		break;
-
-	case BINARY_TRANSFER:
-		pixelColumnBuffer[pixelColumnBufferCntr] = read();
-		pixelColumnBufferCntr++;
-
-		//comMode = LISTENING;		//tests
-		//pixelColumnBufferCntr = 0;	//tests
-
-		if (pixelColumnBufferCntr == Flash::ColumnPixelArraySize) {
-			sendString("1156 byte received!");
-			//flash->savePixelColumn(0, 0, pixelColumnBuffer);
-			pixelColumnBufferCntr = 0;
-			binaryTransferMode = false;
-		}
-		break;
-
-	}
 }
 
-void Com1::resetTram() {
-	memset(tram, 0, sizeof(tram));
-	comMode = LISTENING;
-	tramPosition = 0;
-	tramSynched = false;
-}
 extern "C" {
-void USART2_IRQHandler(void) {
+void USART1_IRQHandler(void) {
 	volatile unsigned int isr;
 	isr = USART2->SR;
 // RX Data

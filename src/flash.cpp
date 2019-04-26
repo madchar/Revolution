@@ -51,6 +51,7 @@ void Flash::init() {
 
 	//------------------------GPIOA MOSI MISO SCLK------------------------------------------
 
+
 	GPIO_InitStructure.GPIO_Pin = SPI5_MOSI_Pin | SPI5_MISO_Pin;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
@@ -61,6 +62,7 @@ void Flash::init() {
 	GPIO_PinAFConfig(SPI5_MOSI_GPIO, SPI5_MOSI_PinSource,SPI5_ALTERNATE_FUNCTION);
 	GPIO_PinAFConfig(SPI5_MISO_GPIO, SPI5_MISO_PinSource,SPI5_ALTERNATE_FUNCTION);
 	GPIO_PinAFConfig(SPI5_CLK_GPIO, SPI5_CLK_PinSource,SPI5_ALTERNATE_FUNCTION);
+
 
 	GPIO_SetBits(SPI5_NSS_GPIO, SPI5_NSS_Pin);
 
@@ -84,6 +86,7 @@ void Flash::init() {
 		;
 	if (debug)
 		STM32F411USART2::getInstance()->sendString("\n\rFlash initialization completed.\n\r");
+
 
 }
 
@@ -112,8 +115,10 @@ void Flash::getDeviceID(uint8_t *buffer) {
 	for (int i = 0; i < 5; i++) {
 		buffer[i] = spiTransfer(DummyByte);
 		if (debug) {
+
 			STM32F411USART2::getInstance()->sendByte8ToBinaryString(buffer[i]);
 			STM32F411USART2::getInstance()->sendString("\n\r");
+
 		}
 	}
 	setCS(false);
@@ -139,6 +144,7 @@ void Flash::readStatusRegisterToString() {
 	if (debug) {
 		STM32F411USART2::getInstance()->sendString("Reading status register :\n\r");
 		(a & 0b10000000) ?
+
 				STM32F411USART2::getInstance()->sendString("b7 : RDY/BUSY Ready\n\r") :
 				STM32F411USART2::getInstance()->sendString("b7 : RDY/BUSY Busy\n\r");
 		(a & 0b01000000) ?
@@ -177,6 +183,7 @@ void Flash::readStatusRegisterToString() {
 		(b & 0b00000001) ?
 				STM32F411USART2::getInstance()->sendString("b0 : ES Is\n\r") :
 				STM32F411USART2::getInstance()->sendString("b0 : ES Not\n\r");
+
 	}
 }
 
@@ -191,8 +198,10 @@ uint8_t Flash::readConfigurationRegister() {
 
 void Flash::setPageSizeBinary() {
 	if (debug)
+
 		STM32F411USART2::getInstance()->sendString(
 				"Configuring page size of 512 bytes (power of 2 adresses)\n\r");
+
 	setCS(true);
 	for (int i = 0; i < 4; i++) {
 		spiTransfer(BinaryPageSize[i]);
@@ -201,7 +210,9 @@ void Flash::setPageSizeBinary() {
 	while (isBusy())
 		;
 	if (debug)
+
 		STM32F411USART2::getInstance()->sendString("Configuration completed\n\r");
+
 }
 
 bool Flash::isBusy() {
@@ -389,7 +400,8 @@ void Flash::erasePage(const address_t *add) {
 	address = address << 9;
 
 	if (debug)
-		STM32F411USART2::getInstance()->sendString("Erasing page...\n\r");
+
+	STM32F411USART2::getInstance()->sendString("Erasing page...\n\r");
 
 	setCS(true);
 	spiTransfer(MainMemmoryPageRead);
@@ -402,11 +414,14 @@ void Flash::erasePage(const address_t *add) {
 
 	if (debug)
 		STM32F411USART2::getInstance()->sendString("Erase successful...\n\r");
+
 }
 
 void Flash::eraseChip() {
 	if (debug)
+
 		STM32F411USART2::getInstance()->sendString("Erasing Chip...\n\r");
+
 
 	setCS(true);
 	spiTransfer(ChipErase[0]);
@@ -417,7 +432,9 @@ void Flash::eraseChip() {
 	while (!(readStatusRegister() & BusyFlag))
 		;
 	if (debug)
+
 		STM32F411USART2::getInstance()->sendString("Erase successful...\n\r");
+
 
 }
 void Flash::disableSectorProtection() {
@@ -457,7 +474,9 @@ uint8_t Flash::getNumberOfImagesInCarrousel() {
 
 bool Flash::savePixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* source) {
 	if (debug)
+
 		STM32F411USART2::getInstance()->sendString("Saving pixel column to flash...\n\r");
+
 
 	imageNo = imageNo % MaxImageStored;
 
@@ -472,6 +491,7 @@ bool Flash::savePixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* source) 
 		STM32F411USART2::getInstance()->sendByte32ToBinaryString(imageColumnStartPage);
 		STM32F411USART2::getInstance()->sendString("\n\rpixelColumnStartByte :");
 		STM32F411USART2::getInstance()->sendByte32ToBinaryString(pixelColumnStartByte);
+
 	}
 
 	address_t add;
@@ -498,12 +518,15 @@ bool Flash::savePixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* source) 
 	if (debug)
 			STM32F411USART2::getInstance()->sendString("Pixel column saved to flash...\n\r");
 
+
 	return !payloadSize;
 }
 
 bool Flash::getPixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* spiBuffer1, uint8_t* spiBuffer2, uint8_t* spiBuffer3, uint8_t* spiBuffer4) {
 	if (debug)
+
 		STM32F411USART2::getInstance()->sendString("Loading pixel column from flash...\n\r");
+
 
 	imageNo = imageNo % MaxImageStored;
 
@@ -513,12 +536,14 @@ bool Flash::getPixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* spiBuffer
 	uint32_t pixelColumnStartByte = (columnNo * ColumnPixelArraySize) % PageSize;
 
 	if (debug) {
+
 		STM32F411USART2::getInstance()->sendString("\n\rpixelColumnPageOffset :");
 		STM32F411USART2::getInstance()->sendByte32ToBinaryString(pixelColumnStartPage);
 		STM32F411USART2::getInstance()->sendString("\n\rpixelColumnStartPage :");
 		STM32F411USART2::getInstance()->sendByte32ToBinaryString(imageColumnStartPage);
 		STM32F411USART2::getInstance()->sendString("\n\rpixelColumnStartByte :");
 		STM32F411USART2::getInstance()->sendByte32ToBinaryString(pixelColumnStartByte);
+
 	}
 
 	address_t add;
@@ -548,6 +573,7 @@ bool Flash::getPixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* spiBuffer
 	setCS(false);
 
 	if (debug)
+
 		STM32F411USART2::getInstance()->sendString("Column loaded from flash...\n\r");
 	return true;
 }
@@ -562,6 +588,7 @@ bool Flash::loadImageFromFlash(uint8_t imageNo, uint8_t* destination) {
 	readPageArray(&add, destination, ImageFileSize);
 	if (debug)
 		STM32F411USART2::getInstance()->sendString("Image loaded from flash...\n\r");
+
 	return true;
 }
 
@@ -593,11 +620,13 @@ void Flash::getFilename(uint8_t imageNo, uint8_t *destination) {
 
 void Flash::resetImageCount() {
 	if (debug)
+
 		STM32F411USART2::getInstance()->sendString("Resetting number of images...\n\r");
 	positionOfPresentImages = 0;
 	savePositionOfPresentImagesInCarrousel();
 	if (debug)
 		STM32F411USART2::getInstance()->sendString("Reset completed...\n\r");
+
 }
 
 uint8_t Flash::getNextFreeImageSlot() {
