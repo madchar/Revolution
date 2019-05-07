@@ -15,30 +15,34 @@
 
 class Flash {
 public:
+	uint32_t positionOfPresentImages = 0;
+	uint8_t redMaxCurrent = 127;
+	uint8_t greenMaxCurrent = 127;
+	uint8_t blueMaxCurrent = 127;
+	uint8_t globalBrightness = 127;
+
+
+	struct address_t {
+		uint16_t page = 0;
+		uint16_t byte = 0;
+	};
 
 	static Flash* getInstance(bool debug = 0);
-	static constexpr uint8_t FilenameSize = 36;
 	static constexpr uint8_t MaxImageStored = 15;
+	static constexpr uint16_t FilenameSize = 16;					//in bytes
 	static constexpr uint16_t SPIBufferSize = 289;					//in bytes
 	static constexpr uint16_t ColumnPixelArraySize = 1156;			//in bytes
 	static constexpr uint32_t ImageFileSize = 295936;				//in bytes
-	static constexpr uint16_t PagesPerImage = 578;						//Flash memory pages per image
-	static constexpr uint8_t FirstImagePageAddress = 99;		//First age where image are stored
-	static constexpr uint16_t PageSize = 512;			//Physical flash memory page size in bytes
+	static constexpr uint16_t PagesPerImage = 578;					//Flash memory pages per image
+	static constexpr uint8_t FirstImagePageAddress = 99;			//First age where image are stored
+	static constexpr uint16_t PageSize = 512;						//Physical flash memory page size in bytes
+	static constexpr uint16_t MaxColumn = 256;						//Max display X resolution
 
-
-	Flash(bool debugEnable) :
-			debug(debugEnable) {
-	}
 	~Flash();
 	/**
 	 * page : page number 0 - 8191
 	 * byte : byte number 0 -255
 	 */
-	struct address_t {
-		uint16_t page = 0;
-		uint16_t byte = 0;
-	};
 
 	/**
 	 * Initialize SPI port
@@ -70,6 +74,7 @@ public:
 	 * @return byte containing the configuration register
 	 */
 	uint8_t readConfigurationRegister();
+
 	void readStatusRegisterToString();
 
 	uint8_t readByte(const address_t *add);
@@ -81,30 +86,43 @@ public:
 	void writeByte(const address_t *add, const char *byte, uint16_t nByte);
 
 	void readByte(const address_t *add, uint8_t *buffer, uint16_t nBytes);
+	void readByte(const address_t *add, char *buffer, uint16_t nBytes);
 	void readPageArray(const address_t *add, uint8_t *buffer, uint32_t nByte);
 	void erasePage(const address_t *add);
 	void eraseChip();
 	void getDeviceID(uint8_t *buffer);
 	void setPageSizeBinary();
 
+	void readControlRegister();
+	void writeControlRegister();
+
 	uint32_t getPositionOfPresentImagesInCarrousel();
 	void savePositionOfPresentImagesInCarrousel();
+
+	void setImageInCarrousel(uint8_t imageNo);
+	void resetImageInCarrousel(uint8_t imageNo);
+	void formatCarrousel();
+
 	uint8_t getNumberOfImagesInCarrousel();
 	uint8_t getNextFreeImageSlot();
+
+	void getFilename(uint8_t imageNo, char *destination);
+	void setFilename(uint8_t imageNo, const char *fileName);
+	void resetFilename(uint8_t imageNo);
 
 	bool getPixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* spiBuffer1, uint8_t* spiBuffer2, uint8_t* spiBuffer3, uint8_t* spiBuffer4);
 	bool savePixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* source);
 
-	void eraseImage(uint8_t imageNo);
-	void getFilename(uint8_t imageNo, uint8_t *destination);
 	void setDebug(bool debug);
 	uint8_t countSetBits(uint32_t n);
-	void resetImageCount();
 
 private:
-
 	Flash();
+	Flash(bool debugEnable) :
+			debug(debugEnable) {
+	}
 	static Flash* instance;
+
 	/**
 	 * Flash read/write and SPI command
 	 */
@@ -132,7 +150,7 @@ private:
 	 */
 
 	/*
-	 * Page 9 is reserved for BMP file names: 32 * 16 char = 512 bytes ex:123456789012.bmp
+	 * Page 9 is reserved for BMP file names: 15 * 16 char = 240 bytes ex:123456789012.bmp
 	 */
 
 	const address_t FilenamePage = { 9, 0 };					//15 images * 34 char = 510 bytes
@@ -142,7 +160,7 @@ private:
 	const address_t BlueMaxCurrentSettingAddress = { 10, 6 };				//2 Bytes
 	const address_t PositionOfPresentImagesInCarrouselAddress = { 10, 7 };	//4 bytes
 
-	uint32_t positionOfPresentImages = 0;
+	bool buff1_Buff2 = true;
 	bool debug = false;
 };
 

@@ -6,14 +6,15 @@
  */
 #include <com1.hpp>
 #include <string.h>
+#include <string>
 #include <cstdlib>
+#include <stm32f4xx_tim.h>
 
 Com1* Com1::instance = 0;
 
 Com1::Com1() {
 
 	commRxCnt = 0;
-	commState = WAIT;
 	pixelColumnBufferCntr = 0;
 	memset(pixelColumnBuffer, 0, sizeof(pixelColumnBuffer));
 	memset(tram, 0, sizeof(tram));
@@ -90,10 +91,16 @@ Com1::Com1() {
 	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
 	NVIC_Init(&NVIC_InitStruct);
 	NVIC_EnableIRQ(USART1_IRQn);
+
+//	commTimeOut = new STM32F4Timer(TIM3, 62499, 6799, true);
+//	commTimeOut->enableITUpdate();
+//	commTimeOut->startTimer();
 }
 Com1::~Com1() {
 	if (instance)
 		delete instance;
+	if (commTimeOut)
+		delete commTimeOut;
 }
 Com1* Com1::getInstance() {
 	if (instance == 0)
@@ -190,59 +197,232 @@ void Com1::sendString(uint8_t *u) {
 void Com1::incommingDataDecoder(Flash* flash) {
 	uint8_t car;
 
-	if (dataAvailable()) {
-		car = read();
-		if (echo)
-			write(car);
+	switch (commState) {						//Réception d'images
 
-		switch (commState) {
-		//WAIT
-		case WAIT:
-			if (car == '<') {
-				commState = RXPAYLOAD;
-				commRxCnt = 0;
+	case IDLE:
+		if (dataAvailable()) {
+			car = read();
+			if (echo)
+				write(car);
+
+			switch (parseRxTram) {								//Réception de trames
+
+			case WAIT:
+				if (car == '<') {
+					parseRxTram = RXPAYLOAD;
+					commRxCnt = 0;
+				}
+				break;
+
+			case RXPAYLOAD:
+				tram[commRxCnt++] = car;
+				if (commRxCnt >= TRAM_SIZE)
+					parseRxTram = VALIDATE;
+				break;
+
+			case VALIDATE:
+				if (car == '>') {
+					parseRxTram = WAIT;
+					parseTram(flash);
+				} else {
+					sendString("TR::ERROR\n\r");
+				}
+				break;
 			}
-			break;
+		}
+		break;
 
-		case RXPAYLOAD:
-			tram[commRxCnt++] = car;
-			if (commRxCnt >= TRAM_SIZE)
-				commState = VALIDATE;
-			break;
+	case ASK_FILE_TO_SERVER: {
+		std::string s;
+		s = "<col" + std::to_string(rxColumnNo) + ">";
+		sendString(s.c_str());
 
-		case VALIDATE:
-			if (car == '>') {
-				// parseDATA
-				parseTram();
+		if (retry < MAX_RETRY) {
+			commState = SAVE_FILE;
+		} else {
+			retry = 0;
+			commState = TRANSFER_FAILED;
+		}
+		commState = SAVE_FILE;
+	}
+		break;
+
+	case SAVE_FILE:
+//		commTimeOut->startTimer();
+		if (dataAvailable()) {
+			pixelColumnBuffer[pixelColumnBufferCntr++] = read();
+		}
+
+		if (pixelColumnBufferCntr == Flash::ColumnPixelArraySize) {
+			flash->savePixelColumn(rxImageNo, rxColumnNo++, pixelColumnBuffer);
+			pixelColumnBufferCntr = 0;
+			if (rxColumnNo == Flash::MaxColumn) {
+				rxColumnNo = 0;
+				commState = TRANSFER_COMPLETED;
 			} else
-				sendString("TR::ERROR\r");
+				commState = ASK_FILE_TO_SERVER;
+		}
 
-			if (commState != FILE_TRANSFER)
-				commState = WAIT;
-			break;
+		if (timeout) {
+			retry++;
+			commState = ASK_FILE_TO_SERVER;
 
-		case FILE_TRANSFER:
-			write(car);
-			if (car == 'q') {
-				commState = WAIT;
-				sendString("Quitting mode");
-			}
+			timeoutCntr = 0;
+			timeout = false;
+//			commTimeOut->stopTimer();
+		}
+		break;
 
-			break;
+	case SAVE_FILENAME:
+		//commState = IDLE;
+
+		if (dataAvailable()) {
+			car = read();
+			if (car == '>') {
+				filename[commRxCnt] = 0;
+				flash->setFilename(rxImageNo, filename);
+				commState = IDLE;
+			} else
+				filename[commRxCnt++] = car;
+		}
+		break;
+
+	case TRANSFER_COMPLETED:
+		flash->setImageInCarrousel(rxImageNo);
+		sendString("<txSuccess>");
+		memset(filename, 0, sizeof filename);
+		commRxCnt = 0;
+		commState = SAVE_FILENAME;
+		break;
+
+	case TRANSFER_FAILED:
+		sendString("Transfer failed!");
+		commState = IDLE;
+		break;
+
+	}
+}
+
+void Com1::parseTram(Flash *flash) {
+	std::string sTram = tram;
+
+	if (sTram == CMD_ImageReadyToTransfer) {
+		rxImageNo = flash->getNextFreeImageSlot();
+		commState = ASK_FILE_TO_SERVER;
+	} else if (sTram == CMD_GetFilenameList) {
+		sendFilenameList(flash);
+	} else if (sTram == CMD_Del0) {
+		flash->resetImageInCarrousel(0);
+		flash->resetFilename(0);
+		sendFilenameList(flash);
+	} else if (sTram == CMD_Del1) {
+		flash->resetImageInCarrousel(1);
+		flash->resetFilename(1);
+		sendFilenameList(flash);
+	} else if (sTram == CMD_Del2) {
+		flash->resetImageInCarrousel(2);
+		flash->resetFilename(2);
+		sendFilenameList(flash);
+	} else if (sTram == CMD_Del3) {
+		flash->resetImageInCarrousel(3);
+		flash->resetFilename(3);
+		sendFilenameList(flash);
+	} else if (sTram == CMD_Del4) {
+		flash->resetImageInCarrousel(4);
+		flash->resetFilename(4);
+		sendFilenameList(flash);
+	} else if (sTram == CMD_Del5) {
+		flash->resetImageInCarrousel(5);
+		flash->resetFilename(5);
+		sendFilenameList(flash);
+	} else if (sTram == CMD_Del6) {
+		flash->resetImageInCarrousel(6);
+		flash->resetFilename(6);
+		sendFilenameList(flash);
+	} else if (sTram == CMD_Del7) {
+		flash->resetImageInCarrousel(7);
+		flash->resetFilename(7);
+		sendFilenameList(flash);
+	} else if (sTram == CMD_Del8) {
+		flash->resetImageInCarrousel(8);
+		flash->resetFilename(8);
+		sendFilenameList(flash);
+	} else if (sTram == CMD_Del9) {
+		flash->resetImageInCarrousel(9);
+		flash->resetFilename(9);
+		sendFilenameList(flash);
+	} else if (sTram == CMD_Del10) {
+		flash->resetImageInCarrousel(10);
+		flash->resetFilename(10);
+		sendFilenameList(flash);
+	} else if (sTram == CMD_Del11) {
+		flash->resetImageInCarrousel(11);
+		flash->resetFilename(11);
+		sendFilenameList(flash);
+	} else if (sTram == CMD_Del12) {
+		flash->resetImageInCarrousel(12);
+		flash->resetFilename(12);
+		sendFilenameList(flash);
+	} else if (sTram == CMD_Del13) {
+		flash->resetImageInCarrousel(13);
+		flash->resetFilename(13);
+		sendFilenameList(flash);
+	} else if (sTram == CMD_Del14) {
+		flash->resetImageInCarrousel(14);
+		flash->resetFilename(14);
+		sendFilenameList(flash);
+	} else {
+
+		std::string s = sTram;
+		s.erase(3, 3);
+		sTram.erase(0, 3);
+		if (s == CMD_Red) {
+			flash->redMaxCurrent = stoi(sTram);
+			sendString("Red");
+			cmdCntr++;
+		} else if (s == CMD_Green) {
+			flash->greenMaxCurrent = stoi(sTram);
+			sendString("Green");
+			cmdCntr++;
+		} else if (s == CMD_Blue) {
+			flash->blueMaxCurrent = stoi(sTram);
+			sendString("Blue");
+			cmdCntr++;
+		} else if (s == CMD_GlobalBrightness) {
+			flash->globalBrightness = stoi(sTram);
+			sendString("Global");
+			cmdCntr++;
+		} else if (cmdCntr == 3) {
+			flash->writeControlRegister();
+			cmdCntr = 0;
 		}
 	}
 }
 
-void Com1::parseTram() {
+void Com1::sendFilenameList(Flash* flash) {
+	uint16_t cntr = 7;
+	char names[40];
 
-	if (!strcmp(tram, CMD_ImageReadyToTransfer)) {
-		commState = FILE_TRANSFER;
-		sendString("Entering file transfer mode\r");
-	} else
-		sendString(tram);
+	filename[0] = '<';
+	filename[1] = 'l';
+	filename[2] = 'i';
+	filename[3] = 's';
+	filename[4] = 't';
+	filename[5] = '>';
+	filename[6] = ';';
+	memset(names, 0, sizeof names);
+	for (int i = 0; i < Flash::MaxImageStored; i++) {
+		flash->getFilename(i, names);
+		uint8_t j = 0;
+		while (names[j]) {
+			filename[cntr++] = names[j++];
+		}
+		j = 0;
+		filename[cntr++] = ';';
+	}
+	filename[cntr - 1] = 0;
+	sendString(filename);
 }
-
-extern "C" {
 
 void USART1_IRQHandler(void) {
 	volatile unsigned int isr;
@@ -264,5 +444,9 @@ void USART1_IRQHandler(void) {
 		}
 	}
 }
-}
 
+void TIM3_IRQHandler(void) {
+	if ((Com1::instance->timeoutCntr++) == Com1::instance->TIME_OUT) {
+		Com1::instance->timeout = true;
+	}
+}
