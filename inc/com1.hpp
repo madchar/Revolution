@@ -14,8 +14,11 @@
 #include "flash.hpp"
 #include "stm32f4timer.hpp"
 
-extern "C" void USART1_IRQHandler(void);
+
+
 extern "C" void TIM3_IRQHandler(void);
+extern "C" void USART2_IRQHandler(void);
+
 
 class Com1 {
 public:
@@ -41,7 +44,6 @@ public:
 private:
 
 	Com1();
-
 	bool echo;
 	bool isTransmitting;
 	Buffer<uint8_t, 2048> rxBuffer;

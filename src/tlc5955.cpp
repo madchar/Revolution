@@ -8,6 +8,9 @@
 #include "tlc5955.hpp"
 #include <math.h>
 #include <stdio.h>
+#include "stm32f411USART2.hpp"
+
+STM32F411USART2 *console = STM32F411USART2::getInstance();
 
 TLC5955::TLC5955()
 {
@@ -43,8 +46,8 @@ void TLC5955::updateControl()
 	{
 		for (int8_t chip = (tlc_count - 1)/4; chip >= 0; chip--)
 		{
-			/*if (debug >= 2)
-	        Serial.println(F("Starting Control Mode... %s"));*/
+			if (debug >= 2)
+	        console->sendString("Starting Control Mode... %s");
 
 			_buffer_count = 7;
 
