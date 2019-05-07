@@ -22,51 +22,52 @@ Com1::Com1() {
 
 	isTransmitting = false;
 
-	GPIO_InitTypeDef GPIO_InitStruct;
 
-	// Enable clock for GPIOA
+
+	// Enable clock for GPIOA and GPIOB
  
 
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
 
-
+	GPIO_InitTypeDef GPIO_InitStruct;
 	// Initialize pins as alternating function
-	GPIO_InitStruct.GPIO_Pin = USART2_TX_Pin;
+	GPIO_InitStruct.GPIO_Pin = USART1_TX_Pin;
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
-	GPIO_Init(USART2_TX_GPIO, &GPIO_InitStruct);
-	GPIO_PinAFConfig(USART2_TX_GPIO, USART2_TX_PinSource,USART2_ALTERNATE_FUNCTION);
+	GPIO_Init(USART1_TX_GPIO, &GPIO_InitStruct);
+	GPIO_PinAFConfig(USART1_TX_GPIO, USART1_TX_PinSource,USART1_ALTERNATE_FUNCTION);
 
 	// Initialize pins as alternating function
-	GPIO_InitStruct.GPIO_Pin = USART2_RX_Pin;
+	GPIO_InitStruct.GPIO_Pin = USART1_RX_Pin;
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
-	GPIO_Init(USART2_RX_GPIO, &GPIO_InitStruct);
-	GPIO_PinAFConfig(USART2_RX_GPIO, USART2_RX_PinSource,USART2_ALTERNATE_FUNCTION);
+	GPIO_Init(USART1_RX_GPIO, &GPIO_InitStruct);
+	GPIO_PinAFConfig(USART1_RX_GPIO, USART1_RX_PinSource,USART1_ALTERNATE_FUNCTION);
 
 	USART_InitTypeDef USART_InitStruct;
 	NVIC_InitTypeDef NVIC_InitStruct;
 
-	//Enable clock for USART2 peripheral
+	//Enable clock for USART1 peripheral
 
 	/**
-	 * Set Channel to USART2
-	 * Set Channel Cmd to enable. That will enable USART2 channel in NVIC
+	 * Set Channel to USART1
+	 * Set Channel Cmd to enable. That will enable USART1 channel in NVIC
 	 * Set Both priorities to 0. This means high priority
 	 *
 	 * Initialize NVIC
 	 */
-	NVIC_InitStruct.NVIC_IRQChannel = USART2_IRQn;
+	NVIC_InitStruct.NVIC_IRQChannel = USART1_IRQn;
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
 	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
 	NVIC_Init(&NVIC_InitStruct);
-	NVIC_EnableIRQ(USART2_IRQn);
+	NVIC_EnableIRQ(USART1_IRQn);
 	/**
 	 * Set Baudrate to value you pass to function
 	 * Disable Hardware Flow control
@@ -75,8 +76,8 @@ Com1::Com1() {
 	 * Set 1 stop bit
 	 * Set Data bits to 8
 	 *
-	 * Initialize USART2
-	 * Activate USART2
+	 * Initialize USART1
+	 * Activate USART1
 	 */
 
 	USART_InitStruct.USART_BaudRate = 921600;
@@ -85,13 +86,13 @@ Com1::Com1() {
 	USART_InitStruct.USART_Parity = USART_Parity_No;
 	USART_InitStruct.USART_StopBits = USART_StopBits_1;
 	USART_InitStruct.USART_WordLength = USART_WordLength_8b;
-	USART_Init(USART2, &USART_InitStruct);
+	USART_Init(USART1, &USART_InitStruct);
 
 	/**
 	 * Enable RX interrupt
 	 */
-
 	USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+
 
 	/**
 	 * Set Channel to USART1
@@ -107,12 +108,15 @@ Com1::Com1() {
 	NVIC_Init(&NVIC_InitStruct);
 	NVIC_EnableIRQ(USART1_IRQn);
 
+
+	USART1->CR1 |= USART_CR1_UE; // USART activé
+
 }
 Com1::~Com1() {
 	if (instance)
 		delete instance;
-	if (commTimeOut)
-		delete commTimeOut;
+//	if (commTimeOut)
+//		delete commTimeOut;
 }
 Com1* Com1::getInstance() {
 	if (instance == 0)
@@ -121,7 +125,41 @@ Com1* Com1::getInstance() {
 }
 
 void Com1::setBaudRate(uint32_t baudrate) {
-USART1->BRR = (SystemCoreClock >> 2) / baudrate;
+	uint32_t tmpreg = 0x00, apbclock = 0x00;
+	uint32_t integerdivider = 0x00;
+	uint32_t fractionaldivider = 0x00;
+	RCC_ClocksTypeDef RCC_ClocksStatus;
+	/*---------------------------- USART BRR Configuration -----------------------*/
+	/* Configure the USART Baud Rate */
+	RCC_GetClocksFreq(&RCC_ClocksStatus);
+
+	apbclock = RCC_ClocksStatus.PCLK1_Frequency;
+
+	/* Determine the integer part */
+	if ((USART1->CR1 & USART_CR1_OVER8) != 0) {
+		/* Integer part computing in case Oversampling mode is 8 Samples */
+		integerdivider = ((25 * apbclock) / (2 * (baudrate)));
+	} else /* if ((USARTx->CR1 & USART_CR1_OVER8) == 0) */
+	{
+		/* Integer part computing in case Oversampling mode is 16 Samples */
+		integerdivider = ((25 * apbclock) / (4 * (baudrate)));
+	}
+	tmpreg = (integerdivider / 100) << 4;
+
+	/* Determine the fractional part */
+	fractionaldivider = integerdivider - (100 * (tmpreg >> 4));
+
+	/* Implement the fractional part in the register */
+	if ((USART1->CR1 & USART_CR1_OVER8) != 0) {
+		tmpreg |= ((((fractionaldivider * 8) + 50) / 100)) & ((uint8_t) 0x07);
+	} else /* if ((USARTx->CR1 & USART_CR1_OVER8) == 0) */
+	{
+		tmpreg |= ((((fractionaldivider * 16) + 50) / 100)) & ((uint8_t) 0x0F);
+	}
+
+	/* Write to USART BRR register */
+	USART1->BRR = (uint16_t) tmpreg;
+
 
 }
 
@@ -445,20 +483,20 @@ void Com1::sendFilenameList(Flash* flash) {
 
 void USART1_IRQHandler(void) {
 	volatile unsigned int isr;
-	isr = USART2->SR;
+	isr = USART1->SR;
 // RX Data
 	if (isr & USART_SR_RXNE) {
-		USART2->SR &= ~USART_SR_RXNE;
-		Com1::instance->rxBuffer.add(USART2->DR);
+		USART1->SR &= ~USART_SR_RXNE;
+		Com1::instance->rxBuffer.add(USART1->DR);
 	}
 // TX Done
 	if ((isr & USART_SR_TXE)) {
-		USART2->SR &= ~USART_SR_TXE;
+		USART1->SR &= ~USART_SR_TXE;
 		if (Com1::instance->txBuffer.isEmpty()) {
 			Com1::instance->isTransmitting = false;
-			USART2->CR1 &= (~USART_CR1_TXEIE);
+			USART1->CR1 &= (~USART_CR1_TXEIE);
 		} else {
-			USART2->DR = Com1::instance->txBuffer.rem();
+			USART1->DR = Com1::instance->txBuffer.rem();
 			Com1::instance->isTransmitting = true;
 		}
 	}

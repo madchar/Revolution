@@ -701,15 +701,6 @@ int main(void) {
 	for (int i; i < 10000000; i++) {
 		asm("nop");
 	}
-	//----------------------------------FLASH INIT---------------------------------------------------------
-	//	if(debug) console->sendString("Initiating Flash...\n\r");
-	//	Flash::address_t add;
-	//	add.byte = 0;
-	//	add.page = 99;
-	//
-	//	Flash *flash = Flash::getInstance();
-	//	flash->init();
-	//	if(debug) console->sendString("Done.\n\r");
 
 	char car;
 	uint8_t bufferConsole[1157];
@@ -755,10 +746,11 @@ int main(void) {
 
 	Com1* com1 = Com1::getInstance();
 	com1->setEcho(false);
+
 	com1->sendString("\rRévolution v3.0\rCommunication : En ligne\r");
 
 	Flash *flash = Flash::getInstance(false);
-	flash->init();
+//	flash->init();
 	Flash::address_t add;
 	add.byte = 0;
 	add.page = 9;
@@ -768,9 +760,8 @@ int main(void) {
 
 	//	flash->getPixelColumn(0, 0, spi1, spi2, spi3, spi4);
 
-	flash->readStatusRegisterToString();
-	while (flash->isBusy())
-		//		;
+//	flash->readStatusRegisterToString();
+
 		//	uint8_t byte[] = "1234";
 		//	flash->writeByte(&add, byte, 4);
 		for (int i = 0; i < 15; i++) {
@@ -796,7 +787,7 @@ int main(void) {
 
 	while (1) {
 
-		//com1->incommingDataDecoder(flash);
+		com1->incommingDataDecoder(flash);
 		/*
 		 if (com1->dataAvailable()) {
 		 com1->write(com1->read());
