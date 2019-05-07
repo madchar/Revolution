@@ -271,7 +271,7 @@ void Com1::incommingDataDecoder(Flash* flash) {
 		if (pixelColumnBufferCntr == Flash::ColumnPixelArraySize) {
 			flash->savePixelColumn(rxImageNo, rxColumnNo++, pixelColumnBuffer);
 			pixelColumnBufferCntr = 0;
-			if (rxColumnNo == Flash::MaxColumn) {
+			if (rxColumnNo == Flash::MaxColumnCount) {
 				rxColumnNo = 0;
 				commState = TRANSFER_COMPLETED;
 			} else
@@ -441,7 +441,7 @@ void Com1::sendFilenameList(Flash* flash) {
 }
 
 
-extern "C" {
+
 
 void USART1_IRQHandler(void) {
 	volatile unsigned int isr;

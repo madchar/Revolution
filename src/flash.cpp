@@ -646,7 +646,7 @@ void Flash::setFilename(uint8_t imageNo, const char* fileName) {
 	add.byte = imageNo * FilenameSize;
 	writeByte(&add, fileName, FilenameSize);
 	if (debug)
-		Com1::getInstance()->sendString("setFilename\n\r");
+		STM32F411USART2::getInstance()->sendString("setFilename\n\r");
 }
 void Flash::resetFilename(uint8_t imageNo) {
 	imageNo = imageNo % MaxImageStored;
@@ -657,7 +657,7 @@ void Flash::resetFilename(uint8_t imageNo) {
 		add.byte++;
 	}
 	if (debug)
-		Com1::getInstance()->sendString("resetFilename\n\r");
+		STM32F411USART2::getInstance()->sendString("resetFilename\n\r");
 }
 void Flash::getFilename(uint8_t imageNo, char *destination) {
 	imageNo = imageNo % MaxImageStored;
@@ -665,7 +665,7 @@ void Flash::getFilename(uint8_t imageNo, char *destination) {
 	add.byte = imageNo * FilenameSize;
 	readByte(&add, destination, (uint32_t) FilenameSize);
 //	if (debug)
-//		Com1::getInstance()->sendString("getFilename\n\r");
+//		STM32F411USART2::getInstance()->sendString("getFilename\n\r");
 }
 
 void Flash::formatCarrousel() {
