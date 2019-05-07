@@ -123,9 +123,7 @@ public:
 
 private:
 	Flash();
-	Flash(bool debugEnable) :
-			debug(debugEnable) {
-	}
+
 	static Flash* instance;
 
 	/**
