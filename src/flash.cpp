@@ -578,20 +578,6 @@ bool Flash::getPixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* spiBuffer
 	return true;
 }
 
-bool Flash::loadImageFromFlash(uint8_t imageNo, uint8_t* destination) {
-	if (debug)
-		STM32F411USART2::getInstance()->sendString("Loading image from flash...\n\r");
-	imageNo = imageNo % MaxImageStored;
-	address_t add;
-	add.byte = 0;
-	add.page = FirstImagePageAddress + ((imageNo - 1) * PagesPerImage);
-	readPageArray(&add, destination, ImageFileSize);
-	if (debug)
-		STM32F411USART2::getInstance()->sendString("Image loaded from flash...\n\r");
-
-	return true;
-}
-
 void Flash::setDebug(bool debug) {
 	this->debug = debug;
 }
