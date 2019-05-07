@@ -16,6 +16,7 @@ sd eh7 * hardware.h
 
 #include "stm32f4timer.hpp"
 
+
 //*************************SPI****************************************
 //-------------------------SPI1----------------------
 #define SPI1_ALTERNATE_FUNCTION		GPIO_AF_SPI1
@@ -80,18 +81,19 @@ sd eh7 * hardware.h
 #define SPI5_NSS_PinSource			GPIO_PinSource1
 #define SPI5_NSS_Pin				GPIO_Pin_1
 
+
 //*************************TLC5955*****************************
-#define TLC_LAT1_GPIO				GPIOA
-#define	TLC_LAT1_Pin				GPIO_Pin_15
-#define TLC_LAT1_PinSource			GPIO_PinSource15
-
-#define TLC_LAT2_GPIO				GPIOC
-#define TLC_LAT2_Pin				GPIO_Pin_10
-#define TLC_LAT2_PinSource			GPIO_PinSource10
-
-#define GSCLK_GPIO					GPIOA
-#define GSCLK_Pin					GPIO_Pin_0
-#define GSCLK_PinSource				GPIO_PinSource0
+//#define TLC_LAT1_GPIO				GPIOA
+//#define	TLC_LAT1_Pin				GPIO_Pin_15
+//#define TLC_LAT1_PinSource			GPIO_PinSource15
+//
+//#define TLC_LAT2_GPIO				GPIOC
+//#define TLC_LAT2_Pin				GPIO_Pin_10
+//#define TLC_LAT2_PinSource			GPIO_PinSource10
+//
+//#define GSCLK_GPIO					GPIOA
+//#define GSCLK_Pin					GPIO_Pin_0
+//#define GSCLK_PinSource				GPIO_PinSource0
 
 //*************************OTHER*****************************
 #define PULSE_GPIO					GPIOB
