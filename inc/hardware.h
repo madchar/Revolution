@@ -1,5 +1,5 @@
 /*
-sd eh7 * hardware.h
+ sd eh7 * hardware.h
  *
  *  Created on: Feb 28, 2019
  *      Author: Zandwich
@@ -15,7 +15,6 @@ sd eh7 * hardware.h
 #include "stm32f4xx_tim.h"
 
 #include "stm32f4timer.hpp"
-
 
 //*************************SPI****************************************
 //-------------------------SPI1----------------------
@@ -81,7 +80,6 @@ sd eh7 * hardware.h
 #define SPI5_NSS_PinSource			GPIO_PinSource1
 #define SPI5_NSS_Pin				GPIO_Pin_1
 
-
 //*************************TLC5955*****************************
 #define TLC_LAT1_GPIO				GPIOA
 #define	TLC_LAT1_Pin				GPIO_Pin_15
@@ -102,18 +100,15 @@ sd eh7 * hardware.h
 //***********************FREQUENCY***********************************
 #define GSCLK_FREQ					1000000 //1MHZ
 
-
-
-
 //**************************USART1*****************************
-//#define USART1_ALTERNATE_FUNCTION	GPIO_AF_USART1
-//
-//#define USART1_TX_GPIO				GPIOA
-//#define USART1_TX_PinSource			GPIO_PinSource9
-//#define USART1_TX_Pin					GPIO_Pin_9
-//#define USART1_RX_GPIO				GPIOB
-//#define USART1_RX_PinSource			GPIO_PinSource7
-//#define USART1_RX_Pin					GPIO_Pin_7
+#define USART1_ALTERNATE_FUNCTION	GPIO_AF_USART1
+
+#define USART1_TX_GPIO				GPIOA
+#define USART1_TX_PinSource			GPIO_PinSource9
+#define USART1_TX_Pin				GPIO_Pin_9
+#define USART1_RX_GPIO				GPIOB
+#define USART1_RX_PinSource			GPIO_PinSource7
+#define USART1_RX_Pin				GPIO_Pin_7
 
 //**************************USART2*****************************
 #define USART2_ALTERNATE_FUNCTION	GPIO_AF_USART2
@@ -139,6 +134,5 @@ void initRCC();
 void initEXTI();
 void initNVIC();
 void initTIM();
-
 
 #endif /* HARDWARE_H_ */

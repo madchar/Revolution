@@ -43,7 +43,8 @@ STM32F411USART2::STM32F411USART2() {
 }
 
 STM32F411USART2::~STM32F411USART2() {
-	// TODO Auto-generated destructor stub
+	if (instance)
+		delete instance;
 }
 
 void STM32F411USART2::setBaudRate(uint32_t baudrate) {

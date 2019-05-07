@@ -15,9 +15,8 @@
 #include "stm32f4timer.hpp"
 
 
-
 extern "C" void TIM3_IRQHandler(void);
-extern "C" void USART2_IRQHandler(void);
+extern "C" void USART1_IRQHandler(void);
 
 
 class Com1 {
@@ -47,7 +46,7 @@ private:
 	bool echo;
 	bool isTransmitting;
 	Buffer<uint8_t, 2048> rxBuffer;
-	Buffer<uint8_t, 2048> txBuffer;
+	Buffer<uint8_t, 64> txBuffer;
 	static Com1* instance;
 
 	friend void USART1_IRQHandler(void);
@@ -101,7 +100,7 @@ private:
 	const char CMD_Del13[7] = { "del013" };
 	const char CMD_Del14[7] = { "del014" };
 
-	STM32F4Timer *commTimeOut;
+	//STM32F4Timer *commTimeOut;
 
 };
 
