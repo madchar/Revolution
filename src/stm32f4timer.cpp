@@ -54,6 +54,7 @@ STM32F4Timer::STM32F4Timer(TIM_TypeDef *tmr, uint32_t frequency, uint16_t presca
 	{
 		timerTickFreq = 100000000 / (prescaler+1);
 		timerPeriod = (timerTickFreq / frequency)-1;
+
 		TIM_TimeBaseInitTypeDef TIM_BaseInitStructure;
 
 		TIM_BaseInitStructure.TIM_Period = timerPeriod;  // PWM_frequency = timer_tick_frequency / (TIM_Period + 1) ** 1MHz**
