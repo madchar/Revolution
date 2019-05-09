@@ -5,8 +5,8 @@
  *      Author: rev
  */
 
-#ifndef COM1_HPP_
-#define COM1_HPP_
+#ifndef STM32F411USART1_HPP_
+#define STM32F411USART1_HPP_
 
 #include "stm32f4xx_usart.h"
 #include "hardware.h"
@@ -19,11 +19,11 @@ extern "C" void TIM3_IRQHandler(void);
 extern "C" void USART1_IRQHandler(void);
 
 
-class Com1 {
+class STM32F411USART1 {
 public:
 
-	static Com1* getInstance();
-	virtual ~Com1();
+	static STM32F411USART1* getInstance();
+	virtual ~STM32F411USART1();
 	void write(uint8_t data);
 	void sendBytes(uint8_t *data, uint32_t nBytes);
 	void sendByteToString(uint8_t byte);
@@ -42,13 +42,13 @@ public:
 	void sendFilenameList(Flash *flash);
 private:
 
-	Com1();
+	STM32F411USART1();
 	bool echo;
 	bool isTransmitting;
 	Buffer<uint8_t, 2048> rxBuffer;
 	Buffer<uint8_t, 512> txBuffer;
-	static Com1* instance;
-	uint8_t testdata[1000000];
+	static STM32F411USART1* instance;
+
 
 
 	friend void USART1_IRQHandler(void);
@@ -106,4 +106,4 @@ private:
 
 };
 
-#endif /* COM1_HPP_ */
+#endif /* STM32F411USART1_HPP_ */

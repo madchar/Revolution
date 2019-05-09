@@ -8,12 +8,11 @@
 #include <string>
 #include <string.h>
 #include <math.h>
-#include "com1.hpp"
-
+#include <stm32f411USART1.hpp>
 #include "stm32f411USART2.hpp"
 
 Flash* Flash::instance = 0;
-Com1 *terminal = Com1::getInstance();
+STM32F411USART1 *terminal = STM32F411USART1::getInstance();
 
 Flash::Flash(bool debugEnable) {
 	debug = debugEnable;
