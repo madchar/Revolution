@@ -6,7 +6,7 @@
  */
 
 #include "stm32spi1.hpp"
-
+#include <string.h>
 STM32SPI1::STM32SPI1()
 {
 
