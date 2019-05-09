@@ -634,7 +634,32 @@ void Flash::setFilename(uint8_t imageNo, const char* fileName) {
 	imageNo = imageNo % MaxImageStored;
 	address_t add = FilenamePage;
 	add.byte = imageNo * FilenameSize;
-	writeByte(&add, fileName, FilenameSize);
+	//writeByte(&add, fileName, sizeof(fileName));
+	uint16_t nByte = sizeof(fileName);
+	uint8_t data;
+
+		if (debug)
+			terminal->sendString("Writing byte\n\r\r");
+
+		uint32_t address = 0;
+		address = add.page;
+		address = address << 9;
+		address |= add.byte;
+
+		setCS(true);
+		spiTransfer(WrtitePagesThroughBuf2BIE);
+		spiTransfer((address & 0x00FF0000) >> 16);
+		spiTransfer((address & 0x0000FF00) >> 8);
+		spiTransfer((address & 0x000000FF));
+		for (uint16_t i = 0; i < nByte; i++) {
+			data = (uint8_t) fileName[i];
+			spiTransfer(data);
+		}
+		setCS(false);
+		while (!(readStatusRegister() & BusyFlag))
+			;
+		if (debug)
+			terminal->sendString("Done. \n\r\r");
 	if (debug)
 		terminal->sendString("setFilename\n\r");
 }

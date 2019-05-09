@@ -34,9 +34,9 @@ public:
 	static constexpr uint16_t ColumnPixelArraySize = 1156;			//in bytes
 	static constexpr uint32_t ImageFileSize = 295936;				//in bytes
 
-	static constexpr uint16_t PagesPerImage = 578;						//Flash memory pages per image
-	static constexpr uint8_t FirstImagePageAddress = 99;		//First age where image are stored
-	static constexpr uint16_t PageSize = 512;			//Physical flash memory page size in bytes
+	static constexpr uint16_t PagesPerImage = 578;					//Flash memory pages per image
+	static constexpr uint8_t FirstImagePageAddress = 99;			//First age where image are stored
+	static constexpr uint16_t PageSize = 512;						//Physical flash memory page size in bytes
 	static constexpr uint16_t MaxColumnCount = 256;
 
 
@@ -146,9 +146,9 @@ private:
 	static constexpr uint8_t StatusRegisterRead = 0xD7;
 	static constexpr uint8_t ConfigurationRegisterRead = 0x3F;
 
-	uint8_t BinaryPageSize[4] = { 0x3D, 0x2A, 0x80, 0xA6 };
-	uint8_t ChipErase[4] = { 0xC7, 0x94, 0x80, 0x9A };
-	uint8_t DisableSectorProtect[4] = {0x3D, 0x2A, 0x7F, 0x9A};
+	static constexpr uint8_t BinaryPageSize[4] = { 0x3D, 0x2A, 0x80, 0xA6 };
+	static constexpr uint8_t ChipErase[4] = { 0xC7, 0x94, 0x80, 0x9A };
+	static constexpr uint8_t DisableSectorProtect[4] = {0x3D, 0x2A, 0x7F, 0x9A};
 
 	/**
 	 * Static configuration addresses
@@ -158,7 +158,7 @@ private:
 	 * Page 9 is reserved for BMP file names: 15 * 16 char = 240 bytes ex:123456789012.bmp
 	 */
 
-	const address_t FilenamePage = { 9, 0 };					//15 images * 34 char = 510 bytes
+	const address_t FilenamePage = { 9, 0 };								//15 images * 34 char = 510 bytes
 	const address_t GlobalBrightnessSettingAddress = { 10, 0 };				//2 bytes
 	const address_t RedMaxCurrentSettingAddress = { 10, 2 };				//2 bytes
 	const address_t GreenMaxCurrentSettingAddress = { 10, 4 };				//2 bytes
