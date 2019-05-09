@@ -4,22 +4,21 @@
  *  Created on: Mar 27, 2019
  *      Author: rev
  */
-#include <com1.hpp>
+#include <stm32f411USART1.hpp>
 #include <string.h>
 #include <string>
 #include <cstdlib>
 #include <stm32f4xx_tim.h>
 
-Com1* Com1::instance = 0;
+STM32F411USART1* STM32F411USART1::instance = 0;
 
-Com1::Com1() {
+STM32F411USART1::STM32F411USART1() {
 
 	commRxCnt = 0;
 	pixelColumnBufferCntr = 0;
 	memset(pixelColumnBuffer, 0, sizeof(pixelColumnBuffer));
 	memset(tram, 0, sizeof(tram));
 	echo = false;
-
 	isTransmitting = false;
 
 
@@ -112,19 +111,19 @@ Com1::Com1() {
 	USART1->CR1 |= USART_CR1_UE; // USART activé
 
 }
-Com1::~Com1() {
+STM32F411USART1::~STM32F411USART1() {
 	if (instance)
 		delete instance;
 //	if (commTimeOut)
 //		delete commTimeOut;
 }
-Com1* Com1::getInstance() {
+STM32F411USART1* STM32F411USART1::getInstance() {
 	if (instance == 0)
-		instance = new Com1();
+		instance = new STM32F411USART1();
 	return instance;
 }
 
-void Com1::setBaudRate(uint32_t baudrate) {
+void STM32F411USART1::setBaudRate(uint32_t baudrate) {
 	uint32_t tmpreg = 0x00, apbclock = 0x00;
 	uint32_t integerdivider = 0x00;
 	uint32_t fractionaldivider = 0x00;
@@ -163,15 +162,15 @@ void Com1::setBaudRate(uint32_t baudrate) {
 
 }
 
-bool Com1::dataAvailable() {
+bool STM32F411USART1::dataAvailable() {
 	return !rxBuffer.isEmpty();
 }
 
-void Com1::setEcho(bool state) {
+void STM32F411USART1::setEcho(bool state) {
 	echo = state;
 }
 
-uint8_t Com1::read() {
+uint8_t STM32F411USART1::read() {
 	uint8_t tmp;
 	USART1->CR1 &= ~USART_CR1_RXNEIE;
 	tmp = rxBuffer.rem();
@@ -180,7 +179,7 @@ uint8_t Com1::read() {
 	return tmp;
 }
 
-void Com1::write(uint8_t data) {
+void STM32F411USART1::write(uint8_t data) {
 	if (isTransmitting) {
 		USART1->CR1 &= ~USART_CR1_TXEIE;
 		txBuffer.add(data);
@@ -191,63 +190,63 @@ void Com1::write(uint8_t data) {
 	}
 	USART1->CR1 |= USART_CR1_TXEIE;
 }
-void Com1::sendBytes(uint8_t* data, uint32_t nBytes) {
+void STM32F411USART1::sendBytes(uint8_t* data, uint32_t nBytes) {
 	for (uint32_t i = 0; i < nBytes; i++) {
 		write(*data++);
 	}
 }
-void Com1::sendByteToString(uint8_t byte) {
+void STM32F411USART1::sendByteToString(uint8_t byte) {
 	char buffer[33];
 	itoa((int) byte, buffer, 10);
 	sendString(buffer);
 }
 
-void Com1::sendbyteToString(uint16_t byte) {
+void STM32F411USART1::sendbyteToString(uint16_t byte) {
 	char buffer[33];
 	itoa(byte, buffer, 10);
 	sendString(buffer);
 }
-void Com1::sendByte8ToBinaryString(uint8_t data) {
+void STM32F411USART1::sendByte8ToBinaryString(uint8_t data) {
 	for (int i = 0; i < 8; i++) {
 		((data >> (7 - i)) & 0x01) ?
-				Com1::getInstance()->write('1') : Com1::getInstance()->write('0');
+				STM32F411USART1::getInstance()->write('1') : STM32F411USART1::getInstance()->write('0');
 	}
-	Com1::getInstance()->write('\n');
+	STM32F411USART1::getInstance()->write('\n');
 }
 
-void Com1::sendByte16ToBinaryString(uint16_t data) {
+void STM32F411USART1::sendByte16ToBinaryString(uint16_t data) {
 	for (int i = 0; i < 16; i++) {
 		if ((data >> (15 - i)) & 0x01)
-			Com1::getInstance()->write('1');
+			STM32F411USART1::getInstance()->write('1');
 		else
-			Com1::getInstance()->write('0');
+			STM32F411USART1::getInstance()->write('0');
 	}
-	Com1::getInstance()->write('\n');
+	STM32F411USART1::getInstance()->write('\n');
 }
 
-void Com1::sendByte32ToBinaryString(uint32_t data) {
+void STM32F411USART1::sendByte32ToBinaryString(uint32_t data) {
 	for (int i = 0; i < 32; i++) {
 		if ((data >> (31 - i)) & 0x01)
-			Com1::getInstance()->write('1');
+			STM32F411USART1::getInstance()->write('1');
 		else
-			Com1::getInstance()->write('0');
+			STM32F411USART1::getInstance()->write('0');
 	}
-	Com1::getInstance()->write('\n');
+	STM32F411USART1::getInstance()->write('\n');
 }
 
-void Com1::sendString(const char *s) {
+void STM32F411USART1::sendString(const char *s) {
 	while (*s) {
 		write(*s++); // Send Char
 	}
 }
 
-void Com1::sendString(uint8_t *u) {
+void STM32F411USART1::sendString(uint8_t *u) {
 	while (*u) {
 		write(*u++); // Send Char
 	}
 }
 
-void Com1::incommingDataDecoder(Flash* flash) {
+void STM32F411USART1::incommingDataDecoder(Flash* flash) {
 	uint8_t car;
 
 	switch (commState) {						//Réception d'images
@@ -350,13 +349,15 @@ void Com1::incommingDataDecoder(Flash* flash) {
 
 	case TRANSFER_FAILED:
 		sendString("Transfer failed!");
+
+
 		commState = IDLE;
 		break;
 
 	}
 }
 
-void Com1::parseTram(Flash *flash) {
+void STM32F411USART1::parseTram(Flash *flash) {
 	std::string sTram = tram;
 
 	if (sTram == CMD_ImageReadyToTransfer) {
@@ -453,7 +454,7 @@ void Com1::parseTram(Flash *flash) {
 }
 
 
-void Com1::sendFilenameList(Flash* flash) {
+void STM32F411USART1::sendFilenameList(Flash* flash) {
 	uint16_t cntr = 7;
 	char names[40];
 
@@ -487,23 +488,23 @@ void USART1_IRQHandler(void) {
 // RX Data
 	if (isr & USART_SR_RXNE) {
 		USART1->SR &= ~USART_SR_RXNE;
-		Com1::instance->rxBuffer.add(USART1->DR);
+		STM32F411USART1::instance->rxBuffer.add(USART1->DR);
 	}
 // TX Done
 	if ((isr & USART_SR_TXE)) {
 		USART1->SR &= ~USART_SR_TXE;
-		if (Com1::instance->txBuffer.isEmpty()) {
-			Com1::instance->isTransmitting = false;
+		if (STM32F411USART1::instance->txBuffer.isEmpty()) {
+			STM32F411USART1::instance->isTransmitting = false;
 			USART1->CR1 &= (~USART_CR1_TXEIE);
 		} else {
-			USART1->DR = Com1::instance->txBuffer.rem();
-			Com1::instance->isTransmitting = true;
+			USART1->DR = STM32F411USART1::instance->txBuffer.rem();
+			STM32F411USART1::instance->isTransmitting = true;
 		}
 	}
 }
 
 void TIM3_IRQHandler(void) {
-	if ((Com1::instance->timeoutCntr++) == Com1::instance->TIME_OUT) {
-		Com1::instance->timeout = true;
+	if ((STM32F411USART1::instance->timeoutCntr++) == STM32F411USART1::instance->TIME_OUT) {
+		STM32F411USART1::instance->timeout = true;
 	}
 }
