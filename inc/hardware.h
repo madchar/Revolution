@@ -104,14 +104,14 @@ sd eh7 * hardware.h
 
 
 //**************************USART1*****************************
-//#define USART1_ALTERNATE_FUNCTION	GPIO_AF_USART1
-//
-//#define USART1_TX_GPIO				GPIOA
-//#define USART1_TX_PinSource			GPIO_PinSource9
-//#define USART1_TX_Pin					GPIO_Pin_9
-//#define USART1_RX_GPIO				GPIOB
-//#define USART1_RX_PinSource			GPIO_PinSource7
-//#define USART1_RX_Pin					GPIO_Pin_7
+#define USART1_ALTERNATE_FUNCTION	GPIO_AF_USART1
+
+#define USART1_TX_GPIO				GPIOA
+#define USART1_TX_PinSource			GPIO_PinSource9
+#define USART1_TX_Pin					GPIO_Pin_9
+#define USART1_RX_GPIO				GPIOB
+#define USART1_RX_PinSource			GPIO_PinSource7
+#define USART1_RX_Pin					GPIO_Pin_7
 
 //**************************USART2*****************************
 #define USART2_ALTERNATE_FUNCTION	GPIO_AF_USART2
