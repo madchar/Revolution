@@ -46,8 +46,10 @@ private:
 	bool echo;
 	bool isTransmitting;
 	Buffer<uint8_t, 2048> rxBuffer;
-	Buffer<uint8_t, 64> txBuffer;
+	Buffer<uint8_t, 512> txBuffer;
 	static Com1* instance;
+	uint8_t testdata[1000000];
+
 
 	friend void USART1_IRQHandler(void);
 	friend void TIM3_IRQHandler(void);

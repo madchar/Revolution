@@ -39,9 +39,8 @@ public:
 	static constexpr uint16_t PageSize = 512;			//Physical flash memory page size in bytes
 	static constexpr uint16_t MaxColumnCount = 256;
 
-	Flash(bool debugEnable) :
-			debug(debugEnable) {
-  }
+
+
 	~Flash();
 	/**
 	 * page : page number 0 - 8191
@@ -123,8 +122,10 @@ public:
 
 private:
 	Flash();
+	Flash(bool debugEnable);
 
 	static Flash* instance;
+
 
 	/**
 	 * Flash read/write and SPI command
@@ -166,6 +167,8 @@ private:
 
 	bool buff1_Buff2 = true;
 	bool debug = false;
+
+
 };
 
 #endif /* FLASH_HPP_ */

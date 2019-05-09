@@ -19,7 +19,6 @@ Com1::Com1() {
 	memset(pixelColumnBuffer, 0, sizeof(pixelColumnBuffer));
 	memset(tram, 0, sizeof(tram));
 	echo = false;
-
 	isTransmitting = false;
 
 
@@ -350,6 +349,8 @@ void Com1::incommingDataDecoder(Flash* flash) {
 
 	case TRANSFER_FAILED:
 		sendString("Transfer failed!");
+
+
 		commState = IDLE;
 		break;
 

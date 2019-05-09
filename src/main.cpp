@@ -37,6 +37,7 @@ uint8_t spi1[289];
 uint8_t spi2[289];
 uint8_t spi3[289];
 uint8_t spi4[289];
+Buffer<uint8_t,1024> b;
 
 //uint8_t bufferSpiRx[1156];
 
@@ -425,6 +426,8 @@ void EXTI2_IRQHandler(void) {
 
 int main(void) {
 
+	//memset(dataOver,0,20000);
+
 	//----------------------------------RCC INIT-----------------------------------------------------
 	//Enable SPIs clocks
 
@@ -747,12 +750,13 @@ int main(void) {
 	Com1* com1 = Com1::getInstance();
 	com1->setEcho(false);
 
-	com1->sendString("\rRévolution v3.0\rCommunication : En ligne\r");
+	//com1->sendString("\rRévolution v3.0\rCommunication : En ligne\r");
 
-	Flash *flash = Flash::getInstance(false);
-//	flash->init();
+	Flash *flash = Flash::getInstance(true);
+	flash->init();
 	Flash::address_t add;
 	add.byte = 0;
+
 	add.page = 9;
 
 	//	com1->sendByte32ToBinaryString(flash->positionOfPresentImages);
@@ -760,14 +764,13 @@ int main(void) {
 
 	//	flash->getPixelColumn(0, 0, spi1, spi2, spi3, spi4);
 
-//	flash->readStatusRegisterToString();
 
 		//	uint8_t byte[] = "1234";
 		//	flash->writeByte(&add, byte, 4);
 		for (int i = 0; i < 15; i++) {
-			//		flash->setFilename(i, "test.bmp");
+					flash->setFilename(i, "test.bmp");
 			//		flash->resetFilename(i);
-			//		flash->resetImageInCarrousel(i);l
+			//		flash->resetImageInCarrousel(i);
 			//		com1->write(spi4[i]);
 		}
 
@@ -776,14 +779,14 @@ int main(void) {
 	//
 	//flash->setFilename(4, "black_hole.bmp");
 
-	//	for (int i = 0; i < 240; i++) {
-	//		com1->write(flash->readByte(&add));
-	//		add.byte++;
-	//	}
-	//	com1->sendString("\n\r");
-	//	for (int i = 0; i < 289; i++) {
-	//		com1->write(spi1[i]);
-	//	}
+		for (int i = 0; i < 240; i++) {
+			com1->write(flash->readByte(&add));
+			add.byte++;
+		}
+//		com1->sendString("\n\r");
+//		for (int i = 0; i < 289; i++) {
+//			com1->write(spi1[i]);
+//		}
 
 	while (1) {
 
@@ -801,7 +804,7 @@ int main(void) {
 				int c = 0;
 
 				uint16_t cnt = 0;
-				console->sendString("Waiting for transmission #");
+				console->sendString("1234ing for transmission #");
 				console->sendbyteToString(testCount);
 				console->sendString("\n\r");
 				while (c < 256) {

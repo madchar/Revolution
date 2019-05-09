@@ -25,6 +25,7 @@ public:
 		in = 0;
 		out = 0;
 		count = 0;
+		data[nSize-1] = 0;
 	}
 	/**
 	 * @brief Ajout d'un element
