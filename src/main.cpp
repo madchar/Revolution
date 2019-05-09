@@ -20,22 +20,20 @@
 #include "stm32f4xx_exti.h"
 
 #include "hardware.h"
-#include "LEDMAP.h"
 #include "tlc5955.hpp"
 #include "stm32spi1.hpp"
 #include "stm32spi2.hpp"
 #include "stm32spi3.hpp"
 #include "stm32spi4.hpp"
 #include "stm32f4timer.hpp"
+#include "stm32f411USART1.hpp"
 #include "stm32f411USART2.hpp"
 #include "flash.hpp"
-#include "com1.hpp"
+
 
 
 uint8_t bufferSpiTx[1156];
 uint8_t bufferSpiRx[1156];
-
-constexpr uint8_t PIXELMAP[] = PIXEL_ARRAY;
 
 bool flagRefreshBuffer = false;
 bool displayOffLatch = false;
@@ -316,30 +314,29 @@ void TIM4_IRQHandler(void) {
 		flagRefreshBuffer = true;
 		columnCounter++;
 
-//		if(columnCounter<128) z = 0;
-//		else z = 2;
+		if(columnCounter<128) z = 0;
+		else z = 1;
 
 		if (resyncDisplay==true)
 		{
 			columnCounter=0;
-			z++;
 			resyncDisplay = false;
 		}
 		if (z==3) z = 0;
-//		if(interlacing==DISPLAY_ODD_SIDE)
-//		{
-//			//z = 0;
-//			if((columnCounter%2)==0) displayState = OFF;
-//			else displayState = ON;
-//		}
-//		if(interlacing==DISPLAY_EVEN_SIDE)
-//		{
-//			//z = 0;
-//			if((columnCounter%2)==0) displayState = ON;
-//			else displayState = OFF;
-//		}
+		if(interlacing==DISPLAY_ODD_SIDE)
+		{
+			//z = 0;
+			if((columnCounter%2)==0) displayState = OFF;
+			else displayState = ON;
+		}
+		if(interlacing==DISPLAY_EVEN_SIDE)
+		{
+			//z = 0;
+			if((columnCounter%2)==0) displayState = ON;
+			else displayState = OFF;
+		}
 
-//		if(columnCounter==255)displayState = OFF;
+		if(columnCounter==255)displayState = OFF;
 		if(columnCounter==256)
 		{
 
@@ -515,7 +512,7 @@ int main(void) {
 
 
 	//----------------------------------COM-----------------------------------------------------------------------------
-	Com1 *console = Com1::getInstance();
+	STM32F411USART1 *console = STM32F411USART1::getInstance();
 
 	console->sendString("\nConsole online\n\r");
 
@@ -715,7 +712,15 @@ int main(void) {
 	STM32F4Timer latchTimer(TIM4,5973,0,false);
 
 	NVIC_EnableIRQ(TIM4_IRQn);
+	for(int i;i<10000000;i++)
+	{
+		asm("nop");
+	}
 	latchTimer.enableITUpdate();
+	for(int i;i<10000000;i++)
+	{
+		asm("nop");
+	}
 	latchTimer.startTimer();
 
 	if(debug) console->sendString("Done.\n\r");
@@ -724,21 +729,18 @@ int main(void) {
 		asm("nop");
 	}
 	//----------------------------------FLASH INIT---------------------------------------------------------
-	//	if(debug) console->sendString("Initiating Flash...\n\r");
-	//	Flash::address_t add;
-	//	add.byte = 0;
-	//	add.page = 99;
-	//
-	//	Flash *flash = Flash::getInstance();
-	//	flash->init();
-	//	if(debug) console->sendString("Done.\n\r");
+		if(debug) console->sendString("Initiating Flash...\n\r");
+		Flash::address_t add;
+		add.byte = 0;
+		add.page = 99;
+
+		Flash *flash = Flash::getInstance();
+		flash->init();
+		if(debug) console->sendString("Done.\n\r");
 
 	char car;
 	uint8_t bufferConsole[1157];
 	bufferConsole[1156] = 0;
-	Com1 *com1 = Com1::getInstance();
-	com1->sendString("Comm online!");
-
 	//if(debug) console->sendString("Done.\n\r");
 	//flash->getPixelColumn(0,0,pixelMapEvenBuffer1,pixelMapEvenBuffer2,pixelMapEvenBuffer3,pixelMapEvenBuffer4);
 	//flash->getPixelColumn(0,0,pixelMapOddBuffer1,pixelMapOddBuffer2,pixelMapOddBuffer3,pixelMapOddBuffer4);
@@ -813,8 +815,8 @@ int main(void) {
 
 		if(flagRefreshBuffer)
 		{
-			//if (bufferIndexFlag==true) flash->getPixelColumn(10,columnCounter,pixelMapEvenBuffer1,pixelMapEvenBuffer2,pixelMapEvenBuffer3,pixelMapEvenBuffer4);
-			//else flash->getPixelColumn(10,columnCounter,pixelMapOddBuffer1,pixelMapOddBuffer2,pixelMapOddBuffer3,pixelMapOddBuffer4);
+//			if (bufferIndex==BUFFER_ODD) flash->getPixelColumn(10,columnCounter,pixelMapEvenBuffer1,pixelMapEvenBuffer2,pixelMapEvenBuffer3,pixelMapEvenBuffer4);
+//			else flash->getPixelColumn(10,columnCounter,pixelMapOddBuffer1,pixelMapOddBuffer2,pixelMapOddBuffer3,pixelMapOddBuffer4);
 			flagRefreshBuffer = false;
 		}
 
@@ -823,11 +825,7 @@ int main(void) {
 			console->sendString("Sync.");
 
 		}
-//		if((GPIO_ReadInputData(PULSE_GPIO) & PULSE_Pin)&&(resyncDisplay==false))
-//		{
-//			resyncDisplay = true;
-//			console->sendString("Sync.");
-//		}
+
 	}
 
 }
