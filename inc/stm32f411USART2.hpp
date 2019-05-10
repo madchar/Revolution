@@ -18,7 +18,7 @@ class STM32F411USART2 {
 	friend void USART2_IRQHandler(void);
 	bool isTransmitting = false;
 	BufferTemplate<uint8_t,64> rxBuffer;
-	BufferTemplate<uint8_t,64> txBuffer;
+	BufferTemplate<uint8_t,1024> txBuffer;
 	STM32F411USART2();
 	static STM32F411USART2 * instance;
 public:

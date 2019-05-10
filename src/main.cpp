@@ -30,6 +30,7 @@
 #include "stm32f411USART2.hpp"
 #include "flash.hpp"
 
+Flash *flash = Flash::getInstance(false);
 
 
 uint8_t bufferSpiTx[1156];
@@ -148,16 +149,15 @@ static constexpr uint8_t pixelMap[3][289] =  {{0x00, 0x00, 0x00, 0x00, 0x03, 0xF
 						0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00,
 						0x00}};
 
-static uint16_t compteurTest = 0;
-static uint8_t testCount = 0;
-static uint16_t columnCounter = 0;
+
+static uint16_t pixelColumnCounter = 0;
 static uint8_t imageNum = 0;
 static uint8_t z = 0;
-static uint16_t syncCount = 0;
+
 
 static bool debug = true;
 
-enum interlace_e{DISPLAY_ODD_SIDE,DISPLAY_EVEN_SIDE}interlacing = DISPLAY_ODD_SIDE;
+enum interlace_e{DISPLAY_ODD_SIDE,DISPLAY_EVEN_SIDE,DISPLAY_NONE}interlacing = DISPLAY_ODD_SIDE;
 enum display_e{ON,OFF} displayState = ON;
 enum bufferIndex_e{BUFFER_ODD,BUFFER_EVEN} bufferIndex = BUFFER_ODD;
 
@@ -311,38 +311,40 @@ void TIM4_IRQHandler(void) {
 	if (TIM_GetFlagStatus(TIM4, TIM_IT_Update) != RESET) {
 		//Clear flag Interrupt
 		TIM4->SR = (uint16_t) ~TIM_IT_Update;
-		flagRefreshBuffer = true;
-		columnCounter++;
 
-		if(columnCounter<128) z = 0;
+
+		pixelColumnCounter++;
+
+		if(pixelColumnCounter<128) z = 0;
 		else z = 1;
+		if (z==3) z = 0;
 
+		//Resynchronisation de l'image à chaque tour
 		if (resyncDisplay==true)
 		{
-			columnCounter=0;
+			pixelColumnCounter = 0;
+			interlacing = DISPLAY_ODD_SIDE;
 			resyncDisplay = false;
 		}
-		if (z==3) z = 0;
+
+
 		if(interlacing==DISPLAY_ODD_SIDE)
 		{
-			//z = 0;
-			if((columnCounter%2)==0) displayState = OFF;
+			if((pixelColumnCounter%2)==0) displayState = OFF;
 			else displayState = ON;
 		}
-		if(interlacing==DISPLAY_EVEN_SIDE)
+		else if(interlacing==DISPLAY_EVEN_SIDE)
 		{
-			//z = 0;
-			if((columnCounter%2)==0) displayState = ON;
+			if((pixelColumnCounter%2)==0) displayState = ON;
 			else displayState = OFF;
 		}
 
-		if(columnCounter==255)displayState = OFF;
-		if(columnCounter==256)
+		if(pixelColumnCounter==255)displayState = OFF;
+		if(pixelColumnCounter==256)
 		{
-
 			if(interlacing==DISPLAY_ODD_SIDE)interlacing = DISPLAY_EVEN_SIDE;
-			else interlacing = DISPLAY_ODD_SIDE;
-			columnCounter = 0;
+			else if(interlacing==DISPLAY_EVEN_SIDE) interlacing = DISPLAY_NONE;
+			pixelColumnCounter = 0;
 		}
 
 
@@ -358,16 +360,16 @@ void TIM4_IRQHandler(void) {
 			case ON:
 				switch(bufferIndex){
 				case BUFFER_ODD:
-					DMA2_Stream2->M0AR = (uint32_t)&pixelMap[z];
-					DMA1_Stream4->M0AR = (uint32_t)&pixelMap[z];
-					DMA1_Stream5->M0AR = (uint32_t)&pixelMap[z];
-					DMA2_Stream1->M0AR = (uint32_t)&pixelMap[z];
+					DMA2_Stream2->M0AR = (uint32_t)&pixelMapOddBuffer1;
+					DMA1_Stream4->M0AR = (uint32_t)&pixelMapOddBuffer2;
+					DMA1_Stream5->M0AR = (uint32_t)&pixelMapOddBuffer3;
+					DMA2_Stream1->M0AR = (uint32_t)&pixelMapOddBuffer4;
 					break;
 				case BUFFER_EVEN:
-					DMA2_Stream2->M0AR = (uint32_t)&pixelMap[z];
-					DMA1_Stream4->M0AR = (uint32_t)&pixelMap[z];
-					DMA1_Stream5->M0AR = (uint32_t)&pixelMap[z];
-					DMA2_Stream1->M0AR = (uint32_t)&pixelMap[z];
+					DMA2_Stream2->M0AR = (uint32_t)&pixelMapEvenBuffer1;
+					DMA1_Stream4->M0AR = (uint32_t)&pixelMapEvenBuffer2;
+					DMA1_Stream5->M0AR = (uint32_t)&pixelMapEvenBuffer3;
+					DMA2_Stream1->M0AR = (uint32_t)&pixelMapEvenBuffer4;
 					break;
 				}
 				break;
@@ -377,7 +379,6 @@ void TIM4_IRQHandler(void) {
 					DMA1_Stream5->M0AR = (uint32_t)&blackRow;
 					DMA2_Stream1->M0AR = (uint32_t)&blackRow;
 					break;
-
 			}
 			break;
 			case DISPLAY_EVEN_SIDE:
@@ -387,16 +388,16 @@ void TIM4_IRQHandler(void) {
 					switch (bufferIndex)
 					{
 					case BUFFER_EVEN:
-						DMA2_Stream2->M0AR = (uint32_t)&pixelMap[z];
-						DMA1_Stream4->M0AR = (uint32_t)&pixelMap[z];
-						DMA1_Stream5->M0AR = (uint32_t)&pixelMap[z];
-						DMA2_Stream1->M0AR = (uint32_t)&pixelMap[z];
+						DMA2_Stream2->M0AR = (uint32_t)&pixelMapEvenBuffer1;
+						DMA1_Stream4->M0AR = (uint32_t)&pixelMapEvenBuffer2;
+						DMA1_Stream5->M0AR = (uint32_t)&pixelMapEvenBuffer3;
+						DMA2_Stream1->M0AR = (uint32_t)&pixelMapEvenBuffer4;
 						break;
 					case BUFFER_ODD:
-						DMA2_Stream2->M0AR = (uint32_t)&pixelMap[z];
-						DMA1_Stream4->M0AR = (uint32_t)&pixelMap[z];
-						DMA1_Stream5->M0AR = (uint32_t)&pixelMap[z];
-						DMA2_Stream1->M0AR = (uint32_t)&pixelMap[z];
+						DMA2_Stream2->M0AR = (uint32_t)&pixelMapOddBuffer1;
+						DMA1_Stream4->M0AR = (uint32_t)&pixelMapOddBuffer2;
+						DMA1_Stream5->M0AR = (uint32_t)&pixelMapOddBuffer3;
+						DMA2_Stream1->M0AR = (uint32_t)&pixelMapOddBuffer4;
 						break;
 					}
 					break;
@@ -407,40 +408,44 @@ void TIM4_IRQHandler(void) {
 						DMA2_Stream1->M0AR = (uint32_t)&blackRow;
 						break;
 				}
-
-				//if (displayState ==OFF) displayState = ON;
+				break;
+				case DISPLAY_NONE:
+					DMA2_Stream2->M0AR = (uint32_t)&blackRow;
+					DMA1_Stream4->M0AR = (uint32_t)&blackRow;
+					DMA1_Stream5->M0AR = (uint32_t)&blackRow;
+					DMA2_Stream1->M0AR = (uint32_t)&blackRow;
+					break;
 		}
-		//		if(displayState==ON) displayState = OFF;
-		//		else displayState = ON;
-		if(bufferIndex==BUFFER_EVEN) bufferIndex = BUFFER_ODD;
-		else bufferIndex = BUFFER_EVEN;
+		if(displayState==ON)
+		{
+			if(bufferIndex==BUFFER_EVEN) bufferIndex = BUFFER_ODD;
+			else bufferIndex = BUFFER_EVEN;
+		}
 
 
 		//Start DMA2 Stream2
 		SPI1->CR2 |= SPI_I2S_DMAReq_Tx;
 		DMA2_Stream2->CR |= (uint32_t) DMA_SxCR_EN;
-
 		//Start DMA1 Stream4
 		SPI2->CR2 |= SPI_I2S_DMAReq_Tx;
 		DMA1_Stream4->CR |= (uint32_t) DMA_SxCR_EN;
-
 		//Start DMA1 Stream5
 		SPI3->CR2 |= SPI_I2S_DMAReq_Tx;
 		DMA1_Stream5->CR |= (uint32_t) DMA_SxCR_EN;
-
 		//Start DMA2 Stream1
 		SPI4->CR2 |= SPI_I2S_DMAReq_Tx;
 		DMA2_Stream1->CR |= (uint32_t) DMA_SxCR_EN;
 
-
+		flagRefreshBuffer = true;
 	}
 }
 
 void EXTI2_IRQHandler(void)
 {
 	if (EXTI_GetITStatus(EXTI_Line2) != RESET) {
-		//columnCounter = 0;
 		resyncDisplay = true;
+		//		TIM4->CR1 &= ~TIM_CR1_CEN;
+		//		TIM4->CR1 |= TIM_CR1_CEN;
 		EXTI->PR = EXTI_Line2;
 	}
 
@@ -512,7 +517,7 @@ int main(void) {
 
 
 	//----------------------------------COM-----------------------------------------------------------------------------
-	STM32F411USART1 *console = STM32F411USART1::getInstance();
+	STM32F411USART2 *console = STM32F411USART2::getInstance();
 
 	console->sendString("\nConsole online\n\r");
 
@@ -541,7 +546,7 @@ int main(void) {
 
 	tlc.setAllDcData(127);
 	tlc.setMaxCurrent(0, 0, 0);
-	tlc.setFunctionControlData(true, true, true, true, true);
+	tlc.setFunctionControlData(false, true, true, true, true);
 	tlc.setBrightnessCurrent(127, 5, 10);
 	tlc.updateControl();
 
@@ -553,7 +558,7 @@ int main(void) {
 
 	//DMA SPI1
 	dma_spi.DMA_Channel = DMA_Channel_2;
-	dma_spi.DMA_Memory0BaseAddr = (uint32_t)&pixelMap[0];
+	dma_spi.DMA_Memory0BaseAddr = (uint32_t)&pixelMapEvenBuffer1;
 	dma_spi.DMA_PeripheralBaseAddr = (uint32_t) (&(SPI1->DR));
 	dma_spi.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
 	dma_spi.DMA_PeripheralDataSize = DMA_MemoryDataSize_Byte;
@@ -561,7 +566,7 @@ int main(void) {
 	dma_spi.DMA_Mode = DMA_Mode_Normal;
 	dma_spi.DMA_MemoryInc = DMA_MemoryInc_Enable;
 	dma_spi.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-	dma_spi.DMA_BufferSize = sizeof(pixelMap[0]);
+	dma_spi.DMA_BufferSize = sizeof(pixelMapEvenBuffer1);
 	dma_spi.DMA_Priority = DMA_Priority_High;
 	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single ;
 	dma_spi.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
@@ -571,7 +576,7 @@ int main(void) {
 
 	//DMA SPI2
 	dma_spi.DMA_Channel = DMA_Channel_0;
-	dma_spi.DMA_Memory0BaseAddr = (uint32_t) &pixelMap[0];
+	dma_spi.DMA_Memory0BaseAddr = (uint32_t) &pixelMapEvenBuffer1;
 	dma_spi.DMA_PeripheralBaseAddr = (uint32_t) (&(SPI2->DR));
 	dma_spi.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
 	dma_spi.DMA_PeripheralDataSize = DMA_MemoryDataSize_Byte;
@@ -579,7 +584,7 @@ int main(void) {
 	dma_spi.DMA_Mode = DMA_Mode_Normal;
 	dma_spi.DMA_MemoryInc = DMA_MemoryInc_Enable;
 	dma_spi.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-	dma_spi.DMA_BufferSize = sizeof(pixelMap[0]);
+	dma_spi.DMA_BufferSize = sizeof(pixelMapEvenBuffer1);
 	dma_spi.DMA_Priority = DMA_Priority_High;
 	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single ;
 	dma_spi.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
@@ -589,7 +594,7 @@ int main(void) {
 
 	//DMA SPI3
 	dma_spi.DMA_Channel = DMA_Channel_0;
-	dma_spi.DMA_Memory0BaseAddr = (uint32_t) &pixelMap[0];
+	dma_spi.DMA_Memory0BaseAddr = (uint32_t) &pixelMapEvenBuffer1;
 	dma_spi.DMA_PeripheralBaseAddr = (uint32_t) (&(SPI3->DR));
 	dma_spi.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
 	dma_spi.DMA_PeripheralDataSize = DMA_MemoryDataSize_Byte;
@@ -597,7 +602,7 @@ int main(void) {
 	dma_spi.DMA_Mode = DMA_Mode_Normal;
 	dma_spi.DMA_MemoryInc = DMA_MemoryInc_Enable;
 	dma_spi.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-	dma_spi.DMA_BufferSize = sizeof(pixelMap[0]);
+	dma_spi.DMA_BufferSize = sizeof(pixelMapEvenBuffer1);
 	dma_spi.DMA_Priority = DMA_Priority_High;
 	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single ;
 	dma_spi.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
@@ -607,7 +612,7 @@ int main(void) {
 
 	//DMA SPI4
 	dma_spi.DMA_Channel = DMA_Channel_4;
-	dma_spi.DMA_Memory0BaseAddr = (uint32_t)&pixelMap[0];
+	dma_spi.DMA_Memory0BaseAddr = (uint32_t)&pixelMapEvenBuffer1;
 	dma_spi.DMA_PeripheralBaseAddr = (uint32_t) (&(SPI4->DR));
 	dma_spi.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
 	dma_spi.DMA_PeripheralDataSize = DMA_MemoryDataSize_Byte;
@@ -615,7 +620,7 @@ int main(void) {
 	dma_spi.DMA_Mode = DMA_Mode_Normal;
 	dma_spi.DMA_MemoryInc = DMA_MemoryInc_Enable;
 	dma_spi.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-	dma_spi.DMA_BufferSize = sizeof(pixelMap[0]);
+	dma_spi.DMA_BufferSize = sizeof(pixelMapEvenBuffer1);
 	dma_spi.DMA_Priority = DMA_Priority_High;
 	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single ;
 	dma_spi.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
@@ -709,7 +714,7 @@ int main(void) {
 	gsclkTimer.startTimer();
 
 	//STM32F4Timer latchTimer(TIM4,50,65535,false);
-	STM32F4Timer latchTimer(TIM4,5973,0,false);
+	STM32F4Timer latchTimer(TIM4,5971,0,false); // 5973
 
 	NVIC_EnableIRQ(TIM4_IRQn);
 	for(int i;i<10000000;i++)
@@ -729,101 +734,61 @@ int main(void) {
 		asm("nop");
 	}
 	//----------------------------------FLASH INIT---------------------------------------------------------
-		if(debug) console->sendString("Initiating Flash...\n\r");
-		Flash::address_t add;
-		add.byte = 0;
-		add.page = 99;
+	if(debug) console->sendString("Initiating Flash...\n\r");
+	Flash::address_t add;
+	add.byte = 0;
+	add.page = 99;
 
-		Flash *flash = Flash::getInstance();
-		flash->init();
-		if(debug) console->sendString("Done.\n\r");
 
-	char car;
-	uint8_t bufferConsole[1157];
-	bufferConsole[1156] = 0;
-	//if(debug) console->sendString("Done.\n\r");
-	//flash->getPixelColumn(0,0,pixelMapEvenBuffer1,pixelMapEvenBuffer2,pixelMapEvenBuffer3,pixelMapEvenBuffer4);
-	//flash->getPixelColumn(0,0,pixelMapOddBuffer1,pixelMapOddBuffer2,pixelMapOddBuffer3,pixelMapOddBuffer4);
+	flash->init();
 
+	if(debug) console->sendString("Done.\n\r");
+
+	flash->getPixelColumn(0,1,pixelMapEvenBuffer1,pixelMapEvenBuffer2,pixelMapEvenBuffer3,pixelMapEvenBuffer4);
+	flash->getPixelColumn(0,0,pixelMapOddBuffer1,pixelMapOddBuffer2,pixelMapOddBuffer3,pixelMapOddBuffer4);
+	console->sendString("Next:");
+	console->sendbyteToString(flash->getNextFreeImageSlot());
+	console->sendString("\n\r");
+	console->sendByte32ToBinaryString(flash->positionOfPresentImages);
 
 
 	if(debug) console->sendString("Starting DMA...\n\r");
+
 	//Start DMA2 Stream2
 	SPI1->CR2 |= SPI_I2S_DMAReq_Tx;
 	DMA2_Stream2->CR |= (uint32_t)DMA_SxCR_EN;
-
 	//Start DMA1 Stream4
 	SPI2->CR2 |= SPI_I2S_DMAReq_Tx;
 	DMA1_Stream4->CR |= (uint32_t)DMA_SxCR_EN;
-
 	//Start DMA1 Stream5
 	SPI3->CR2 |= SPI_I2S_DMAReq_Tx;
 	DMA1_Stream5->CR |= (uint32_t)DMA_SxCR_EN;
-
 	//Start DMA2 Stream1
 	SPI4->CR2 |= SPI_I2S_DMAReq_Tx;
 	DMA2_Stream1->CR |= (uint32_t)DMA_SxCR_EN;
+
 	if(debug) console->sendString("Done.\n\r");
 	if(debug) console->sendString("All systems nominal.\n\r");
 
-
+	STM32F411USART1* com1 = STM32F411USART1::getInstance();
 
 	while (1) {
 
-//		if (console->dataAvailable())
-//		{
-//			car = console->read();
-//			//console->write(car);
-//			if (car == '1')
-//			{
-//				int c = 0;
-//
-//				uint16_t cnt = 0;
-//				console->sendString("Waiting for transmission #");
-//				console->sendbyteToString(testCount);
-//				console->sendString("\n\r");
-//				while(c<256)
-//				{
-//					while(!console->dataAvailable());
-//					console->sendString("Receiving transmission #");
-//					console->sendbyteToString(testCount);
-//					console->sendString("\n\r");
-//					while(cnt<1156)
-//					{
-//						if(console->dataAvailable())
-//						{
-//							bufferConsole[cnt] = console->read();
-//							cnt++;
-//						}
-//					}
-//
-//					if(debug) console->sendString("Saving to flash...\n\r");
-//					//flash->savePixelColumn(0,0,bufferConsole);
-//					testCount++;
-//					if(debug) console->sendString("Success.\n\r");
-//					if(testCount==256)testCount=0;
-//
-//					//if (imageNum==Flash::MaxImageStored) imageNum = 0;
-//					car = 0;
-//					cnt = 0;
-//					c++;
-//				}
-//				console->sendString("Transmission done.\n\r");
-//			}
-//
-//		}
+		//com1->incommingDataDecoder(flash);
 
 		if(flagRefreshBuffer)
 		{
-//			if (bufferIndex==BUFFER_ODD) flash->getPixelColumn(10,columnCounter,pixelMapEvenBuffer1,pixelMapEvenBuffer2,pixelMapEvenBuffer3,pixelMapEvenBuffer4);
-//			else flash->getPixelColumn(10,columnCounter,pixelMapOddBuffer1,pixelMapOddBuffer2,pixelMapOddBuffer3,pixelMapOddBuffer4);
+			if(pixelColumnCounter<255)
+			{
+				if (bufferIndex==BUFFER_ODD) flash->getPixelColumn(0,(pixelColumnCounter+1),pixelMapEvenBuffer4,pixelMapEvenBuffer3,pixelMapEvenBuffer2,pixelMapEvenBuffer1);
+				else flash->getPixelColumn(0,(pixelColumnCounter+1),pixelMapOddBuffer4,pixelMapOddBuffer3,pixelMapOddBuffer2,pixelMapOddBuffer1);
+			}
+			else if(pixelColumnCounter==255)
+			{
+				if (bufferIndex==BUFFER_ODD) flash->getPixelColumn(0,0,pixelMapEvenBuffer4,pixelMapEvenBuffer3,pixelMapEvenBuffer2,pixelMapEvenBuffer1);
+				else flash->getPixelColumn(0,0,pixelMapOddBuffer4,pixelMapOddBuffer3,pixelMapOddBuffer2,pixelMapOddBuffer1);
+			}
 			flagRefreshBuffer = false;
-		}
-
-		if(resyncDisplay)
-		{
-			console->sendString("Sync.");
-
 		}
 
 	}

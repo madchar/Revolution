@@ -137,7 +137,7 @@ private:
 	static constexpr uint8_t DummyByte = 0x00;
 
 	static constexpr uint8_t MainMemmoryPageRead = 0xD2;
-	static constexpr uint8_t ContinuousPageRead = 0x03;
+	static constexpr uint8_t ContinuousPageRead = 0x1B;
 	static constexpr uint8_t WrtitePagesThroughBuf1BIE = 0x82;
 	static constexpr uint8_t WrtitePagesThroughBuf2BIE = 0x85;
 	static constexpr uint8_t WrtiteBytesThroughBuf1NoBIE = 0x02;
@@ -146,9 +146,9 @@ private:
 	static constexpr uint8_t StatusRegisterRead = 0xD7;
 	static constexpr uint8_t ConfigurationRegisterRead = 0x3F;
 
-	static constexpr uint8_t BinaryPageSize[4] = { 0x3D, 0x2A, 0x80, 0xA6 };
-	static constexpr uint8_t ChipErase[4] = { 0xC7, 0x94, 0x80, 0x9A };
-	static constexpr uint8_t DisableSectorProtect[4] = {0x3D, 0x2A, 0x7F, 0x9A};
+	const uint8_t BinaryPageSize[4] = { 0x3D, 0x2A, 0x80, 0xA6 };
+	const uint8_t ChipErase[4] = { 0xC7, 0x94, 0x80, 0x9A };
+	const uint8_t DisableSectorProtect[4] = {0x3D, 0x2A, 0x7F, 0x9A};
 
 	/**
 	 * Static configuration addresses
