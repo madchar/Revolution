@@ -43,7 +43,8 @@ void Flash::init() {
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
 	GPIO_Init(SPI5_CLK_GPIO, &GPIO_InitStructure);
-	GPIO_PinAFConfig(SPI5_CLK_GPIO, SPI5_CLK_PinSource, SPI5_ALTERNATE_FUNCTION);
+	GPIO_PinAFConfig(SPI5_CLK_GPIO, SPI5_CLK_PinSource,
+			SPI5_ALTERNATE_FUNCTION);
 
 	GPIO_InitStructure.GPIO_Pin = SPI5_NSS_Pin;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
@@ -61,8 +62,10 @@ void Flash::init() {
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
 
-	GPIO_PinAFConfig(SPI5_MOSI_GPIO, SPI5_MOSI_PinSource, SPI5_ALTERNATE_FUNCTION);
-	GPIO_PinAFConfig(SPI5_MISO_GPIO, SPI5_MISO_PinSource, SPI5_ALTERNATE_FUNCTION);
+	GPIO_PinAFConfig(SPI5_MOSI_GPIO, SPI5_MOSI_PinSource,
+			SPI5_ALTERNATE_FUNCTION);
+	GPIO_PinAFConfig(SPI5_MISO_GPIO, SPI5_MISO_PinSource,
+			SPI5_ALTERNATE_FUNCTION);
 
 	GPIO_SetBits(SPI5_NSS_GPIO, SPI5_NSS_Pin);
 
@@ -73,7 +76,7 @@ void Flash::init() {
 	SPI_InitStruct.SPI_CPOL = SPI_CPOL_Low;
 	SPI_InitStruct.SPI_CPHA = SPI_CPHA_1Edge;
 	SPI_InitStruct.SPI_CRCPolynomial = 7;
-	SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4;
+	SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;
 	SPI_InitStruct.SPI_FirstBit = SPI_FirstBit_MSB;
 	SPI_InitStruct.SPI_NSS = SPI_NSS_Soft;
 
@@ -84,8 +87,8 @@ void Flash::init() {
 	while (isBusy())
 		;
 
-	//positionOfPresentImages = getPositionOfPresentImagesInCarrousel();
-	//readControlRegister();
+	positionOfPresentImages = getPositionOfPresentImagesInCarrousel();
+	readControlRegister();
 
 	if (debug)
 		terminal->sendString("\n\rFlash initialization completed.\n\r");
@@ -164,21 +167,26 @@ void Flash::readStatusRegisterToString() {
 				terminal->sendString("b7 : RDY/BUSY Ready\n\r") :
 				terminal->sendString("b7 : RDY/BUSY Busy\n\r");
 		(b & 0b01000000) ?
-				terminal->sendString("b6 : RES\n\r") : terminal->sendString("b6 : RES\n\r");
+				terminal->sendString("b6 : RES\n\r") :
+				terminal->sendString("b6 : RES\n\r");
 		(b & 0b00100000) ?
 				terminal->sendString("b5 : EPE Detected\n\r") :
 				terminal->sendString("b5 : EPE Ok\n\r");
 		(b & 0b00100000) ?
-				terminal->sendString("b4 : RES\n\r") : terminal->sendString("b4 : RES\n\r");
+				terminal->sendString("b4 : RES\n\r") :
+				terminal->sendString("b4 : RES\n\r");
 		(b & 0b00100000) ?
 				terminal->sendString("b3 : SLE Enable\n\r") :
 				terminal->sendString("b3 : SLE Disable\n\r");
 		(b & 0b00100000) ?
-				terminal->sendString("b2 : PS2 Is\n\r") : terminal->sendString("b2 : PS2 Not\n\r");
+				terminal->sendString("b2 : PS2 Is\n\r") :
+				terminal->sendString("b2 : PS2 Not\n\r");
 		(b & 0b00000010) ?
-				terminal->sendString("b1 : PS1 Is\n\r") : terminal->sendString("b1 : PS2 Not\n\r");
+				terminal->sendString("b1 : PS1 Is\n\r") :
+				terminal->sendString("b1 : PS2 Not\n\r");
 		(b & 0b00000001) ?
-				terminal->sendString("b0 : ES Is\n\r") : terminal->sendString("b0 : ES Not\n\r");
+				terminal->sendString("b0 : ES Is\n\r") :
+				terminal->sendString("b0 : ES Not\n\r");
 
 	}
 }
@@ -195,7 +203,8 @@ uint8_t Flash::readConfigurationRegister() {
 void Flash::setPageSizeBinary() {
 	if (debug)
 
-		terminal->sendString("Configuring page size of 512 bytes (power of 2 adresses)\n\r");
+		terminal->sendString(
+				"Configuring page size of 512 bytes (power of 2 adresses)\n\r");
 
 	setCS(true);
 	for (int i = 0; i < 4; i++) {
@@ -277,7 +286,8 @@ void Flash::readByte(const address_t *add, char *buffer, uint16_t nByte) {
 	}
 	setCS(false);
 }
-void Flash::readPageArray(const address_t *add, uint8_t* buffer, uint32_t nBytes) {
+void Flash::readPageArray(const address_t *add, uint8_t* buffer,
+		uint32_t nBytes) {
 	uint32_t address = 0;
 	address = add->page;
 	address = address << 9;
@@ -288,6 +298,9 @@ void Flash::readPageArray(const address_t *add, uint8_t* buffer, uint32_t nBytes
 	spiTransfer((address & 0x00FF0000) >> 16);
 	spiTransfer((address & 0x0000FF00) >> 8);
 	spiTransfer((address & 0x000000FF));
+
+	spiTransfer(DummyByte);
+	spiTransfer(DummyByte);
 
 	for (uint32_t i = 0; i < nBytes; i++) {
 		buffer[i] = spiTransfer(DummyByte);
@@ -368,7 +381,8 @@ void Flash::writeByte(const address_t* add, uint32_t byte) {
 		;
 }
 
-void Flash::writeByte(const address_t *add, uint8_t *byte, uint16_t nByte, uint16_t offsetByte) {
+void Flash::writeByte(const address_t *add, uint8_t *byte, uint16_t nByte,
+		uint16_t offsetByte) {
 	uint32_t address = 0;
 	address = add->page;
 	address = address << 9;
@@ -503,24 +517,28 @@ void Flash::setImageInCarrousel(uint8_t imageNo) {
 }
 
 void Flash::savePositionOfPresentImagesInCarrousel() {
-	writeByte(&PositionOfPresentImagesInCarrouselAddress, positionOfPresentImages);
+	writeByte(&PositionOfPresentImagesInCarrouselAddress,
+			positionOfPresentImages);
 }
 
 uint8_t Flash::getNumberOfImagesInCarrousel() {
 	return countSetBits(positionOfPresentImages);
 }
 
-bool Flash::savePixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* source) {
+bool Flash::savePixelColumn(uint8_t imageNo, uint8_t columnNo,
+		uint8_t* source) {
 	if (debug)
 
 		terminal->sendString("Saving pixel column to flash...\n\r");
 
 	imageNo = imageNo % MaxImageStored;
 
-	uint32_t imageColumnStartPage = FirstImagePageAddress + (imageNo * PagesPerImage);
+	uint32_t imageColumnStartPage = FirstImagePageAddress
+			+ (imageNo * PagesPerImage);
 	uint32_t pixelColumnStartPage = imageColumnStartPage
 			+ (floor((columnNo * ColumnPixelArraySize) / PageSize));
-	uint32_t pixelColumnStartByte = (columnNo * ColumnPixelArraySize) % PageSize;
+	uint32_t pixelColumnStartByte = (columnNo * ColumnPixelArraySize)
+			% PageSize;
 
 	if (debug) {
 		terminal->sendString("\n\rpixelColumnPageOffset :");
@@ -559,17 +577,21 @@ bool Flash::savePixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* source) 
 	return !payloadSize;
 }
 
-bool Flash::getPixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* spiBuffer1, uint8_t* spiBuffer2, uint8_t* spiBuffer3, uint8_t* spiBuffer4) {
+bool Flash::getPixelColumn(uint8_t imageNo, uint8_t columnNo,
+		uint8_t* spiBuffer1, uint8_t* spiBuffer2, uint8_t* spiBuffer3,
+		uint8_t* spiBuffer4) {
 	if (debug)
 
 		terminal->sendString("Loading pixel column from flash...\n\r");
 
 	imageNo = imageNo % MaxImageStored;
 
-	uint32_t imageColumnStartPage = FirstImagePageAddress + (imageNo * PagesPerImage);
+	uint32_t imageColumnStartPage = FirstImagePageAddress
+			+ (imageNo * PagesPerImage);
 	uint32_t pixelColumnStartPage = imageColumnStartPage
 			+ (floor((columnNo * ColumnPixelArraySize) / PageSize));
-	uint32_t pixelColumnStartByte = (columnNo * ColumnPixelArraySize) % PageSize;
+	uint32_t pixelColumnStartByte = (columnNo * ColumnPixelArraySize)
+			% PageSize;
 
 	if (debug) {
 		terminal->sendString("\n\rpixelColumnPageOffset :");
@@ -595,6 +617,9 @@ bool Flash::getPixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* spiBuffer
 	spiTransfer((address & 0x0000FF00) >> 8);
 	spiTransfer((address & 0x000000FF));
 
+	spiTransfer(DummyByte);
+	spiTransfer(DummyByte);
+
 	for (uint32_t i = 0; i < SPIBufferSize; i++)
 		spiBuffer1[i] = spiTransfer(DummyByte);
 	for (uint32_t i = 0; i < SPIBufferSize; i++)
@@ -612,6 +637,67 @@ bool Flash::getPixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* spiBuffer
 	return true;
 }
 
+void Flash::getPixelColumnToString(uint8_t imageNo, uint8_t columnNo,
+		uint8_t* destination) {
+
+	imageNo = imageNo % MaxImageStored;
+
+	uint32_t imageColumnStartPage = FirstImagePageAddress
+			+ (imageNo * PagesPerImage);
+	uint32_t pixelColumnStartPage = imageColumnStartPage
+			+ (floor((columnNo * ColumnPixelArraySize) / PageSize));
+	uint32_t pixelColumnStartByte = (columnNo * ColumnPixelArraySize)
+			% PageSize;
+
+	address_t add;
+	add.page = pixelColumnStartPage;
+	add.byte = pixelColumnStartByte;
+
+	uint32_t address = 0;
+	address = add.page;
+	address = address << 9;
+	address |= add.byte;
+
+	setCS(true);
+	spiTransfer(ContinuousPageRead);
+	spiTransfer((address & 0x00FF0000) >> 16);
+	spiTransfer((address & 0x0000FF00) >> 8);
+	spiTransfer((address & 0x000000FF));
+
+	spiTransfer(DummyByte);
+	spiTransfer(DummyByte);
+
+	uint16_t writePosition = 0;
+	destination[writePosition++] = 'B';
+	destination[writePosition++] = '1';
+	destination[writePosition++] = ':';
+
+	for (uint32_t i = 0; i < SPIBufferSize; i++)
+		destination[writePosition++] = spiTransfer(DummyByte);
+	destination[writePosition++] = 'B';
+	destination[writePosition++] = '2';
+	destination[writePosition++] = ':';
+
+	for (uint32_t i = 0; i < SPIBufferSize; i++)
+		destination[writePosition++] = spiTransfer(DummyByte);
+	destination[writePosition++] = 'B';
+	destination[writePosition++] = '3';
+	destination[writePosition++] = ':';
+	for (uint32_t i = 0; i < SPIBufferSize; i++)
+		destination[writePosition++] = spiTransfer(DummyByte);
+	destination[writePosition++] = 'B';
+	destination[writePosition++] = '4';
+	destination[writePosition++] = ':';
+	for (uint32_t i = 0; i < SPIBufferSize; i++)
+		destination[writePosition++] = spiTransfer(DummyByte);
+
+	setCS(false);
+
+	if (debug)
+
+		terminal->sendString("Column loaded from flash...\n\r");
+}
+
 void Flash::setDebug(bool debug) {
 	this->debug = debug;
 }
@@ -627,10 +713,11 @@ uint8_t Flash::countSetBits(uint32_t n) {
 
 void Flash::resetImageInCarrousel(uint8_t imageNo) {
 	positionOfPresentImages &= ~(1 << (imageNo));
-	writeByte(&PositionOfPresentImagesInCarrouselAddress, positionOfPresentImages);
+	writeByte(&PositionOfPresentImagesInCarrouselAddress,
+			positionOfPresentImages);
 }
 
-void Flash::setFilename(uint8_t imageNo, const char* fileName) {
+void Flash::setFilename(uint8_t imageNo, uint8_t* fileName) {
 	imageNo = imageNo % MaxImageStored;
 	address_t add = FilenamePage;
 	add.byte = imageNo * FilenameSize;
@@ -638,28 +725,28 @@ void Flash::setFilename(uint8_t imageNo, const char* fileName) {
 	uint16_t nByte = sizeof(fileName);
 	uint8_t data;
 
-		if (debug)
-			terminal->sendString("Writing byte\n\r\r");
+	if (debug)
+		terminal->sendString("Writing byte\n\r\r");
 
-		uint32_t address = 0;
-		address = add.page;
-		address = address << 9;
-		address |= add.byte;
+	uint32_t address = 0;
+	address = add.page;
+	address = address << 9;
+	address |= add.byte;
 
-		setCS(true);
-		spiTransfer(WrtitePagesThroughBuf2BIE);
-		spiTransfer((address & 0x00FF0000) >> 16);
-		spiTransfer((address & 0x0000FF00) >> 8);
-		spiTransfer((address & 0x000000FF));
-		for (uint16_t i = 0; i < nByte; i++) {
-			data = (uint8_t) fileName[i];
-			spiTransfer(data);
-		}
-		setCS(false);
-		while (!(readStatusRegister() & BusyFlag))
-			;
-		if (debug)
-			terminal->sendString("Done. \n\r\r");
+	setCS(true);
+	spiTransfer(WrtitePagesThroughBuf2BIE);
+	spiTransfer((address & 0x00FF0000) >> 16);
+	spiTransfer((address & 0x0000FF00) >> 8);
+	spiTransfer((address & 0x000000FF));
+	for (uint16_t i = 0; i < nByte; i++) {
+		data = (uint8_t) fileName[i];
+		spiTransfer(data);
+	}
+	setCS(false);
+	while (!(readStatusRegister() & BusyFlag))
+		;
+	if (debug)
+		terminal->sendString("Done. \n\r\r");
 	if (debug)
 		terminal->sendString("setFilename\n\r");
 }

@@ -40,6 +40,9 @@ public:
 	void setEcho(bool state);
 	void parseTram(Flash *flash);
 	void sendFilenameList(Flash *flash);
+
+	bool readyTotransfer;
+	bool okToTransfer;
 private:
 
 	STM32F411USART1();
@@ -59,7 +62,7 @@ private:
 	} parseRxTram = WAIT;
 
 	enum commState_e {
-		IDLE, ASK_FILE_TO_SERVER, SAVE_FILE, SAVE_FILENAME, TRANSFER_COMPLETED, TRANSFER_FAILED
+		IDLE, WAIT_OK_TO_TRANSFER, ASK_FILE_TO_SERVER, SAVE_FILE, SAVE_FILENAME, TRANSFER_COMPLETED, TRANSFER_FAILED
 	} commState = IDLE;
 
 	uint16_t commRxCnt = 0;

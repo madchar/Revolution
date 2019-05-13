@@ -231,7 +231,7 @@ void STM32F411USART1::sendByte32ToBinaryString(uint32_t data) {
 		else
 			STM32F411USART1::getInstance()->write('0');
 	}
-	STM32F411USART1::getInstance()->write('\n');
+	STM32F411USART1::getInstance()->write('\n\r');
 }
 
 void STM32F411USART1::sendString(const char *s) {
@@ -249,7 +249,7 @@ void STM32F411USART1::sendString(uint8_t *u) {
 void STM32F411USART1::incommingDataDecoder(Flash* flash) {
 	uint8_t car;
 
-	switch (commState) {						//RÃ©ception d'images
+	switch (commState) {										//Réception d'images
 
 	case IDLE:
 		if (dataAvailable()) {
@@ -257,7 +257,7 @@ void STM32F411USART1::incommingDataDecoder(Flash* flash) {
 			if (echo)
 				write(car);
 
-			switch (parseRxTram) {								//RÃ©ception de trames
+			switch (parseRxTram) {								//Réception de trames
 
 			case WAIT:
 				if (car == '<') {
@@ -281,6 +281,15 @@ void STM32F411USART1::incommingDataDecoder(Flash* flash) {
 				}
 				break;
 			}
+		}
+		break;
+
+	case WAIT_OK_TO_TRANSFER:
+		readyTotransfer = true;
+		if(okToTransfer){
+			okToTransfer = false;
+			readyTotransfer = false;
+			commState = ASK_FILE_TO_SERVER;
 		}
 		break;
 
@@ -332,7 +341,7 @@ void STM32F411USART1::incommingDataDecoder(Flash* flash) {
 			car = read();
 			if (car == '>') {
 				filename[commRxCnt] = 0;
-				flash->setFilename(rxImageNo, filename);
+				//flash->setFilename(rxImageNo, filename);
 				commState = IDLE;
 			} else
 				filename[commRxCnt++] = car;
@@ -362,7 +371,7 @@ void STM32F411USART1::parseTram(Flash *flash) {
 
 	if (sTram == CMD_ImageReadyToTransfer) {
 		rxImageNo = flash->getNextFreeImageSlot();
-		commState = ASK_FILE_TO_SERVER;
+		commState = WAIT_OK_TO_TRANSFER;
 	} else if (sTram == CMD_GetFilenameList) {
 		sendFilenameList(flash);
 	} else if (sTram == CMD_Del0) {

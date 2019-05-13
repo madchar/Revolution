@@ -28,7 +28,7 @@ public:
 	};
 
 	static Flash* getInstance(bool debug = 0);
-	static constexpr uint8_t MaxImageStored = 15;
+	static constexpr uint8_t MaxImageStored = 14;
 	static constexpr uint16_t FilenameSize = 16;					//in bytes
 	static constexpr uint16_t SPIBufferSize = 289;					//in bytes
 	static constexpr uint16_t ColumnPixelArraySize = 1156;			//in bytes
@@ -111,12 +111,12 @@ public:
 	uint8_t getNextFreeImageSlot();
 
 	void getFilename(uint8_t imageNo, char *destination);
-	void setFilename(uint8_t imageNo, const char *fileName);
+	void setFilename(uint8_t imageNo, uint8_t *fileName);
 	void resetFilename(uint8_t imageNo);
 
 	bool getPixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* spiBuffer1, uint8_t* spiBuffer2, uint8_t* spiBuffer3, uint8_t* spiBuffer4);
 	bool savePixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* source);
-
+	void getPixelColumnToString(uint8_t imageNo, uint8_t columnNo, uint8_t* destination);
 	void setDebug(bool debug);
 	uint8_t countSetBits(uint32_t n);
 
@@ -137,7 +137,7 @@ private:
 	static constexpr uint8_t DummyByte = 0x00;
 
 	static constexpr uint8_t MainMemmoryPageRead = 0xD2;
-	static constexpr uint8_t ContinuousPageRead = 0x03;
+	static constexpr uint8_t ContinuousPageRead = 0x1B;
 	static constexpr uint8_t WrtitePagesThroughBuf1BIE = 0x82;
 	static constexpr uint8_t WrtitePagesThroughBuf2BIE = 0x85;
 	static constexpr uint8_t WrtiteBytesThroughBuf1NoBIE = 0x02;

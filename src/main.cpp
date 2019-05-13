@@ -767,39 +767,47 @@ int main(void) {
 
 	STM32F411USART1* com1 = STM32F411USART1::getInstance();
 	com1->setEcho(false);
-	com1->sendString("\rRevolution v3.0\rCommunication : En ligne\r");
+//	com1->sendString("\rRevolution v3.0\rCommunication : En ligne\r");
 
 	Flash *flash = Flash::getInstance(false);
 	flash->init();
 	Flash::address_t add;
-	add.page = 9;
+	add.page = 99;
 	add.byte = 0;
 
-	//	com1->sendByte32ToBinaryString(flash->positionOfPresentImages);
+//	com1->sendString("Next free saving slot : ");
+//	com1->sendbyteToString(flash->getNextFreeImageSlot());
+//	com1->sendString("\n\r");
+//	com1->sendByte32ToBinaryString(flash->positionOfPresentImages);
 	//	com1->sendString("\n\r");
 
-	//	flash->getPixelColumn(0, 0, spi1, spi2, spi3, spi4);
+	//flash->getPixelColumn(0, 0, spi1, spi2, spi3, spi4);
 
 	//	uint8_t byte[] = "1234";
 	//	flash->writeByte(&add, byte, 4);
-	for (int i = 0; i < 15; i++) {
+	for (int i = 0; i < 14; i++) {
 		//		flash->setFilename(i, "test.bmp");
-		//flash->resetFilename(i);
+		//		flash->resetFilename(i);
 		//		flash->resetImageInCarrousel(i);
 		//		com1->write(spi4[i]);
 	}
 
 	//flash->resetFilename(1);
-		char c[] = {"1234"};
-//	flash->setFilename(0, c);
+	uint8_t c[4];
+	c[0] = 'T';
+	c[0] = 'e';
+	c[0] = 's';
+	c[0] = 't';
+	//flash->setFilename(0, c);
 	//flash->setFilename(4, "black_hole.bmp");
 	uint8_t t;
-	for (int i = 0; i < 240; i++) {
 
+	for (int i = 0; i < 512; i++) {
 		t = flash->readByte(&add);
 		com1->write(t);
 		add.byte++;
 	}
+
 //		com1->sendString("\n\r");
 //		for (int i = 0; i < 289; i++) {
 //			com1->write(spi1[i]);
