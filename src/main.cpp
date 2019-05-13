@@ -769,12 +769,12 @@ int main(void) {
 
 	if(debug) console->sendString("Done.\n\r");
 	if(debug) console->sendString("All systems nominal.\n\r");
-
 	STM32F411USART1* com1 = STM32F411USART1::getInstance();
 	char car;
 	uint8_t bufferConsole[1169];
 	bufferConsole[1168] = 0;
 	uint8_t testCount= 0;
+
 	while (1) {
 
 		if (console->dataAvailable())
@@ -789,8 +789,7 @@ int main(void) {
 						console->sendString("Waiting for transmission #");
 						console->sendbyteToString(testCount);
 						console->sendString("\n\r");
-						while(c<256)
-						{
+
 							while(!console->dataAvailable());
 							console->sendString("Receiving transmission #");
 							console->sendbyteToString(testCount);
@@ -803,9 +802,13 @@ int main(void) {
 									cnt++;
 								}
 							}
-
+							if(debug) console->sendString("Printing buffer \n\r");
+							for(int i = 0;i<1156;i++)
+								{
+									console->write(bufferConsole[i]);
+								}
 							if(debug) console->sendString("Saving to flash...\n\r");
-							//flash->savePixelColumn(0,0,bufferConsole);
+							flash->savePixelColumn(0,0,bufferConsole);
 							testCount++;
 							if(debug) console->sendString("Success.\n\r");
 							if(testCount==256)testCount=0;
@@ -813,19 +816,18 @@ int main(void) {
 							//if (imageNum==Flash::MaxImageStored) imageNum = 0;
 							car = 0;
 							cnt = 0;
-							c++;
-						}
+
 						console->sendString("Transmission done.\n\r");
 					}
 					if(car== '2')
 					{
 						console->sendString("Printing column #");
-						console->sendByteToString(testCount);
+						console->sendByteToString(0);
 						console->sendString("\n\r");
 
-//						flash->getPixelColumnToString(0,testCount,con)
+						flash->getPixelColumnToString(0,0);
+						car = 0;
 					}
-
 				}
 
 
@@ -848,5 +850,5 @@ int main(void) {
 
 	}
 
-}
+	}
 

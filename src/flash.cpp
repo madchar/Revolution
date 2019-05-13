@@ -634,8 +634,7 @@ bool Flash::getPixelColumn(uint8_t imageNo, uint8_t columnNo,
 	return true;
 }
 
-void Flash::getPixelColumnToString(uint8_t imageNo, uint8_t columnNo,
-		uint8_t* destination) {
+void Flash::getPixelColumnToString(uint8_t imageNo, uint8_t columnNo){
 
 	imageNo = imageNo % MaxImageStored;
 
@@ -664,37 +663,24 @@ void Flash::getPixelColumnToString(uint8_t imageNo, uint8_t columnNo,
 	spiTransfer(DummyByte);
 	spiTransfer(DummyByte);
 
-	uint16_t writePosition = 0;
-	destination[writePosition++] = 'B';
-	destination[writePosition++] = '1';
-	destination[writePosition++] = ':';
 
 	for (uint32_t i = 0; i < SPIBufferSize; i++)
-		destination[writePosition++] = spiTransfer(DummyByte);
-	destination[writePosition++] = 'B';
-	destination[writePosition++] = '2';
-	destination[writePosition++] = ':';
+		terminal->write(spiTransfer(DummyByte));
 
 	for (uint32_t i = 0; i < SPIBufferSize; i++)
-		destination[writePosition++] = spiTransfer(DummyByte);
-	destination[writePosition++] = 'B';
-	destination[writePosition++] = '3';
-	destination[writePosition++] = ':';
-	for (uint32_t i = 0; i < SPIBufferSize; i++)
-		destination[writePosition++] = spiTransfer(DummyByte);
-	destination[writePosition++] = 'B';
-	destination[writePosition++] = '4';
-	destination[writePosition++] = ':';
-	for (uint32_t i = 0; i < SPIBufferSize; i++)
-		destination[writePosition++] = spiTransfer(DummyByte);
+		terminal->write(spiTransfer(DummyByte));
 
+	for (uint32_t i = 0; i < SPIBufferSize; i++)
+		terminal->write(spiTransfer(DummyByte));
+
+	for (uint32_t i = 0; i < SPIBufferSize; i++)
+		terminal->write(spiTransfer(DummyByte));
 	setCS(false);
 
 	if (debug)
 
 		terminal->sendString("Column loaded from flash...\n\r");
 }
-
 void Flash::setDebug(bool debug) {
 	this->debug = debug;
 }
