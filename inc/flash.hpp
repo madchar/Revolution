@@ -116,7 +116,7 @@ public:
 
 	bool getPixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* spiBuffer1, uint8_t* spiBuffer2, uint8_t* spiBuffer3, uint8_t* spiBuffer4);
 	bool savePixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* source);
-	void getPixelColumnToString(uint8_t imageNo, uint8_t columnNo, uint8_t* destination);
+	void getPixelColumnToString(uint8_t imageNo, uint8_t columnNo);
 	void setDebug(bool debug);
 	uint8_t countSetBits(uint32_t n);
 

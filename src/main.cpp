@@ -736,7 +736,7 @@ int main(void) {
 	}
 
 //	char car;
-//	uint8_t bufferConsole[1157];
+	uint8_t bufferConsole[1200];
 //	bufferConsole[1156] = 0;
 
 	//if(debug) console->sendString("Done.\n\r");
@@ -802,16 +802,19 @@ int main(void) {
 	//flash->setFilename(4, "black_hole.bmp");
 	uint8_t t;
 
-	for (int i = 0; i < 512; i++) {
-		t = flash->readByte(&add);
-		com1->write(t);
-		add.byte++;
-	}
+//	for (int i = 0; i < 512; i++) {
+//		t = flash->readByte(&add);
+//		com1->write(t);
+//		add.byte++;
+//	}
 
 //		com1->sendString("\n\r");
 //		for (int i = 0; i < 289; i++) {
 //			com1->write(spi1[i]);
 //		}
+
+	flash->getPixelColumnToString(0,0);
+
 
 	while (1) {
 
