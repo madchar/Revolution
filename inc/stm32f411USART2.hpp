@@ -17,8 +17,8 @@ extern "C" void USART2_IRQHandler(void);
 class STM32F411USART2 {
 	friend void USART2_IRQHandler(void);
 	bool isTransmitting = false;
-	BufferTemplate<uint8_t,64> rxBuffer;
-	BufferTemplate<uint8_t,64> txBuffer;
+	BufferTemplate<uint8_t,2048> rxBuffer;
+	BufferTemplate<uint8_t,2048> txBuffer;
 	STM32F411USART2();
 	static STM32F411USART2 * instance;
 public:
