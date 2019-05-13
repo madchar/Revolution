@@ -634,6 +634,67 @@ bool Flash::getPixelColumn(uint8_t imageNo, uint8_t columnNo,
 	return true;
 }
 
+void Flash::getPixelColumnToString(uint8_t imageNo, uint8_t columnNo,
+		uint8_t* destination) {
+
+	imageNo = imageNo % MaxImageStored;
+
+	uint32_t imageColumnStartPage = FirstImagePageAddress
+			+ (imageNo * PagesPerImage);
+	uint32_t pixelColumnStartPage = imageColumnStartPage
+			+ (floor((columnNo * ColumnPixelArraySize) / PageSize));
+	uint32_t pixelColumnStartByte = (columnNo * ColumnPixelArraySize)
+			% PageSize;
+
+	address_t add;
+	add.page = pixelColumnStartPage;
+	add.byte = pixelColumnStartByte;
+
+	uint32_t address = 0;
+	address = add.page;
+	address = address << 9;
+	address |= add.byte;
+
+	setCS(true);
+	spiTransfer(ContinuousPageRead);
+	spiTransfer((address & 0x00FF0000) >> 16);
+	spiTransfer((address & 0x0000FF00) >> 8);
+	spiTransfer((address & 0x000000FF));
+
+	spiTransfer(DummyByte);
+	spiTransfer(DummyByte);
+
+	uint16_t writePosition = 0;
+	destination[writePosition++] = 'B';
+	destination[writePosition++] = '1';
+	destination[writePosition++] = ':';
+
+	for (uint32_t i = 0; i < SPIBufferSize; i++)
+		destination[writePosition++] = spiTransfer(DummyByte);
+	destination[writePosition++] = 'B';
+	destination[writePosition++] = '2';
+	destination[writePosition++] = ':';
+
+	for (uint32_t i = 0; i < SPIBufferSize; i++)
+		destination[writePosition++] = spiTransfer(DummyByte);
+	destination[writePosition++] = 'B';
+	destination[writePosition++] = '3';
+	destination[writePosition++] = ':';
+	for (uint32_t i = 0; i < SPIBufferSize; i++)
+		destination[writePosition++] = spiTransfer(DummyByte);
+	destination[writePosition++] = 'B';
+	destination[writePosition++] = '4';
+	destination[writePosition++] = ':';
+	for (uint32_t i = 0; i < SPIBufferSize; i++)
+		destination[writePosition++] = spiTransfer(DummyByte);
+
+	setCS(false);
+
+	if (debug)
+
+		terminal->sendString("Column loaded from flash...\n\r");
+}
+
 void Flash::setDebug(bool debug) {
 	this->debug = debug;
 }
