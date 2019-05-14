@@ -156,7 +156,7 @@ static uint8_t imageNum = 0;
 static uint8_t z = 0;
 
 
-static bool debug = true;
+static bool debug = false;
 
 enum interlace_e{DISPLAY_ODD_SIDE,DISPLAY_EVEN_SIDE,DISPLAY_NONE}interlacing = DISPLAY_ODD_SIDE;
 enum display_e{ON,OFF} displayState = ON;
@@ -316,9 +316,9 @@ void TIM4_IRQHandler(void) {
 
 		pixelColumnCounter++;
 
-		if(pixelColumnCounter<128) z = 0;
-		else z = 1;
-		if (z==3) z = 0;
+//		if(pixelColumnCounter<128) z = 0;
+//		else z = 1;
+//		if (z==3) z = 0;
 
 		//Resynchronisation de l'image à chaque tour
 		if (resyncDisplay==true)
@@ -334,17 +334,17 @@ void TIM4_IRQHandler(void) {
 			if((pixelColumnCounter%2)==0) displayState = OFF;
 			else displayState = ON;
 		}
-//		else if(interlacing==DISPLAY_EVEN_SIDE)
-//		{
-//			if((pixelColumnCounter%2)==0) displayState = ON;
-//			else displayState = OFF;
-//		}
+		else if(interlacing==DISPLAY_EVEN_SIDE)
+		{
+			if((pixelColumnCounter%2)==0) displayState = ON;
+			else displayState = OFF;
+		}
 
 		if(pixelColumnCounter==255)displayState = OFF;
 		if(pixelColumnCounter==256)
 		{
-			//if(interlacing==DISPLAY_ODD_SIDE)interlacing = DISPLAY_EVEN_SIDE;
-			//else if(interlacing==DISPLAY_EVEN_SIDE) interlacing = DISPLAY_NONE;
+			if(interlacing==DISPLAY_ODD_SIDE)interlacing = DISPLAY_EVEN_SIDE;
+			else if(interlacing==DISPLAY_EVEN_SIDE) interlacing = DISPLAY_NONE;
 			pixelColumnCounter = 0;
 		}
 
@@ -519,8 +519,6 @@ int main(void) {
 
 	//----------------------------------COM-----------------------------------------------------------------------------
 	STM32F411USART2 *console = STM32F411USART2::getInstance();
-
-	console->sendString("\nConsole online\n\r");
 
 	//----------------------------------SPI INIT-----------------------------------------------------
 	if(debug) console->sendString("Initiating SPI...\n\r");
@@ -714,7 +712,7 @@ int main(void) {
 	gsclkTimer.enablePWM(1,50);
 	gsclkTimer.startTimer();
 
-	STM32F4Timer latchTimer(TIM4,10,65535,false);
+	STM32F4Timer latchTimer(TIM4,1,65535,false);
 	//STM32F4Timer latchTimer(TIM4,5971,0,false); // 5973
 
 	NVIC_EnableIRQ(TIM4_IRQn);
@@ -743,15 +741,11 @@ int main(void) {
 
 	flash->init();
 
+
 	if(debug) console->sendString("Done.\n\r");
 
-	flash->getPixelColumn(0,1,pixelMapEvenBuffer1,pixelMapEvenBuffer2,pixelMapEvenBuffer3,pixelMapEvenBuffer4);
-	flash->getPixelColumn(0,0,pixelMapOddBuffer1,pixelMapOddBuffer2,pixelMapOddBuffer3,pixelMapOddBuffer4);
-	console->sendString("Next:");
-	console->sendbyteToString(flash->getNextFreeImageSlot());
-	console->sendString("\n\r");
-	console->sendByte32ToBinaryString(flash->positionOfPresentImages);
-
+	//flash->getPixelColumn(0,1,pixelMapEvenBuffer1,pixelMapEvenBuffer2,pixelMapEvenBuffer3,pixelMapEvenBuffer4);
+	//flash->getPixelColumn(0,0,pixelMapOddBuffer1,pixelMapOddBuffer2,pixelMapOddBuffer3,pixelMapOddBuffer4);
 
 	if(debug) console->sendString("Starting DMA...\n\r");
 
@@ -770,7 +764,13 @@ int main(void) {
 
 	if(debug) console->sendString("Done.\n\r");
 	if(debug) console->sendString("All systems nominal.\n\r");
-	STM32F411USART1* com1 = STM32F411USART1::getInstance();
+
+	uint16_t t = 34;
+	//console->sendByteToString(t);
+	STM32F411USART1* wifi = STM32F411USART1::getInstance();
+	flash->getPixelColumnToString(0,1);
+	//flash->readStatusRegisterToString();
+
 	char car;
 	uint8_t bufferConsole[1169];
 	bufferConsole[1168] = 0;
@@ -778,61 +778,61 @@ int main(void) {
 
 	while (1) {
 
-		if (console->dataAvailable())
-				{
-					car = console->read();
-					//console->write(car);
-					if (car == '1')
-					{
-						int c = 0;
+//		if (console->dataAvailable())
+//				{
+//					car = console->read();
+//					//console->write(car);
+//					if (car == '1')
+//					{
+//						int c = 0;
+//
+//						uint16_t cnt = 0;
+//						console->sendString("Waiting for transmission #");
+//						console->sendbyteToString(testCount);
+//						console->sendString("\n\r");
+//
+//							while(!console->dataAvailable());
+//							console->sendString("Receiving transmission #");
+//							console->sendbyteToString(testCount);
+//							console->sendString("\n\r");
+//							while(cnt<1156)
+//							{
+//								if(console->dataAvailable())
+//								{
+//									bufferConsole[cnt] = console->read();
+//									cnt++;
+//								}
+//							}
+//							if(debug) console->sendString("Printing buffer \n\r");
+//							for(int i = 0;i<1156;i++)
+//								{
+//									console->write(bufferConsole[i]);
+//								}
+//							if(debug) console->sendString("Saving to flash...\n\r");
+//							flash->savePixelColumn(0,0,bufferConsole);
+//							testCount++;
+//							if(debug) console->sendString("Success.\n\r");
+//							if(testCount==256)testCount=0;
+//
+//							//if (imageNum==Flash::MaxImageStored) imageNum = 0;
+//							car = 0;
+//							cnt = 0;
+//
+//						console->sendString("Transmission done.\n\r");
+//					}
+//					if(car== '2')
+//					{
+//						console->sendString("Printing column #");
+//						console->sendByteToString(0);
+//						console->sendString("\n\r");
+//
+//						flash->getPixelColumnToString(0,0);
+//						car = 0;
+//					}
+//				}
 
-						uint16_t cnt = 0;
-						console->sendString("Waiting for transmission #");
-						console->sendbyteToString(testCount);
-						console->sendString("\n\r");
 
-							while(!console->dataAvailable());
-							console->sendString("Receiving transmission #");
-							console->sendbyteToString(testCount);
-							console->sendString("\n\r");
-							while(cnt<1156)
-							{
-								if(console->dataAvailable())
-								{
-									bufferConsole[cnt] = console->read();
-									cnt++;
-								}
-							}
-							if(debug) console->sendString("Printing buffer \n\r");
-							for(int i = 0;i<1156;i++)
-								{
-									console->write(bufferConsole[i]);
-								}
-							if(debug) console->sendString("Saving to flash...\n\r");
-							flash->savePixelColumn(0,0,bufferConsole);
-							testCount++;
-							if(debug) console->sendString("Success.\n\r");
-							if(testCount==256)testCount=0;
-
-							//if (imageNum==Flash::MaxImageStored) imageNum = 0;
-							car = 0;
-							cnt = 0;
-
-						console->sendString("Transmission done.\n\r");
-					}
-					if(car== '2')
-					{
-						console->sendString("Printing column #");
-						console->sendByteToString(0);
-						console->sendString("\n\r");
-
-						flash->getPixelColumnToString(0,0);
-						car = 0;
-					}
-				}
-
-
-		//com1->incommingDataDecoder(flash);
+		//wifi->incommingDataDecoder(flash);
 
 		if(flagRefreshBuffer)
 		{

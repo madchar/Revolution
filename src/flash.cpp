@@ -13,7 +13,7 @@
 #include "stm32f411USART2.hpp"
 
 Flash* Flash::instance = 0;
-STM32F411USART1 *terminal = STM32F411USART1::getInstance();
+STM32F411USART2 *terminal = STM32F411USART2::getInstance();
 
 Flash::Flash(bool debugEnable) {
 	debug = debugEnable;
@@ -77,7 +77,7 @@ void Flash::init() {
 	SPI_InitStruct.SPI_CPOL = SPI_CPOL_Low;
 	SPI_InitStruct.SPI_CPHA = SPI_CPHA_1Edge;
 	SPI_InitStruct.SPI_CRCPolynomial = 7;
-	SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;
+	SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4;
 	SPI_InitStruct.SPI_FirstBit = SPI_FirstBit_MSB;
 	SPI_InitStruct.SPI_NSS = SPI_NSS_Soft;
 
@@ -543,11 +543,11 @@ bool Flash::savePixelColumn(uint8_t imageNo, uint8_t columnNo,
 
 	if (debug) {
 		terminal->sendString("\n\rpixelColumnPageOffset :");
-		terminal->sendByte32ToBinaryString(pixelColumnStartPage);
+		terminal->sendByteToString(pixelColumnStartPage);
 		terminal->sendString("\n\rpixelColumnStartPage :");
-		terminal->sendByte32ToBinaryString(imageColumnStartPage);
+		terminal->sendByteToString(imageColumnStartPage);
 		terminal->sendString("\n\rpixelColumnStartByte :");
-		terminal->sendByte32ToBinaryString(pixelColumnStartByte);
+		terminal->sendByteToString(pixelColumnStartByte);
 
 	}
 
@@ -596,11 +596,11 @@ bool Flash::getPixelColumn(uint8_t imageNo, uint8_t columnNo,
 
 	if (debug) {
 		terminal->sendString("\n\rpixelColumnPageOffset :");
-		terminal->sendByte32ToBinaryString(pixelColumnStartPage);
+		terminal->sendByteToString(pixelColumnStartPage);
 		terminal->sendString("\n\rpixelColumnStartPage :");
-		terminal->sendByte32ToBinaryString(imageColumnStartPage);
+		terminal->sendByteToString(imageColumnStartPage);
 		terminal->sendString("\n\rpixelColumnStartByte :");
-		terminal->sendByte32ToBinaryString(pixelColumnStartByte);
+		terminal->sendByteToString(pixelColumnStartByte);
 	}
 
 	address_t add;
@@ -684,9 +684,8 @@ void Flash::getPixelColumnToString(uint8_t imageNo, uint8_t columnNo){
 		terminal->write(spiTransfer(DummyByte));
 	setCS(false);
 
-	if (debug)
-
-		terminal->sendString("Column loaded from flash...\n\r");
+	if (debug);
+		//terminal->sendString("\n\rColumn loaded from flash...\n\r");
 }
 
 void Flash::setDebug(bool debug) {
