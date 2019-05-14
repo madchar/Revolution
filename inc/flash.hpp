@@ -1,3 +1,4 @@
+
 /*
  * flash.hpp
  *
@@ -172,3 +173,4 @@ private:
 };
 
 #endif /* FLASH_HPP_ */
+

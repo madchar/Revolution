@@ -1,3 +1,4 @@
+
 /*
  * flash.cpp
  *
@@ -780,4 +781,5 @@ uint8_t Flash::getNextFreeImageSlot() {
 
 	return counter - 1;
 }
+
 
