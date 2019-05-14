@@ -9,7 +9,7 @@
 #define STM32F411USART2_HPP_
 
 #include "stm32f4xx.h"
-#include "BufferTemplate.h"
+#include "buffer.hpp"
 
 extern "C" void USART2_IRQHandler(void);
 
@@ -17,8 +17,8 @@ extern "C" void USART2_IRQHandler(void);
 class STM32F411USART2 {
 	friend void USART2_IRQHandler(void);
 	bool isTransmitting = false;
-	BufferTemplate<uint8_t,64> rxBuffer;
-	BufferTemplate<uint8_t,64> txBuffer;
+	Buffer<uint8_t,1024> rxBuffer;
+	Buffer<uint8_t,1024> txBuffer;
 	STM32F411USART2();
 	static STM32F411USART2 * instance;
 public:
@@ -34,7 +34,7 @@ public:
 	void sendByte32ToBinaryString(uint32_t data);
 	void sendString(const char *s);
 	void sendString(uint8_t *u);
-	bool dataAvailable() const;
+	bool dataAvailable();
 	uint8_t read();
 };
 

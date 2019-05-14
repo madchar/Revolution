@@ -666,19 +666,19 @@ void Flash::getPixelColumnToString(uint8_t imageNo, uint8_t columnNo){
 	spiTransfer(DummyByte);
 	spiTransfer(DummyByte);
 
-	terminal->sendString("B1:");
+	//terminal->sendString("B1:");
 	for (uint32_t i = 0; i < SPIBufferSize; i++)
 		terminal->write(spiTransfer(DummyByte));
 
-	terminal->sendString("B2:");
+	//terminal->sendString("B2:");
 	for (uint32_t i = 0; i < SPIBufferSize; i++)
 		terminal->write(spiTransfer(DummyByte));
 
-	terminal->sendString("B3:");
+	//terminal->sendString("B3:");
 	for (uint32_t i = 0; i < SPIBufferSize; i++)
 		terminal->write(spiTransfer(DummyByte));
 
-	terminal->sendString("B4:");
+	//terminal->sendString("B4:");
 	for (uint32_t i = 0; i < SPIBufferSize; i++)
 		terminal->write(spiTransfer(DummyByte));
 	setCS(false);

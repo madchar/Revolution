@@ -775,43 +775,23 @@ int main(void) {
 	add.page = 99;
 	add.byte = 0;
 
-//	com1->sendString("Next free saving slot : ");
-//	com1->sendbyteToString(flash->getNextFreeImageSlot());
-//	com1->sendString("\n\r");
-//	com1->sendByte32ToBinaryString(flash->positionOfPresentImages);
-	//	com1->sendString("\n\r");
+	console->sendString("Next free saving slot : ");
+	console->sendbyteToString(flash->getNextFreeImageSlot());
+	console->sendString("\n\r");
+	console->sendByte32ToBinaryString(flash->positionOfPresentImages);
+	console->sendString("\n\r");
 
 	//flash->getPixelColumn(0, 0, spi1, spi2, spi3, spi4);
 
-	//	uint8_t byte[] = "1234";
-	//	flash->writeByte(&add, byte, 4);
-	for (int i = 0; i < 14; i++) {
-		//		flash->setFilename(i, "test.bmp");
-		//		flash->resetFilename(i);
-		//		flash->resetImageInCarrousel(i);
-		//		com1->write(spi4[i]);
-	}
+//	flash->savePixelColumn(0, 0, columnTest);
 
-	//flash->resetFilename(1);
-	uint8_t c[4];
-	c[0] = 'T';
-	c[0] = 'e';
-	c[0] = 's';
-	c[0] = 't';
-	//flash->setFilename(0, c);
-	//flash->setFilename(4, "black_hole.bmp");
-	uint8_t t;
 
-//	for (int i = 0; i < 512; i++) {
-//		t = flash->readByte(&add);
-//		com1->write(t);
-//		add.byte++;
-//	}
 
-//		com1->sendString("\n\r");
-//		for (int i = 0; i < 289; i++) {
-//			com1->write(spi1[i]);
-//		}
+
+	uint8_t buffer[1156];
+	flash->readPageArray(&add, buffer, 1156);
+	console->sendBytes(buffer, 1156);
+	console->sendString("\n\r/*----------------------------------------------------*/ \n\r");
 
 	flash->getPixelColumnToString(0,0);
 

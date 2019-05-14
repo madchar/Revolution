@@ -21,10 +21,7 @@ STM32F411USART1::STM32F411USART1() {
 	echo = false;
 	isTransmitting = false;
 
-
-
 	// Enable clock for GPIOA and GPIOB
- 
 
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
@@ -38,7 +35,8 @@ STM32F411USART1::STM32F411USART1() {
 	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
 	GPIO_Init(USART1_TX_GPIO, &GPIO_InitStruct);
-	GPIO_PinAFConfig(USART1_TX_GPIO, USART1_TX_PinSource,USART1_ALTERNATE_FUNCTION);
+	GPIO_PinAFConfig(USART1_TX_GPIO, USART1_TX_PinSource,
+			USART1_ALTERNATE_FUNCTION);
 
 	// Initialize pins as alternating function
 	GPIO_InitStruct.GPIO_Pin = USART1_RX_Pin;
@@ -47,7 +45,8 @@ STM32F411USART1::STM32F411USART1() {
 	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
 	GPIO_Init(USART1_RX_GPIO, &GPIO_InitStruct);
-	GPIO_PinAFConfig(USART1_RX_GPIO, USART1_RX_PinSource,USART1_ALTERNATE_FUNCTION);
+	GPIO_PinAFConfig(USART1_RX_GPIO, USART1_RX_PinSource,
+			USART1_ALTERNATE_FUNCTION);
 
 	USART_InitTypeDef USART_InitStruct;
 	NVIC_InitTypeDef NVIC_InitStruct;
@@ -92,7 +91,6 @@ STM32F411USART1::STM32F411USART1() {
 	 */
 	USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
 
-
 	/**
 	 * Set Channel to USART1
 	 * Set Channel Cmd to enable. That will enable USART1 channel in NVIC
@@ -106,7 +104,6 @@ STM32F411USART1::STM32F411USART1() {
 	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
 	NVIC_Init(&NVIC_InitStruct);
 	NVIC_EnableIRQ(USART1_IRQn);
-
 
 	USART1->CR1 |= USART_CR1_UE; // USART activÃ©
 
@@ -159,7 +156,6 @@ void STM32F411USART1::setBaudRate(uint32_t baudrate) {
 	/* Write to USART BRR register */
 	USART1->BRR = (uint16_t) tmpreg;
 
-
 }
 
 bool STM32F411USART1::dataAvailable() {
@@ -180,16 +176,15 @@ uint8_t STM32F411USART1::read() {
 }
 
 void STM32F411USART1::write(uint8_t data) {
-	if (isTransmitting) {
-		USART1->CR1 &= ~USART_CR1_TXEIE;
-		txBuffer.add(data);
-	} else {
-		txBuffer.add(data);
+	while (txBuffer.isFull())
+		;
+	txBuffer.add(data);
+	if (!isTransmitting) {
 		isTransmitting = true;
-
+		USART2->CR1 |= USART_CR1_TXEIE; // active l'interruption.
 	}
-	USART1->CR1 |= USART_CR1_TXEIE;
 }
+
 void STM32F411USART1::sendBytes(uint8_t* data, uint32_t nBytes) {
 	for (uint32_t i = 0; i < nBytes; i++) {
 		write(*data++);
@@ -209,7 +204,8 @@ void STM32F411USART1::sendbyteToString(uint16_t byte) {
 void STM32F411USART1::sendByte8ToBinaryString(uint8_t data) {
 	for (int i = 0; i < 8; i++) {
 		((data >> (7 - i)) & 0x01) ?
-				STM32F411USART1::getInstance()->write('1') : STM32F411USART1::getInstance()->write('0');
+				STM32F411USART1::getInstance()->write('1') :
+				STM32F411USART1::getInstance()->write('0');
 	}
 	STM32F411USART1::getInstance()->write('\n');
 }
@@ -249,7 +245,7 @@ void STM32F411USART1::sendString(uint8_t *u) {
 void STM32F411USART1::incommingDataDecoder(Flash* flash) {
 	uint8_t car;
 
-	switch (commState) {										//Réception d'images
+	switch (commState) {									//Réception d'images
 
 	case IDLE:
 		if (dataAvailable()) {
@@ -257,7 +253,7 @@ void STM32F411USART1::incommingDataDecoder(Flash* flash) {
 			if (echo)
 				write(car);
 
-			switch (parseRxTram) {								//Réception de trames
+			switch (parseRxTram) {						//Réception de trames
 
 			case WAIT:
 				if (car == '<') {
@@ -286,11 +282,12 @@ void STM32F411USART1::incommingDataDecoder(Flash* flash) {
 
 	case WAIT_OK_TO_TRANSFER:
 		readyTotransfer = true;
-		if(okToTransfer){
+		if (okToTransfer) {
 			okToTransfer = false;
 			readyTotransfer = false;
 			commState = ASK_FILE_TO_SERVER;
 		}
+		commState = ASK_FILE_TO_SERVER; 		//bypass
 		break;
 
 	case ASK_FILE_TO_SERVER: {
@@ -358,7 +355,6 @@ void STM32F411USART1::incommingDataDecoder(Flash* flash) {
 
 	case TRANSFER_FAILED:
 		sendString("Transfer failed!");
-
 
 		commState = IDLE;
 		break;
@@ -462,7 +458,6 @@ void STM32F411USART1::parseTram(Flash *flash) {
 	}
 }
 
-
 void STM32F411USART1::sendFilenameList(Flash* flash) {
 	uint16_t cntr = 7;
 	char names[40];
@@ -488,9 +483,6 @@ void STM32F411USART1::sendFilenameList(Flash* flash) {
 	sendString(filename);
 }
 
-
-
-
 void USART1_IRQHandler(void) {
 	volatile unsigned int isr;
 	isr = USART1->SR;
@@ -513,7 +505,8 @@ void USART1_IRQHandler(void) {
 }
 
 void TIM3_IRQHandler(void) {
-	if ((STM32F411USART1::instance->timeoutCntr++) == STM32F411USART1::instance->TIME_OUT) {
+	if ((STM32F411USART1::instance->timeoutCntr++)
+			== STM32F411USART1::instance->TIME_OUT) {
 		STM32F411USART1::instance->timeout = true;
 	}
 }
