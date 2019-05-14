@@ -45,7 +45,7 @@ private:
 	STM32F411USART1();
 	bool echo;
 	bool isTransmitting;
-	Buffer<uint8_t, 128> rxBuffer;
+	Buffer<uint8_t, 2048> rxBuffer;
 	Buffer<uint8_t, 128> txBuffer;
 	static STM32F411USART1* instance;
 
