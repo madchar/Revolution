@@ -1,3 +1,4 @@
+
 /*
  * flash.hpp
  *
@@ -28,7 +29,7 @@ public:
 	};
 
 	static Flash* getInstance(bool debug = 0);
-	static constexpr uint8_t MaxImageStored = 15;
+	static constexpr uint8_t MaxImageStored = 14;
 	static constexpr uint16_t FilenameSize = 16;					//in bytes
 	static constexpr uint16_t SPIBufferSize = 289;					//in bytes
 	static constexpr uint16_t ColumnPixelArraySize = 1156;			//in bytes
@@ -111,13 +112,12 @@ public:
 	uint8_t getNextFreeImageSlot();
 
 	void getFilename(uint8_t imageNo, char *destination);
-	void setFilename(uint8_t imageNo, const char *fileName);
+	void setFilename(uint8_t imageNo, uint8_t *fileName);
 	void resetFilename(uint8_t imageNo);
 
-	void getPixelColumnToString(uint8_t imageNo, uint8_t columnNo);
 	bool getPixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* spiBuffer1, uint8_t* spiBuffer2, uint8_t* spiBuffer3, uint8_t* spiBuffer4);
 	bool savePixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* source);
-
+	void getPixelColumnToString(uint8_t imageNo, uint8_t columnNo);
 	void setDebug(bool debug);
 	uint8_t countSetBits(uint32_t n);
 
@@ -147,9 +147,9 @@ private:
 	static constexpr uint8_t StatusRegisterRead = 0xD7;
 	static constexpr uint8_t ConfigurationRegisterRead = 0x3F;
 
-	const uint8_t BinaryPageSize[4] = { 0x3D, 0x2A, 0x80, 0xA6 };
-	const uint8_t ChipErase[4] = { 0xC7, 0x94, 0x80, 0x9A };
-	const uint8_t DisableSectorProtect[4] = {0x3D, 0x2A, 0x7F, 0x9A};
+	static constexpr uint8_t BinaryPageSize[4] = { 0x3D, 0x2A, 0x80, 0xA6 };
+	static constexpr uint8_t ChipErase[4] = { 0xC7, 0x94, 0x80, 0x9A };
+	static constexpr uint8_t DisableSectorProtect[4] = {0x3D, 0x2A, 0x7F, 0x9A};
 
 	/**
 	 * Static configuration addresses
@@ -173,3 +173,4 @@ private:
 };
 
 #endif /* FLASH_HPP_ */
+

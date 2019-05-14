@@ -1,3 +1,4 @@
+
 /*
  * flash.cpp
  *
@@ -12,7 +13,7 @@
 #include "stm32f411USART2.hpp"
 
 Flash* Flash::instance = 0;
-STM32F411USART2 *terminal = STM32F411USART2::getInstance();
+STM32F411USART1 *terminal = STM32F411USART1::getInstance();
 
 Flash::Flash(bool debugEnable) {
 	debug = debugEnable;
@@ -298,6 +299,9 @@ void Flash::readPageArray(const address_t *add, uint8_t* buffer,
 	spiTransfer((address & 0x00FF0000) >> 16);
 	spiTransfer((address & 0x0000FF00) >> 8);
 	spiTransfer((address & 0x000000FF));
+
+	spiTransfer(DummyByte);
+	spiTransfer(DummyByte);
 
 	for (uint32_t i = 0; i < nBytes; i++) {
 		buffer[i] = spiTransfer(DummyByte);
@@ -663,16 +667,19 @@ void Flash::getPixelColumnToString(uint8_t imageNo, uint8_t columnNo){
 	spiTransfer(DummyByte);
 	spiTransfer(DummyByte);
 
-
+	//terminal->sendString("B1:");
 	for (uint32_t i = 0; i < SPIBufferSize; i++)
 		terminal->write(spiTransfer(DummyByte));
 
+	//terminal->sendString("B2:");
 	for (uint32_t i = 0; i < SPIBufferSize; i++)
 		terminal->write(spiTransfer(DummyByte));
 
+	//terminal->sendString("B3:");
 	for (uint32_t i = 0; i < SPIBufferSize; i++)
 		terminal->write(spiTransfer(DummyByte));
 
+	//terminal->sendString("B4:");
 	for (uint32_t i = 0; i < SPIBufferSize; i++)
 		terminal->write(spiTransfer(DummyByte));
 	setCS(false);
@@ -681,6 +688,7 @@ void Flash::getPixelColumnToString(uint8_t imageNo, uint8_t columnNo){
 
 		terminal->sendString("Column loaded from flash...\n\r");
 }
+
 void Flash::setDebug(bool debug) {
 	this->debug = debug;
 }
@@ -700,7 +708,7 @@ void Flash::resetImageInCarrousel(uint8_t imageNo) {
 			positionOfPresentImages);
 }
 
-void Flash::setFilename(uint8_t imageNo, const char* fileName) {
+void Flash::setFilename(uint8_t imageNo, uint8_t* fileName) {
 	imageNo = imageNo % MaxImageStored;
 	address_t add = FilenamePage;
 	add.byte = imageNo * FilenameSize;
@@ -773,4 +781,5 @@ uint8_t Flash::getNextFreeImageSlot() {
 
 	return counter - 1;
 }
+
 

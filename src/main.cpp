@@ -1,3 +1,4 @@
+
 /**
  ******************************************************************************
  * @file    main.c
@@ -319,7 +320,7 @@ void TIM4_IRQHandler(void) {
 		else z = 1;
 		if (z==3) z = 0;
 
-		//Resynchronisation de l'image à chaque tour
+		//Resynchronisation de l'image Ã  chaque tour
 		if (resyncDisplay==true)
 		{
 			pixelColumnCounter = 0;
@@ -851,4 +852,5 @@ int main(void) {
 	}
 
 	}
+
 

@@ -1,3 +1,4 @@
+
 /*
  * com.hpp
  *
@@ -40,13 +41,16 @@ public:
 	void setEcho(bool state);
 	void parseTram(Flash *flash);
 	void sendFilenameList(Flash *flash);
+
+	bool readyTotransfer;
+	bool okToTransfer;
 private:
 
 	STM32F411USART1();
 	bool echo;
 	bool isTransmitting;
-	Buffer<uint8_t, 2048> rxBuffer;
-	Buffer<uint8_t, 128> txBuffer;
+	Buffer<uint8_t, 1024> rxBuffer;
+	Buffer<uint8_t, 1024> txBuffer;
 	static STM32F411USART1* instance;
 
 
@@ -59,7 +63,7 @@ private:
 	} parseRxTram = WAIT;
 
 	enum commState_e {
-		IDLE, ASK_FILE_TO_SERVER, SAVE_FILE, SAVE_FILENAME, TRANSFER_COMPLETED, TRANSFER_FAILED
+		IDLE, WAIT_OK_TO_TRANSFER, ASK_FILE_TO_SERVER, SAVE_FILE, SAVE_FILENAME, TRANSFER_COMPLETED, TRANSFER_FAILED
 	} commState = IDLE;
 
 	uint16_t commRxCnt = 0;
