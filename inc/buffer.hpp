@@ -58,6 +58,10 @@ public:
 		return (out == in);
 	}
 
+	bool isFull(){
+		return count == nSize;
+	}
+
 	uint16_t getCount() const {
 		return count;
 	}

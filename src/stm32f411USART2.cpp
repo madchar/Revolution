@@ -24,7 +24,7 @@ STM32F411USART2::STM32F411USART2() {
 
 	// Par default la configuration est 8N1
 	USART2->CR1 |= USART_CR1_RE | USART_CR1_TE; // Active RX et TX
-	setBaudRate(115200);
+	setBaudRate(921600);
 
 	NVIC_InitTypeDef NVIC_InitStructure;
 	//Enable the USART2 Interrupt
@@ -99,6 +99,8 @@ uint8_t STM32F411USART2::read() {
 }
 
 void STM32F411USART2::write(uint8_t data) {
+	while (txBuffer.isFull())
+		;
 	txBuffer.add(data);
 	if (!isTransmitting) {
 		isTransmitting = true;
@@ -165,7 +167,7 @@ void STM32F411USART2::sendString(uint8_t *u) {
 	}
 }
 
-bool STM32F411USART2::dataAvailable() const {
+bool STM32F411USART2::dataAvailable() {
 	return !rxBuffer.isEmpty();
 }
 
