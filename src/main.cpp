@@ -98,9 +98,11 @@ extern "C" void EXTI2_IRQHandler(void);
 
 
 void DMA2_Stream2_IRQHandler(void) {
-	if (DMA_GetITStatus(DMA2_Stream2, DMA_IT_TCIF2) == SET) {
-		DMA_ClearITPendingBit(DMA2_Stream2, DMA_IT_TCIF2);
-		DMA_ClearFlag(DMA2_Stream2, DMA_FLAG_TCIF2);
+
+		if((DMA2->LISR & DMA_IT_TCIF2) != RESET ) {
+
+		DMA2->LIFCR = (uint32_t)((DMA_IT_TCIF2|DMA_IT_DMEIF2|DMA_IT_FEIF2|DMA_IT_HTIF2|DMA_IT_TEIF2) & RESERVED_MASK);
+		DMA2->LIFCR = (uint32_t)((DMA_FLAG_DMEIF2|DMA_FLAG_FEIF2|DMA_FLAG_HTIF2|DMA_FLAG_TCIF2|DMA_FLAG_TEIF2) & RESERVED_MASK);
 
 		flagDMA_TX_Complete1 = true;
 		DMA2_Stream2->CR &= ~(uint32_t)DMA_SxCR_EN;
@@ -132,8 +134,8 @@ void DMA2_Stream2_IRQHandler(void) {
 
 void DMA1_Stream4_IRQHandler(void) {
 	if (DMA_GetITStatus(DMA1_Stream4, DMA_IT_TCIF4) == SET) {
-		DMA_ClearITPendingBit(DMA1_Stream4, DMA_IT_TCIF4);
-		DMA_ClearFlag(DMA1_Stream4, DMA_FLAG_TCIF4);
+		DMA1->HIFCR = (uint32_t)((DMA_IT_TCIF4|DMA_IT_DMEIF4|DMA_IT_FEIF4|DMA_IT_HTIF4|DMA_IT_TEIF4) & RESERVED_MASK);
+		DMA1->HIFCR = (uint32_t)((DMA_FLAG_DMEIF4|DMA_FLAG_FEIF4|DMA_FLAG_HTIF4|DMA_FLAG_TCIF4|DMA_FLAG_TEIF4) & RESERVED_MASK);
 		flagDMA_TX_Complete2 = true;
 		DMA1_Stream4->CR &= ~(uint32_t) DMA_SxCR_EN;
 
@@ -164,8 +166,8 @@ void DMA1_Stream4_IRQHandler(void) {
 
 void DMA1_Stream5_IRQHandler(void) {
 	if (DMA_GetITStatus(DMA1_Stream5, DMA_IT_TCIF5) == SET) {
-		DMA_ClearITPendingBit(DMA1_Stream5, DMA_IT_TCIF5);
-		DMA_ClearFlag(DMA1_Stream5, DMA_FLAG_TCIF5);
+		DMA1->HIFCR = (uint32_t)((DMA_IT_TCIF5|DMA_IT_DMEIF5|DMA_IT_FEIF5|DMA_IT_HTIF5|DMA_IT_TEIF5) & RESERVED_MASK);
+		DMA1->HIFCR = (uint32_t)((DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_HTIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5) & RESERVED_MASK);
 		flagDMA_TX_Complete3 = true;
 		DMA1_Stream5->CR &= ~(uint32_t) DMA_SxCR_EN;
 
@@ -196,10 +198,11 @@ void DMA1_Stream5_IRQHandler(void) {
 
 void DMA2_Stream1_IRQHandler(void) {
 	if (DMA_GetITStatus(DMA2_Stream1, DMA_IT_TCIF1) == SET) {
-		DMA_ClearITPendingBit(DMA2_Stream1, DMA_IT_TCIF1);
-		DMA_ClearFlag(DMA2_Stream1, DMA_FLAG_TCIF1);
+		DMA2->LIFCR = (uint32_t)((DMA_IT_TCIF1|DMA_IT_DMEIF1|DMA_IT_FEIF1|DMA_IT_HTIF1|DMA_IT_TEIF1) & RESERVED_MASK);
+		DMA2->LIFCR = (uint32_t)((DMA_FLAG_DMEIF1|DMA_FLAG_FEIF1|DMA_FLAG_HTIF1|DMA_FLAG_TCIF1|DMA_FLAG_TEIF1) & RESERVED_MASK);
 		flagDMA_TX_Complete4 = true;
 		DMA2_Stream1->CR &= ~(uint32_t) DMA_SxCR_EN;
+
 
 
 		if (flagDMA_TX_Complete1&&flagDMA_TX_Complete2&&flagDMA_TX_Complete3&&flagDMA_TX_Complete4)
@@ -232,19 +235,6 @@ void TIM4_IRQHandler(void) {
 
 		pixelColumnCounter++;
 
-//		if(pixelColumnCounter<128) z = 0;
-//		else z = 1;
-//		if (z==3) z = 0;
-
-		//Resynchronisation de l'image à chaque tour
-//		if (resyncDisplay==true)
-//		{
-//			pixelColumnCounter = 0;
-//			interlacing = DISPLAY_ODD_SIDE;
-//			resyncDisplay = false;
-//		}
-
-
 		if(interlacing==DISPLAY_ODD_SIDE)
 		{
 			if((pixelColumnCounter%2)==0) displayState = OFF;
@@ -263,7 +253,6 @@ void TIM4_IRQHandler(void) {
 			else if(interlacing==DISPLAY_EVEN_SIDE) interlacing = DISPLAY_NONE;
 			pixelColumnCounter = 0;
 		}
-
 
 		//Disable DMA
 		DMA2_Stream2->CR &= ~(uint32_t)DMA_SxCR_EN;
