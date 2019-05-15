@@ -10,9 +10,9 @@
 
 #include "stm32f4xx_spi.h"
 #include "hardware.h"
-#include "ispi.hpp"
 
-class STM32SPI1 : public ISPI {
+
+class STM32SPI1 {
 public:
 
 	STM32SPI1();
