@@ -680,14 +680,29 @@ bool Flash::getPixelColumnDMA(uint8_t imageNo, uint8_t columnNo,
 	spiTransfer(DummyByte);
 	spiTransfer(DummyByte);
 
-	for (uint32_t i = 0; i < SPIBufferSize; i++)
-		spiBuffer[i] = spiTransfer(DummyByte);
-	for (uint32_t i = 0; i < SPIBufferSize; i++)
-		spiBuffer[i+289] = spiTransfer(DummyByte);
-	for (uint32_t i = 0; i < SPIBufferSize; i++)
-		spiBuffer[i+578] = spiTransfer(DummyByte);
-	for (uint32_t i = 0; i < SPIBufferSize; i++)
-		spiBuffer[i+867] = spiTransfer(DummyByte);
+	DMA2_Stream2->M0AR = (uint32_t)&spiBuffer[0];
+	SPI5->CR2 |= SPI_I2S_DMAReq_Rx;
+	DMA2_Stream5->CR |= (uint32_t) DMA_SxCR_EN;
+	while(((DMA2->HISR&(uint32_t)RESERVED_MASK)&DMA_FLAG_TCIF5)==(uint32_t)RESET);
+	DMA2->HIFCR = (uint32_t)(DMA_FLAG_TCIF5 & RESERVED_MASK);
+
+	DMA2_Stream2->M0AR = (uint32_t)&spiBuffer[289];
+	SPI5->CR2 |= SPI_I2S_DMAReq_Rx;
+	DMA2_Stream5->CR |= (uint32_t) DMA_SxCR_EN;
+	while(((DMA2->HISR&(uint32_t)RESERVED_MASK)&DMA_FLAG_TCIF5)==(uint32_t)RESET);
+	DMA2->HIFCR = (uint32_t)(DMA_FLAG_TCIF5 & RESERVED_MASK);
+
+	DMA2_Stream2->M0AR = (uint32_t)&spiBuffer[578];
+	SPI5->CR2 |= SPI_I2S_DMAReq_Rx;
+	DMA2_Stream5->CR |= (uint32_t) DMA_SxCR_EN;
+	while(((DMA2->HISR&(uint32_t)RESERVED_MASK)&DMA_FLAG_TCIF5)==(uint32_t)RESET);
+	DMA2->HIFCR = (uint32_t)(DMA_FLAG_TCIF5 & RESERVED_MASK);
+
+	DMA2_Stream2->M0AR = (uint32_t)&spiBuffer[867];
+	SPI5->CR2 |= SPI_I2S_DMAReq_Rx;
+	DMA2_Stream5->CR |= (uint32_t) DMA_SxCR_EN;
+	while(((DMA2->HISR&(uint32_t)RESERVED_MASK)&DMA_FLAG_TCIF5)==(uint32_t)RESET);
+	DMA2->HIFCR = (uint32_t)(DMA_FLAG_TCIF5 & RESERVED_MASK);
 
 	setCS(false);
 
