@@ -29,6 +29,7 @@ public:
 	void sendBytes(uint8_t *data, uint32_t nBytes);
 	void sendByteToString(uint8_t byte);
 	void sendbyteToString(uint16_t byte);
+	void sendbyteToString(uint32_t byte);
 	void sendByte8ToBinaryString(uint8_t data);
 	void sendByte16ToBinaryString(uint16_t data);
 	void sendByte32ToBinaryString(uint32_t data);
@@ -75,7 +76,7 @@ private:
 	uint16_t rxImageNo = 0;
 	uint8_t pixelColumnBuffer[1156];
 	uint16_t pixelColumnBufferCntr;
-	char filename[256];
+	uint8_t filename[256];
 
 	bool timeout = 0;
 	uint8_t timeoutCntr = 0;

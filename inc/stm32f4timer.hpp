@@ -2,7 +2,7 @@
  * stm32f4timer.hpp
  *
  *  Created on: Apr 5, 2019
- *      Author: rev
+ *      Author: Matthieu Madran
  */
 
 #ifndef STM32F4TIMER_HPP_
@@ -24,9 +24,23 @@ public:
 	STM32F4Timer(TIM_TypeDef *tmr,uint32_t frequency, uint16_t prescaler,bool interruptEnable);
 	~STM32F4Timer() {}
 
+	/**
+	 * Réglage du timer en mode PWM
+	 * @param ch Channel
+	 * @param dutyCycle
+	 */
 	void enablePWM(uint8_t ch, uint32_t dutyCycle);
+	/**
+	 * Activation de l'interrupt
+	 */
 	void enableITUpdate();
+	/**
+	 * Démarrage du timer
+	 */
 	void startTimer();
+	/**
+	 * Arrêt du timer
+	 */
 	void stopTimer();
 
 private:
