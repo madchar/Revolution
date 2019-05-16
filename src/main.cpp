@@ -34,9 +34,6 @@
 
 #define HARDCODE
 
-
-
-
 Flash *flash = Flash::getInstance(false);
 
 

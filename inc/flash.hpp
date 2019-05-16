@@ -11,7 +11,6 @@
 
 #include "stm32f4xx_spi.h"
 #include "hardware.h"
-#include "ispi.hpp"
 #include <stdio.h>
 
 class Flash {

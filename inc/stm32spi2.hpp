@@ -10,7 +10,7 @@
 
 #include "stm32f4xx_spi.h"
 #include "hardware.h"
-#include "ispi.hpp"
+
 
 class STM32SPI2{
 public:
@@ -57,6 +57,7 @@ public:
 		/**
 		 * Désactivation du chip select (soft)
 		 */
+		void deassert();
 
 private:
 	static constexpr uint8_t ControlDataByte	= 0x96;
