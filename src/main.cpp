@@ -78,7 +78,7 @@ static constexpr uint8_t blackRow[289] =  {
 };
 
 static uint16_t pixelColumnCounter = 0;
-static bool debug = false;
+static bool debug = true;
 
 enum interlace_e{DISPLAY_ODD_SIDE,DISPLAY_EVEN_SIDE,DISPLAY_NONE}interlacing = DISPLAY_ODD_SIDE;
 enum display_e{ON,OFF} displayState = ON;
@@ -326,6 +326,7 @@ void TIM4_IRQHandler(void) {
 		{
 			if(bufferIndex==BUFFER_EVEN) bufferIndex = BUFFER_ODD;
 			else bufferIndex = BUFFER_EVEN;
+			flagRefreshBuffer = true;
 		}
 
 
@@ -342,7 +343,7 @@ void TIM4_IRQHandler(void) {
 		SPI4->CR2 |= SPI_I2S_DMAReq_Tx;
 		DMA2_Stream1->CR |= (uint32_t) DMA_SxCR_EN;
 
-		flagRefreshBuffer = true;
+
 	}
 }
 
@@ -529,7 +530,7 @@ int main(void) {
 	DMA_Init(DMA2_Stream1, &dma_spi);
 
 	//DMA SPI5 RX
-	dma_spi.DMA_Channel = DMA_Channel_5;
+	dma_spi.DMA_Channel = DMA_Channel_7;
 	dma_spi.DMA_Memory0BaseAddr = (uint32_t)&pixelMapEvenBuffer[867];
 	dma_spi.DMA_PeripheralBaseAddr = (uint32_t) (&(SPI5->DR));
 	dma_spi.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
@@ -546,7 +547,7 @@ int main(void) {
 	DMA_Init(DMA2_Stream5, &dma_spi);
 
 	//DMA SPI5 TX
-	dma_spi.DMA_Channel = DMA_Channel_4;
+	dma_spi.DMA_Channel = DMA_Channel_2;
 	dma_spi.DMA_Memory0BaseAddr = (uint32_t)&pixelMapEvenBuffer[867];
 	dma_spi.DMA_PeripheralBaseAddr = (uint32_t) (&(SPI5->DR));
 	dma_spi.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
@@ -649,8 +650,8 @@ int main(void) {
 	gsclkTimer.enablePWM(1,50);
 	gsclkTimer.startTimer();
 
-	STM32F4Timer latchTimer(TIM4,25,65535,false);
-	//STM32F4Timer latchTimer(TIM4,5971,0,false); // 5973
+	//STM32F4Timer latchTimer(TIM4,10,10,false);
+	STM32F4Timer latchTimer(TIM4,5971,0,false); // 5973
 
 	NVIC_EnableIRQ(TIM4_IRQn);
 
@@ -669,12 +670,11 @@ int main(void) {
 
 
 	flash->init();
-
+	flash->getPixelColumnDMA(0,0,pixelMapEvenBuffer);
 
 	if(debug) console->sendString("Done.\n\r");
 
-	//flash->getPixelColumn(0,1,pixelMapEvenBuffer1,pixelMapEvenBuffer2,pixelMapEvenBuffer3,pixelMapEvenBuffer4);
-	//flash->getPixelColumn(0,0,pixelMapOddBuffer1,pixelMapOddBuffer2,pixelMapOddBuffer3,pixelMapOddBuffer4);
+
 
 	if(debug) console->sendString("Starting DMA...\n\r");
 
@@ -697,7 +697,7 @@ int main(void) {
 	uint16_t t = 34;
 	//console->sendByteToString(t);
 	STM32F411USART1* wifi = STM32F411USART1::getInstance();
-	flash->getPixelColumnToString(0,1);
+	//flash->getPixelColumnToString(0,1);
 	//flash->readStatusRegisterToString();
 
 
