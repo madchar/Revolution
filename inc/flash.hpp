@@ -11,7 +11,6 @@
 
 #include "stm32f4xx_spi.h"
 #include "hardware.h"
-#include "ispi.hpp"
 #include <stdio.h>
 
 class Flash {
@@ -39,7 +38,6 @@ public:
 	static constexpr uint8_t FirstImagePageAddress = 99;			//First age where image are stored
 	static constexpr uint16_t PageSize = 512;						//Physical flash memory page size in bytes
 	static constexpr uint16_t MaxColumnCount = 256;
-
 
 
 	~Flash();
@@ -115,6 +113,7 @@ public:
 	void setFilename(uint8_t imageNo, uint8_t *fileName);
 	void resetFilename(uint8_t imageNo);
 
+	bool getPixelColumnDMA(uint8_t imageNo, uint8_t columnNo,uint8_t* spiBuffer);
 	bool getPixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* spiBuffer1, uint8_t* spiBuffer2, uint8_t* spiBuffer3, uint8_t* spiBuffer4);
 	bool savePixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* source);
 	void getPixelColumnToString(uint8_t imageNo, uint8_t columnNo);

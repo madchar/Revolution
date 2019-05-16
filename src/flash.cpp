@@ -13,7 +13,7 @@
 #include "stm32f411USART2.hpp"
 
 Flash* Flash::instance = 0;
-STM32F411USART1 *terminal = STM32F411USART1::getInstance();
+STM32F411USART2 *terminal = STM32F411USART2::getInstance();
 
 Flash::Flash(bool debugEnable) {
 	debug = debugEnable;
@@ -42,7 +42,7 @@ void Flash::init() {
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(SPI5_CLK_GPIO, &GPIO_InitStructure);
 	GPIO_PinAFConfig(SPI5_CLK_GPIO, SPI5_CLK_PinSource,
 			SPI5_ALTERNATE_FUNCTION);
@@ -51,7 +51,7 @@ void Flash::init() {
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(SPI5_NSS_GPIO, &GPIO_InitStructure);
 
 	//------------------------ GPIO_A MOSI MISO------------------------------------------
@@ -60,7 +60,7 @@ void Flash::init() {
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
 
 	GPIO_PinAFConfig(SPI5_MOSI_GPIO, SPI5_MOSI_PinSource,
@@ -543,11 +543,11 @@ bool Flash::savePixelColumn(uint8_t imageNo, uint8_t columnNo,
 
 	if (debug) {
 		terminal->sendString("\n\rpixelColumnPageOffset :");
-		terminal->sendByte32ToBinaryString(pixelColumnStartPage);
+		terminal->sendByteToString(pixelColumnStartPage);
 		terminal->sendString("\n\rpixelColumnStartPage :");
-		terminal->sendByte32ToBinaryString(imageColumnStartPage);
+		terminal->sendByteToString(imageColumnStartPage);
 		terminal->sendString("\n\rpixelColumnStartByte :");
-		terminal->sendByte32ToBinaryString(pixelColumnStartByte);
+		terminal->sendByteToString(pixelColumnStartByte);
 
 	}
 
@@ -596,11 +596,11 @@ bool Flash::getPixelColumn(uint8_t imageNo, uint8_t columnNo,
 
 	if (debug) {
 		terminal->sendString("\n\rpixelColumnPageOffset :");
-		terminal->sendByte32ToBinaryString(pixelColumnStartPage);
+		terminal->sendByteToString(pixelColumnStartPage);
 		terminal->sendString("\n\rpixelColumnStartPage :");
-		terminal->sendByte32ToBinaryString(imageColumnStartPage);
+		terminal->sendByteToString(imageColumnStartPage);
 		terminal->sendString("\n\rpixelColumnStartByte :");
-		terminal->sendByte32ToBinaryString(pixelColumnStartByte);
+		terminal->sendByteToString(pixelColumnStartByte);
 	}
 
 	address_t add;
@@ -637,6 +637,66 @@ bool Flash::getPixelColumn(uint8_t imageNo, uint8_t columnNo,
 		terminal->sendString("Column loaded from flash...\n\r");
 	return true;
 }
+
+bool Flash::getPixelColumnDMA(uint8_t imageNo, uint8_t columnNo,
+		uint8_t* spiBuffer) {
+	if (debug)
+
+		terminal->sendString("Loading pixel column from flash...\n\r");
+
+	imageNo = imageNo % MaxImageStored;
+
+	uint32_t imageColumnStartPage = FirstImagePageAddress
+			+ (imageNo * PagesPerImage);
+	uint32_t pixelColumnStartPage = imageColumnStartPage
+			+ (floor((columnNo * ColumnPixelArraySize) / PageSize));
+	uint32_t pixelColumnStartByte = (columnNo * ColumnPixelArraySize)
+			% PageSize;
+
+	if (debug) {
+		terminal->sendString("\n\rpixelColumnPageOffset :");
+		terminal->sendByteToString(pixelColumnStartPage);
+		terminal->sendString("\n\rpixelColumnStartPage :");
+		terminal->sendByteToString(imageColumnStartPage);
+		terminal->sendString("\n\rpixelColumnStartByte :");
+		terminal->sendByteToString(pixelColumnStartByte);
+	}
+
+	address_t add;
+	add.page = pixelColumnStartPage;
+	add.byte = pixelColumnStartByte;
+
+	uint32_t address = 0;
+	address = add.page;
+	address = address << 9;
+	address |= add.byte;
+
+	setCS(true);
+	spiTransfer(ContinuousPageRead);
+	spiTransfer((address & 0x00FF0000) >> 16);
+	spiTransfer((address & 0x0000FF00) >> 8);
+	spiTransfer((address & 0x000000FF));
+
+	spiTransfer(DummyByte);
+	spiTransfer(DummyByte);
+
+	for (uint32_t i = 0; i < SPIBufferSize; i++)
+		spiBuffer[i] = spiTransfer(DummyByte);
+	for (uint32_t i = 0; i < SPIBufferSize; i++)
+		spiBuffer[i+289] = spiTransfer(DummyByte);
+	for (uint32_t i = 0; i < SPIBufferSize; i++)
+		spiBuffer[i+578] = spiTransfer(DummyByte);
+	for (uint32_t i = 0; i < SPIBufferSize; i++)
+		spiBuffer[i+867] = spiTransfer(DummyByte);
+
+	setCS(false);
+
+	if (debug)
+
+		terminal->sendString("Column loaded from flash...\n\r");
+	return true;
+}
+
 
 void Flash::getPixelColumnToString(uint8_t imageNo, uint8_t columnNo){
 
@@ -684,9 +744,8 @@ void Flash::getPixelColumnToString(uint8_t imageNo, uint8_t columnNo){
 		terminal->write(spiTransfer(DummyByte));
 	setCS(false);
 
-	if (debug)
-
-		terminal->sendString("Column loaded from flash...\n\r");
+	if (debug);
+		//terminal->sendString("\n\rColumn loaded from flash...\n\r");
 }
 
 void Flash::setDebug(bool debug) {

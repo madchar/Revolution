@@ -29,6 +29,7 @@ public:
 	void write(uint8_t data);
 	void sendByteToString(uint8_t byte);
 	void sendbyteToString(uint16_t byte);
+	void sendbyteToString(uint32_t byte);
 	void sendBytes(uint8_t *data, uint32_t nBytes);
 	void sendByte8ToBinaryString(uint8_t data);
 	void sendByte16ToBinaryString(uint16_t data);
