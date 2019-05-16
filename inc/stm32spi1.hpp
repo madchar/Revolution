@@ -11,8 +11,7 @@
 #include "stm32f4xx_spi.h"
 #include "hardware.h"
 
-
-class STM32SPI1 {
+class STM32SPI1  {
 public:
 
 	STM32SPI1();
@@ -58,10 +57,6 @@ public:
 	 * Désactivation du chip select (soft)
 	 */
 	void deassert();
-	/**
-	 *
-	 * @param spi
-	 */
 
 private:
 	static constexpr uint8_t ControlDataByte	= 0x96;

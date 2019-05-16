@@ -79,7 +79,8 @@ static constexpr uint8_t blackRow[289] =  {
 
 
 static uint16_t pixelColumnCounter = 0;
-static bool debug = false;
+
+static bool debug = true;
 
 enum interlace_e{DISPLAY_ODD_SIDE,DISPLAY_EVEN_SIDE,DISPLAY_NONE}interlacing = DISPLAY_ODD_SIDE;
 enum display_e{ON,OFF} displayState = ON;
@@ -231,21 +232,7 @@ void TIM4_IRQHandler(void) {
 		//Clear flag Interrupt
 		TIM4->SR = (uint16_t) ~TIM_IT_Update;
 
-
 		pixelColumnCounter++;
-
-//		if(pixelColumnCounter<128) z = 0;
-//		else z = 1;
-//		if (z==3) z = 0;
-
-		//Resynchronisation de l'image à chaque tour
-		if (resyncDisplay==true)
-		{
-			pixelColumnCounter = 0;
-			interlacing = DISPLAY_ODD_SIDE;
-			resyncDisplay = false;
-		}
-
 
 		if(interlacing==DISPLAY_ODD_SIDE)
 		{
@@ -265,7 +252,6 @@ void TIM4_IRQHandler(void) {
 			else if(interlacing==DISPLAY_EVEN_SIDE) interlacing = DISPLAY_NONE;
 			pixelColumnCounter = 0;
 		}
-
 
 		//Disable DMA
 		DMA2_Stream2->CR &= ~(uint32_t)DMA_SxCR_EN;
@@ -339,6 +325,7 @@ void TIM4_IRQHandler(void) {
 		{
 			if(bufferIndex==BUFFER_EVEN) bufferIndex = BUFFER_ODD;
 			else bufferIndex = BUFFER_EVEN;
+			flagRefreshBuffer = true;
 		}
 
 
@@ -355,16 +342,19 @@ void TIM4_IRQHandler(void) {
 		SPI4->CR2 |= SPI_I2S_DMAReq_Tx;
 		DMA2_Stream1->CR |= (uint32_t) DMA_SxCR_EN;
 
-		flagRefreshBuffer = true;
+
 	}
 }
 
 void EXTI2_IRQHandler(void)
 {
 	if ((EXTI->PR & EXTI_Line2) != RESET) {
-		resyncDisplay = true;
+		pixelColumnCounter = 63;
+		interlacing = DISPLAY_ODD_SIDE;
+
 		//		TIM4->CR1 &= ~TIM_CR1_CEN;
 		//		TIM4->CR1 |= TIM_CR1_CEN;
+		//resyncDisplay = true;
 		EXTI->PR = EXTI_Line2;
 	}
 }
@@ -462,7 +452,7 @@ int main(void) {
 	tlc.setAllDcData(127);
 	tlc.setMaxCurrent(0, 0, 0);
 	tlc.setFunctionControlData(true, true, true, true, true);
-	tlc.setBrightnessCurrent(127, 5, 10);
+	tlc.setBrightnessCurrent(127, 25, 25);
 	tlc.updateControl();
 
 	if(debug) console->sendString("Done.\n\r");
@@ -486,7 +476,6 @@ int main(void) {
 	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single ;
 	dma_spi.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	dma_spi.DMA_FIFOMode = DMA_FIFOMode_Disable;
-
 	DMA_Init(DMA2_Stream2, &dma_spi);
 
 	//DMA SPI2
@@ -504,7 +493,6 @@ int main(void) {
 	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single ;
 	dma_spi.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	dma_spi.DMA_FIFOMode = DMA_FIFOMode_Disable;
-
 	DMA_Init(DMA1_Stream4, &dma_spi);
 
 	//DMA SPI3
@@ -522,7 +510,6 @@ int main(void) {
 	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single ;
 	dma_spi.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	dma_spi.DMA_FIFOMode = DMA_FIFOMode_Disable;
-
 	DMA_Init(DMA1_Stream5, &dma_spi);
 
 	//DMA SPI4
@@ -540,8 +527,43 @@ int main(void) {
 	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single ;
 	dma_spi.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	dma_spi.DMA_FIFOMode = DMA_FIFOMode_Disable;
-
 	DMA_Init(DMA2_Stream1, &dma_spi);
+
+	//DMA SPI5 RX
+	dma_spi.DMA_Channel = DMA_Channel_7;
+	dma_spi.DMA_Memory0BaseAddr = (uint32_t)&pixelMapEvenBuffer[867];
+	dma_spi.DMA_PeripheralBaseAddr = (uint32_t) (&(SPI5->DR));
+	dma_spi.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+	dma_spi.DMA_PeripheralDataSize = DMA_MemoryDataSize_Byte;
+	dma_spi.DMA_DIR = DMA_DIR_PeripheralToMemory;
+	dma_spi.DMA_Mode = DMA_Mode_Normal;
+	dma_spi.DMA_MemoryInc = DMA_MemoryInc_Enable;
+	dma_spi.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+	dma_spi.DMA_BufferSize = 289;
+	dma_spi.DMA_Priority = DMA_Priority_High;
+	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single ;
+	dma_spi.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
+	dma_spi.DMA_FIFOMode = DMA_FIFOMode_Disable;
+	DMA_Init(DMA2_Stream5, &dma_spi);
+
+	//DMA SPI5 TX
+	dma_spi.DMA_Channel = DMA_Channel_2;
+	dma_spi.DMA_Memory0BaseAddr = (uint32_t)&pixelMapEvenBuffer[867];
+	dma_spi.DMA_PeripheralBaseAddr = (uint32_t) (&(SPI5->DR));
+	dma_spi.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+	dma_spi.DMA_PeripheralDataSize = DMA_MemoryDataSize_Byte;
+	dma_spi.DMA_DIR = DMA_DIR_MemoryToPeripheral;
+	dma_spi.DMA_Mode = DMA_Mode_Normal;
+	dma_spi.DMA_MemoryInc = DMA_MemoryInc_Enable;
+	dma_spi.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+	dma_spi.DMA_BufferSize = 289;
+	dma_spi.DMA_Priority = DMA_Priority_High;
+	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single ;
+	dma_spi.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
+	dma_spi.DMA_FIFOMode = DMA_FIFOMode_Disable;
+	DMA_Init(DMA2_Stream4, &dma_spi);
+
+
 
 	//Enable the transfer complete interrupt
 	DMA_ITConfig(DMA2_Stream2,DMA_IT_TC,ENABLE);
@@ -628,8 +650,8 @@ int main(void) {
 	gsclkTimer.enablePWM(1,50);
 	gsclkTimer.startTimer();
 
-	STM32F4Timer latchTimer(TIM4,25,65535,false);
-	//STM32F4Timer latchTimer(TIM4,5971,0,false); // 5973
+	//STM32F4Timer latchTimer(TIM4,10,10,false);
+	STM32F4Timer latchTimer(TIM4,5971,0,false); // 5973
 
 	NVIC_EnableIRQ(TIM4_IRQn);
 
@@ -648,12 +670,11 @@ int main(void) {
 
 
 	flash->init();
-
+	flash->getPixelColumnDMA(0,0,pixelMapEvenBuffer);
 
 	if(debug) console->sendString("Done.\n\r");
 
-	//flash->getPixelColumn(0,1,pixelMapEvenBuffer1,pixelMapEvenBuffer2,pixelMapEvenBuffer3,pixelMapEvenBuffer4);
-	//flash->getPixelColumn(0,0,pixelMapOddBuffer1,pixelMapOddBuffer2,pixelMapOddBuffer3,pixelMapOddBuffer4);
+
 
 	if(debug) console->sendString("Starting DMA...\n\r");
 
@@ -676,68 +697,14 @@ int main(void) {
 	uint16_t t = 34;
 	//console->sendByteToString(t);
 	STM32F411USART1* wifi = STM32F411USART1::getInstance();
-	flash->getPixelColumnToString(0,1);
+	//flash->getPixelColumnToString(0,1);
 	//flash->readStatusRegisterToString();
 
-//	char car;
-//	uint8_t bufferConsole[1169];
-//	bufferConsole[1168] = 0;
-//	uint8_t testCount= 0;
+
 
 	while (1) {
 
-//		if (console->dataAvailable())
-//				{
-//					car = console->read();
-//					//console->write(car);
-//					if (car == '1')
-//					{
-//						int c = 0;
-//
-//						uint16_t cnt = 0;
-//						console->sendString("Waiting for transmission #");
-//						console->sendbyteToString(testCount);
-//						console->sendString("\n\r");
-//
-//							while(!console->dataAvailable());
-//							console->sendString("Receiving transmission #");
-//							console->sendbyteToString(testCount);
-//							console->sendString("\n\r");
-//							while(cnt<1156)
-//							{
-//								if(console->dataAvailable())
-//								{
-//									bufferConsole[cnt] = console->read();
-//									cnt++;
-//								}
-//							}
-//							if(debug) console->sendString("Printing buffer \n\r");
-//							for(int i = 0;i<1156;i++)
-//								{
-//									console->write(bufferConsole[i]);
-//								}
-//							if(debug) console->sendString("Saving to flash...\n\r");
-//							flash->savePixelColumn(0,0,bufferConsole);
-//							testCount++;
-//							if(debug) console->sendString("Success.\n\r");
-//							if(testCount==256)testCount=0;
-//
-//							//if (imageNum==Flash::MaxImageStored) imageNum = 0;
-//							car = 0;
-//							cnt = 0;
-//
-//						console->sendString("Transmission done.\n\r");
-//					}
-//					if(car== '2')
-//					{
-//						console->sendString("Printing column #");
-//						console->sendByteToString(0);
-//						console->sendString("\n\r");
-//
-//						flash->getPixelColumnToString(0,0);
-//						car = 0;
-//					}
-//				}
+
 
 
 		//wifi->incommingDataDecoder(flash);

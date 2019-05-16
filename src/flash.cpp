@@ -84,12 +84,12 @@ void Flash::init() {
 	SPI_Init(SPI5, &SPI_InitStruct);
 	SPI_NSSInternalSoftwareConfig(SPI5, SPI_NSSInternalSoft_Set);
 	SPI_Cmd(SPI5, ENABLE);
+//
+//	while (isBusy())
+//		;
 
-	while (isBusy())
-		;
-
-	positionOfPresentImages = getPositionOfPresentImagesInCarrousel();
-	readControlRegister();
+	//positionOfPresentImages = getPositionOfPresentImagesInCarrousel();
+	//readControlRegister();
 
 	if (debug)
 		terminal->sendString("\n\rFlash initialization completed.\n\r");
@@ -103,7 +103,7 @@ void Flash::setCS(bool state) {
 	}
 }
 
-uint8_t Flash::spiTransfer(uint8_t data) {
+uint8_t inline Flash::spiTransfer(uint8_t data) {
 	uint8_t result = 0;
 	while (SPI_GetFlagStatus(SPI5, SPI_FLAG_TXE) == RESET)
 		;
@@ -579,66 +579,6 @@ bool Flash::savePixelColumn(uint8_t imageNo, uint8_t columnNo,
 }
 
 bool Flash::getPixelColumn(uint8_t imageNo, uint8_t columnNo,
-		uint8_t* spiBuffer1, uint8_t* spiBuffer2, uint8_t* spiBuffer3,
-		uint8_t* spiBuffer4) {
-	if (debug)
-
-		terminal->sendString("Loading pixel column from flash...\n\r");
-
-	imageNo = imageNo % MaxImageStored;
-
-	uint32_t imageColumnStartPage = FirstImagePageAddress
-			+ (imageNo * PagesPerImage);
-	uint32_t pixelColumnStartPage = imageColumnStartPage
-			+ (floor((columnNo * ColumnPixelArraySize) / PageSize));
-	uint32_t pixelColumnStartByte = (columnNo * ColumnPixelArraySize)
-			% PageSize;
-
-	if (debug) {
-		terminal->sendString("\n\rpixelColumnPageOffset :");
-		terminal->sendByteToString(pixelColumnStartPage);
-		terminal->sendString("\n\rpixelColumnStartPage :");
-		terminal->sendByteToString(imageColumnStartPage);
-		terminal->sendString("\n\rpixelColumnStartByte :");
-		terminal->sendByteToString(pixelColumnStartByte);
-	}
-
-	address_t add;
-	add.page = pixelColumnStartPage;
-	add.byte = pixelColumnStartByte;
-
-	uint32_t address = 0;
-	address = add.page;
-	address = address << 9;
-	address |= add.byte;
-
-	setCS(true);
-	spiTransfer(ContinuousPageRead);
-	spiTransfer((address & 0x00FF0000) >> 16);
-	spiTransfer((address & 0x0000FF00) >> 8);
-	spiTransfer((address & 0x000000FF));
-
-	spiTransfer(DummyByte);
-	spiTransfer(DummyByte);
-
-	for (uint32_t i = 0; i < SPIBufferSize; i++)
-		spiBuffer1[i] = spiTransfer(DummyByte);
-	for (uint32_t i = 0; i < SPIBufferSize; i++)
-		spiBuffer2[i] = spiTransfer(DummyByte);
-	for (uint32_t i = 0; i < SPIBufferSize; i++)
-		spiBuffer3[i] = spiTransfer(DummyByte);
-	for (uint32_t i = 0; i < SPIBufferSize; i++)
-		spiBuffer4[i] = spiTransfer(DummyByte);
-
-	setCS(false);
-
-	if (debug)
-
-		terminal->sendString("Column loaded from flash...\n\r");
-	return true;
-}
-
-bool Flash::getPixelColumnDMA(uint8_t imageNo, uint8_t columnNo,
 		uint8_t* spiBuffer) {
 	if (debug)
 
@@ -687,13 +627,125 @@ bool Flash::getPixelColumnDMA(uint8_t imageNo, uint8_t columnNo,
 	for (uint32_t i = 0; i < SPIBufferSize; i++)
 		spiBuffer[i+578] = spiTransfer(DummyByte);
 	for (uint32_t i = 0; i < SPIBufferSize; i++)
-		spiBuffer[i+867] = spiTransfer(DummyByte);
 
 	setCS(false);
 
 	if (debug)
 
 		terminal->sendString("Column loaded from flash...\n\r");
+	return true;
+}
+
+bool Flash::getPixelColumnDMA(uint8_t imageNo, uint8_t columnNo,
+		uint8_t* spiBuffer) {
+#ifdef DDEBUG
+	if (debug)
+
+		terminal->sendString("Loading pixel column from flash...\n\r");
+#endif
+	imageNo = imageNo % MaxImageStored;
+
+	uint32_t imageColumnStartPage = FirstImagePageAddress
+			+ (imageNo * PagesPerImage);
+	uint32_t pixelColumnStartPage = imageColumnStartPage
+			+ (floor((columnNo * ColumnPixelArraySize) / PageSize));
+	uint32_t pixelColumnStartByte = (columnNo * ColumnPixelArraySize)
+			% PageSize;
+#ifdef DDEBUG
+	if (debug) {
+		terminal->sendString("\n\rpixelColumnPageOffset :");
+		terminal->sendByteToString(pixelColumnStartPage);
+		terminal->sendString("\n\rpixelColumnStartPage :");
+		terminal->sendByteToString(imageColumnStartPage);
+		terminal->sendString("\n\rpixelColumnStartByte :");
+		terminal->sendByteToString(pixelColumnStartByte);
+	}
+#endif
+	address_t add;
+	add.page = pixelColumnStartPage;
+	add.byte = pixelColumnStartByte;
+
+	uint32_t address = 0;
+	address = add.page;
+	address = address << 9;
+	address |= add.byte;
+
+	//setCS(true);
+	SPI5_NSS_GPIO->BSRRH = SPI5_NSS_Pin;
+
+	spiTransfer(ContinuousPageRead);
+	spiTransfer((address & 0x00FF0000) >> 16);
+	spiTransfer((address & 0x0000FF00) >> 8);
+	spiTransfer((address & 0x000000FF));
+
+	spiTransfer(DummyByte);
+	spiTransfer(DummyByte);
+
+	#ifdef DDEBUG
+	terminal->sendString("starting DMA\n\r");
+#endif
+
+	DMA2_Stream5->M0AR = (uint32_t)&spiBuffer[0];
+	SPI5->CR2 |= SPI_I2S_DMAReq_Rx;
+	SPI5->CR2 |= SPI_I2S_DMAReq_Tx;
+	DMA2_Stream4->CR |= (uint32_t) DMA_SxCR_EN;
+	DMA2_Stream5->CR |= (uint32_t) DMA_SxCR_EN;
+	while(DMA_GetFlagStatus(DMA2_Stream5, DMA_FLAG_TCIF5)==RESET);
+	//while(((DMA2->HISR&(uint32_t)RESERVED_MASK)&DMA_FLAG_TCIF5)==(uint32_t)RESET);
+	DMA2->HIFCR = (uint32_t)((DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_HTIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5) & RESERVED_MASK);
+	DMA2->HIFCR = (uint32_t)((DMA_FLAG_DMEIF4|DMA_FLAG_FEIF4|DMA_FLAG_HTIF4|DMA_FLAG_TCIF4|DMA_FLAG_TEIF4) & RESERVED_MASK);
+	//DMA_ClearFlag(DMA2_Stream5, DMA_FLAG_TCIF5);
+	//DMA_ClearFlag(DMA2_Stream4, DMA_FLAG_TCIF4);
+	#ifdef DDEBUG
+	terminal->sendString("buffer1 done\n\r");
+#endif
+
+	DMA2_Stream5->M0AR = (uint32_t)&spiBuffer[289];
+	SPI5->CR2 |= SPI_I2S_DMAReq_Rx;
+	SPI5->CR2 |= SPI_I2S_DMAReq_Tx;
+	DMA2_Stream4->CR |= (uint32_t) DMA_SxCR_EN;
+	DMA2_Stream5->CR |= (uint32_t) DMA_SxCR_EN;
+	while(DMA_GetFlagStatus(DMA2_Stream5, DMA_FLAG_TCIF5)==RESET);
+	DMA2->HIFCR = (uint32_t)((DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_HTIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5) & RESERVED_MASK);
+	DMA2->HIFCR = (uint32_t)((DMA_FLAG_DMEIF4|DMA_FLAG_FEIF4|DMA_FLAG_HTIF4|DMA_FLAG_TCIF4|DMA_FLAG_TEIF4) & RESERVED_MASK);
+
+	#ifdef DDEBUG
+	terminal->sendString("buffer2 done\n\r");
+#endif
+
+	DMA2_Stream5->M0AR = (uint32_t)&spiBuffer[578];
+	SPI5->CR2 |= SPI_I2S_DMAReq_Rx;
+	SPI5->CR2 |= SPI_I2S_DMAReq_Tx;
+	DMA2_Stream4->CR |= (uint32_t) DMA_SxCR_EN;
+	DMA2_Stream5->CR |= (uint32_t) DMA_SxCR_EN;
+	while(DMA_GetFlagStatus(DMA2_Stream5, DMA_FLAG_TCIF5)==RESET);
+	DMA2->HIFCR = (uint32_t)((DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_HTIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5) & RESERVED_MASK);
+	DMA2->HIFCR = (uint32_t)((DMA_FLAG_DMEIF4|DMA_FLAG_FEIF4|DMA_FLAG_HTIF4|DMA_FLAG_TCIF4|DMA_FLAG_TEIF4) & RESERVED_MASK);
+
+	#ifdef DDEBUG
+	terminal->sendString("buffer3 done\n\r");
+#endif
+
+	DMA2_Stream5->M0AR = (uint32_t)&spiBuffer[867];
+	SPI5->CR2 |= SPI_I2S_DMAReq_Rx;
+	SPI5->CR2 |= SPI_I2S_DMAReq_Tx;
+	DMA2_Stream4->CR |= (uint32_t) DMA_SxCR_EN;
+	DMA2_Stream5->CR |= (uint32_t) DMA_SxCR_EN;
+	while(DMA_GetFlagStatus(DMA2_Stream5, DMA_FLAG_TCIF5)==RESET);
+	DMA2->HIFCR = (uint32_t)((DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_HTIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5) & RESERVED_MASK);
+	DMA2->HIFCR = (uint32_t)((DMA_FLAG_DMEIF4|DMA_FLAG_FEIF4|DMA_FLAG_HTIF4|DMA_FLAG_TCIF4|DMA_FLAG_TEIF4) & RESERVED_MASK);
+
+	#ifdef DDEBUG
+	terminal->sendString("buffer4 done\n\r");
+#endif
+
+	//setCS(false);
+	  SPI5_NSS_GPIO->BSRRL = SPI5_NSS_Pin;
+#ifdef DDEBUG
+	if (debug)
+
+		terminal->sendString("Column loaded from flash...\n\r");
+#endif
 	return true;
 }
 

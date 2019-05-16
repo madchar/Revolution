@@ -11,8 +11,8 @@
 #include "stm32f4xx_spi.h"
 #include "hardware.h"
 
+class STM32SPI2{
 
-class STM32SPI2 {
 public:
 
 	STM32SPI2();

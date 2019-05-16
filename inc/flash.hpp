@@ -11,7 +11,6 @@
 
 #include "stm32f4xx_spi.h"
 #include "hardware.h"
-#include "ispi.hpp"
 #include <stdio.h>
 
 class Flash {
@@ -57,7 +56,7 @@ public:
 	 * @param data : byte to be transfered via SPI
 	 * @return byte read from SPI Data Register
 	 */
-	uint8_t spiTransfer(uint8_t data);
+	uint8_t inline spiTransfer(uint8_t data);
 	/**
 	 *
 	 * @param state : 1 = assert Chip Select 0 = deassert Chip Select
@@ -116,7 +115,7 @@ public:
 	void resetFilename(uint8_t imageNo);
 
 	bool getPixelColumnDMA(uint8_t imageNo, uint8_t columnNo,uint8_t* spiBuffer);
-	bool getPixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* spiBuffer1, uint8_t* spiBuffer2, uint8_t* spiBuffer3, uint8_t* spiBuffer4);
+	bool getPixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* spiBuffer);
 	bool savePixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* source);
 	void getPixelColumnToString(uint8_t imageNo, uint8_t columnNo);
 	void setDebug(bool debug);
