@@ -40,7 +40,6 @@ public:
 	static constexpr uint16_t MaxColumnCount = 256;
 
 
-
 	~Flash();
 	/**
 	 * page : page number 0 - 8191
