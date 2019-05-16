@@ -121,11 +121,7 @@
 #define USART2_RX_Pin				GPIO_Pin_3
 
 //*************GLOBAL VARIABLEs********************************
-//static uint8_t screenBuffer1[289];
-//static uint8_t screenBuffer2[289];
-//static uint8_t screenBuffer3[289];
-//static uint8_t screenBuffer4[289];
-//static uint8_t screenBuffer5[289];
+#define RESERVED_MASK           (uint32_t)0x0F7D0F7D
 
 //******************GLOBAL FUNCTIONS***************************
 void initGPIO();

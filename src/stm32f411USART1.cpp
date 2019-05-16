@@ -62,7 +62,7 @@ STM32F411USART1::STM32F411USART1() {
 	 */
 	NVIC_InitStruct.NVIC_IRQChannel = USART1_IRQn;
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
+	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 3;
 	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
 	NVIC_Init(&NVIC_InitStruct);
 	NVIC_EnableIRQ(USART1_IRQn);
@@ -178,11 +178,15 @@ uint8_t STM32F411USART1::read() {
 void STM32F411USART1::write(uint8_t data) {
 	while (txBuffer.isFull())
 		;
-	txBuffer.add(data);
-	if (!isTransmitting) {
-		isTransmitting = true;
-		USART2->CR1 |= USART_CR1_TXEIE; // active l'interruption.
-	}
+	if (isTransmitting) {
+			USART1->CR1 &= ~USART_CR1_TXEIE;
+			txBuffer.add(data);
+		} else {
+			txBuffer.add(data);
+			isTransmitting = true;
+
+		}
+		USART1->CR1 |= USART_CR1_TXEIE;
 }
 
 void STM32F411USART1::sendBytes(uint8_t* data, uint32_t nBytes) {
@@ -245,7 +249,7 @@ void STM32F411USART1::sendString(uint8_t *u) {
 void STM32F411USART1::incommingDataDecoder(Flash* flash) {
 	uint8_t car;
 
-	switch (commState) {									//Réception d'images
+	switch (commState) {									//Rï¿½ception d'images
 
 	case IDLE:
 		if (dataAvailable()) {
@@ -253,7 +257,7 @@ void STM32F411USART1::incommingDataDecoder(Flash* flash) {
 			if (echo)
 				write(car);
 
-			switch (parseRxTram) {						//Réception de trames
+			switch (parseRxTram) {						//Rï¿½ception de trames
 
 			case WAIT:
 				if (car == '<') {
@@ -338,7 +342,7 @@ void STM32F411USART1::incommingDataDecoder(Flash* flash) {
 			car = read();
 			if (car == '>') {
 				filename[commRxCnt] = 0;
-				//flash->setFilename(rxImageNo, filename);
+				flash->setFilename(rxImageNo, filename);
 				commState = IDLE;
 			} else
 				filename[commRxCnt++] = car;
@@ -426,10 +430,6 @@ void STM32F411USART1::parseTram(Flash *flash) {
 		flash->resetImageInCarrousel(13);
 		flash->resetFilename(13);
 		sendFilenameList(flash);
-	} else if (sTram == CMD_Del14) {
-		flash->resetImageInCarrousel(14);
-		flash->resetFilename(14);
-		sendFilenameList(flash);
 	} else {
 
 		std::string s = sTram;
@@ -489,6 +489,7 @@ void USART1_IRQHandler(void) {
 // RX Data
 	if (isr & USART_SR_RXNE) {
 		USART1->SR &= ~USART_SR_RXNE;
+		while(STM32F411USART1::instance->rxBuffer.isFull());
 		STM32F411USART1::instance->rxBuffer.add(USART1->DR);
 	}
 // TX Done
