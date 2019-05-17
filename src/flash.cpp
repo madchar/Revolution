@@ -417,7 +417,7 @@ void Flash::writeByte(const address_t *add, const char *byte, uint16_t nByte) {
 		terminal->sendString("Done. \n\r\r");
 }
 
-void Flash::erasePage(const address_t *add) {
+void Flash::formatPage(const address_t *add) {
 	uint32_t address = 0;
 	address = add->page;
 	address = address << 9;
@@ -440,7 +440,7 @@ void Flash::erasePage(const address_t *add) {
 
 }
 
-void Flash::eraseChip() {
+void Flash::formatChip() {
 	if (debug)
 
 		terminal->sendString("Erasing Chip...\n\r");
