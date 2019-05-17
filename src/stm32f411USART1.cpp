@@ -362,6 +362,7 @@ void STM32F411USART1::incommingDataDecoder(Flash* flash) {
 	}
 }
 
+
 void STM32F411USART1::parseTram(Flash *flash) {
 	std::string sTram = tram;
 

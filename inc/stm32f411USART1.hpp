@@ -107,5 +107,6 @@ private:
 
 	//STM32F4Timer *commTimeOut;
 
+
 };
 #endif /* STM32F411USART1_HPP_ */

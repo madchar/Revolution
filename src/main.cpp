@@ -706,6 +706,7 @@ int main(void) {
 		}
 
 
+
 		if(flagRefreshBuffer)
 		{
 						if(pixelColumnCounter<255)
