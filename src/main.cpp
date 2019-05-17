@@ -97,9 +97,6 @@ void DMA2_Stream2_IRQHandler(void) {
 
 	if((DMA2->LISR & DMA_IT_TCIF2) != RESET ) {
 
-		DMA2->LIFCR = (uint32_t)((DMA_IT_TCIF2|DMA_IT_DMEIF2|DMA_IT_FEIF2|DMA_IT_HTIF2|DMA_IT_TEIF2) & RESERVED_MASK);
-		DMA2->LIFCR = (uint32_t)((DMA_FLAG_DMEIF2|DMA_FLAG_FEIF2|DMA_FLAG_HTIF2|DMA_FLAG_TCIF2|DMA_FLAG_TEIF2) & RESERVED_MASK);
-
 		flagDMA_TX_Complete1 = true;
 		DMA2_Stream2->CR &= ~(uint32_t)DMA_SxCR_EN;
 
@@ -117,21 +114,20 @@ void DMA2_Stream2_IRQHandler(void) {
 				TLC_LAT2_GPIO->BSRRL = TLC_LAT2_Pin;
 				TLC_LAT2_GPIO->BSRRH = TLC_LAT2_Pin;
 			}
-
-
 			flagDMA_TX_Complete1 = false;
 			flagDMA_TX_Complete2 = false;
 			flagDMA_TX_Complete3 = false;
 			flagDMA_TX_Complete4 = false;
 		}
-
 	}
+	DMA2->LIFCR = (uint32_t)((DMA_IT_TCIF2|DMA_IT_DMEIF2|DMA_IT_FEIF2|DMA_IT_HTIF2|DMA_IT_TEIF2) & RESERVED_MASK);
+	DMA2->LIFCR = (uint32_t)((DMA_FLAG_DMEIF2|DMA_FLAG_FEIF2|DMA_FLAG_HTIF2|DMA_FLAG_TCIF2|DMA_FLAG_TEIF2) & RESERVED_MASK);
+
 }
 
 void DMA1_Stream4_IRQHandler(void) {
 	if (DMA_GetITStatus(DMA1_Stream4, DMA_IT_TCIF4) == SET) {
-		DMA1->HIFCR = (uint32_t)((DMA_IT_TCIF4|DMA_IT_DMEIF4|DMA_IT_FEIF4|DMA_IT_HTIF4|DMA_IT_TEIF4) & RESERVED_MASK);
-		DMA1->HIFCR = (uint32_t)((DMA_FLAG_DMEIF4|DMA_FLAG_FEIF4|DMA_FLAG_HTIF4|DMA_FLAG_TCIF4|DMA_FLAG_TEIF4) & RESERVED_MASK);
+
 		flagDMA_TX_Complete2 = true;
 		DMA1_Stream4->CR &= ~(uint32_t) DMA_SxCR_EN;
 
@@ -158,15 +154,15 @@ void DMA1_Stream4_IRQHandler(void) {
 			flagDMA_TX_Complete4 = false;
 		}
 	}
+	DMA1->HIFCR = (uint32_t)((DMA_IT_TCIF4|DMA_IT_DMEIF4|DMA_IT_FEIF4|DMA_IT_HTIF4|DMA_IT_TEIF4) & RESERVED_MASK);
+	DMA1->HIFCR = (uint32_t)((DMA_FLAG_DMEIF4|DMA_FLAG_FEIF4|DMA_FLAG_HTIF4|DMA_FLAG_TCIF4|DMA_FLAG_TEIF4) & RESERVED_MASK);
 }
 
 void DMA1_Stream5_IRQHandler(void) {
 	if (DMA_GetITStatus(DMA1_Stream5, DMA_IT_TCIF5) == SET) {
-		DMA1->HIFCR = (uint32_t)((DMA_IT_TCIF5|DMA_IT_DMEIF5|DMA_IT_FEIF5|DMA_IT_HTIF5|DMA_IT_TEIF5) & RESERVED_MASK);
-		DMA1->HIFCR = (uint32_t)((DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_HTIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5) & RESERVED_MASK);
+
 		flagDMA_TX_Complete3 = true;
 		DMA1_Stream5->CR &= ~(uint32_t) DMA_SxCR_EN;
-
 
 		if (flagDMA_TX_Complete1&&flagDMA_TX_Complete2&&flagDMA_TX_Complete3&&flagDMA_TX_Complete4)
 		{
@@ -182,20 +178,19 @@ void DMA1_Stream5_IRQHandler(void) {
 				TLC_LAT2_GPIO->BSRRL = TLC_LAT2_Pin;
 				TLC_LAT2_GPIO->BSRRH = TLC_LAT2_Pin;
 			}
-
 			flagDMA_TX_Complete1 = false;
 			flagDMA_TX_Complete2 = false;
 			flagDMA_TX_Complete3 = false;
 			flagDMA_TX_Complete4 = false;
 		}
-
 	}
+	DMA1->HIFCR = (uint32_t)((DMA_IT_TCIF5|DMA_IT_DMEIF5|DMA_IT_FEIF5|DMA_IT_HTIF5|DMA_IT_TEIF5) & RESERVED_MASK);
+		DMA1->HIFCR = (uint32_t)((DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_HTIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5) & RESERVED_MASK);
 }
 
 void DMA2_Stream1_IRQHandler(void) {
 	if (DMA_GetITStatus(DMA2_Stream1, DMA_IT_TCIF1) == SET) {
-		DMA2->LIFCR = (uint32_t)((DMA_IT_TCIF1|DMA_IT_DMEIF1|DMA_IT_FEIF1|DMA_IT_HTIF1|DMA_IT_TEIF1) & RESERVED_MASK);
-		DMA2->LIFCR = (uint32_t)((DMA_FLAG_DMEIF1|DMA_FLAG_FEIF1|DMA_FLAG_HTIF1|DMA_FLAG_TCIF1|DMA_FLAG_TEIF1) & RESERVED_MASK);
+
 		flagDMA_TX_Complete4 = true;
 		DMA2_Stream1->CR &= ~(uint32_t) DMA_SxCR_EN;
 
@@ -220,6 +215,8 @@ void DMA2_Stream1_IRQHandler(void) {
 			flagDMA_TX_Complete4 = false;
 		}
 	}
+	DMA2->LIFCR = (uint32_t)((DMA_IT_TCIF1|DMA_IT_DMEIF1|DMA_IT_FEIF1|DMA_IT_HTIF1|DMA_IT_TEIF1) & RESERVED_MASK);
+	DMA2->LIFCR = (uint32_t)((DMA_FLAG_DMEIF1|DMA_FLAG_FEIF1|DMA_FLAG_HTIF1|DMA_FLAG_TCIF1|DMA_FLAG_TEIF1) & RESERVED_MASK);
 }
 
 void TIM4_IRQHandler(void) {
@@ -312,8 +309,8 @@ void EXTI2_IRQHandler(void)
 	if ((EXTI->PR & EXTI_Line2) != RESET) {
 		pixelColumnCounter = 62;
 		interlacing = DISPLAY_ODD_SIDE;
-//		TIM4->CR1 &= ~TIM_CR1_CEN;
-//		TIM4->CR1 |= TIM_CR1_CEN;
+		TIM4->CR1 &= ~TIM_CR1_CEN;
+		TIM4->CR1 |= TIM_CR1_CEN;
 		EXTI->PR = EXTI_Line2;
 	}
 }
@@ -409,9 +406,9 @@ int main(void) {
 	tlc.setRGBPinOrder(0, 1, 2);
 
 	tlc.setAllDcData(127);
-	tlc.setMaxCurrent(0, 0, 0);
+	tlc.setMaxCurrent(5, 5, 5);
 	tlc.setFunctionControlData(false, true, true, true, true);
-	tlc.setBrightnessCurrent(127, 10, 20);
+	tlc.setBrightnessCurrent(127, 10, 15);
 	tlc.updateControl();
 
 	if(debug) console->sendString("Done.\n\r");
@@ -610,8 +607,8 @@ int main(void) {
 	add.page = 99;
 
 	flash->init();
-	flash->getPixelColumnDMA(0,(pixelColumnCounter+1),pixelmapBuffer2);
-	flash->getPixelColumnDMA(0,(pixelColumnCounter+1),pixelmapBuffer1);
+//	flash->getPixelColumnDMA(2,(pixelColumnCounter+1),pixelmapBuffer2);
+//	flash->getPixelColumnDMA(2,(pixelColumnCounter+1),pixelmapBuffer1);
 
 	if(debug) console->sendString("Done.\n\r");
 
@@ -668,7 +665,7 @@ int main(void) {
 
 		if(flagRefreshBuffer)
 		{
-			flagRefreshBuffer = false;
+
 			if(pixelColumnCounter<255)
 			{
 				if (bufferIndex==BUFFER_1) flash->getPixelColumnDMA(0,(pixelColumnCounter+1),pixelmapBuffer2);
@@ -679,8 +676,10 @@ int main(void) {
 				if (bufferIndex==BUFFER_1) flash->getPixelColumnDMA(0,0,pixelmapBuffer2);
 				else flash->getPixelColumnDMA(0,0,pixelmapBuffer1);
 			}
+			flagRefreshBuffer = false;
 
 		}
+		if(pixelColumnCounter>256) pixelColumnCounter = 0;
 
 	}
 
