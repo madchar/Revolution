@@ -237,7 +237,7 @@ void TIM4_IRQHandler(void) {
 		if(pixelColumnCounter==256)
 		{
 			if(interlacing==DISPLAY_ODD_SIDE)interlacing = DISPLAY_EVEN_SIDE;
-			else if(interlacing==DISPLAY_EVEN_SIDE) interlacing = DISPLAY_NONE;
+			else if(interlacing==DISPLAY_EVEN_SIDE) interlacing = DISPLAY_ODD_SIDE;
 			pixelColumnCounter = 0;
 			pos = 0;
 		}
@@ -483,7 +483,7 @@ int main(void) {
 
 	tlc.setAllDcData(127);
 	tlc.setMaxCurrent(0, 0, 0);
-	tlc.setFunctionControlData(true, true, true, true, true);
+	tlc.setFunctionControlData(false, true, true, true, true);
 	tlc.setBrightnessCurrent(127, 5, 10);
 	tlc.updateControl();
 
@@ -651,7 +651,7 @@ int main(void) {
 	gsclkTimer.startTimer();
 
 	//STM32F4Timer latchTimer(TIM4,25,65535,false);
-	STM32F4Timer latchTimer(TIM4,5971,0,false); // 5973
+	STM32F4Timer latchTimer(TIM4,5800,0,false); // 5973
 
 	NVIC_EnableIRQ(TIM4_IRQn);
 
