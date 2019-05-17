@@ -8,12 +8,15 @@
 #include <string.h>
 #include <string>
 #include <cstdlib>
+#include <stdio.h>
 #include <stm32f4xx_tim.h>
 
 STM32F411USART1* STM32F411USART1::instance = 0;
 
 STM32F411USART1::STM32F411USART1() {
 
+	isReadyToTransfer = false;
+	isOkToTransfer = false;
 	commRxCnt = 0;
 	pixelColumnBufferCntr = 0;
 	memset(pixelColumnBuffer, 0, sizeof(pixelColumnBuffer));
@@ -194,17 +197,12 @@ void STM32F411USART1::sendBytes(uint8_t* data, uint32_t nBytes) {
 		write(*data++);
 	}
 }
-void STM32F411USART1::sendByteToString(uint8_t byte) {
-	char buffer[33];
-	itoa((int) byte, buffer, 10);
+void STM32F411USART1::sendByteToString(uint32_t byte) {
+	char buffer[12];
+	sprintf(buffer, "%lu",byte);
 	sendString(buffer);
 }
 
-void STM32F411USART1::sendbyteToString(uint16_t byte) {
-	char buffer[33];
-	itoa(byte, buffer, 10);
-	sendString(buffer);
-}
 void STM32F411USART1::sendByte8ToBinaryString(uint8_t data) {
 	for (int i = 0; i < 8; i++) {
 		((data >> (7 - i)) & 0x01) ?
@@ -285,13 +283,10 @@ void STM32F411USART1::incommingDataDecoder(Flash* flash) {
 		break;
 
 	case WAIT_OK_TO_TRANSFER:
-		readyTotransfer = true;
-		if (okToTransfer) {
-			okToTransfer = false;
-			readyTotransfer = false;
+		isReadyToTransfer = true;
+		if (isOkToTransfer)
 			commState = ASK_FILE_TO_SERVER;
-		}
-		commState = ASK_FILE_TO_SERVER; 		//bypass
+		//commState = ASK_FILE_TO_SERVER; 		//bypass
 		break;
 
 	case ASK_FILE_TO_SERVER: {
@@ -343,6 +338,7 @@ void STM32F411USART1::incommingDataDecoder(Flash* flash) {
 			if (car == '>') {
 				filename[commRxCnt] = 0;
 				flash->setFilename(rxImageNo, filename);
+				isReadyToTransfer = false;
 				commState = IDLE;
 			} else
 				filename[commRxCnt++] = car;

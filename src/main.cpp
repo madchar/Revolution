@@ -37,7 +37,7 @@ Flash *flash = Flash::getInstance(false);
 uint8_t bufferSpiTx[1156];
 uint8_t bufferSpiRx[1156];
 uint8_t imageNumber = 0;
-uint8_t cnt = 0;
+uint16_t cnt = 0;
 
 bool flagRefreshBuffer = false;
 bool flagDMA_TX_Complete1 = false;
@@ -52,6 +52,9 @@ static bool debug = true;
 enum interlace_e{DISPLAY_ODD_SIDE,DISPLAY_EVEN_SIDE,DISPLAY_NONE}interlacing = DISPLAY_ODD_SIDE;
 enum display_e{ON,OFF} displayState = ON;
 enum bufferIndex_e{BUFFER_1,BUFFER_2} bufferIndex = BUFFER_1;
+enum transferState_e {
+	IDLE, DISABLE_DISPLAY, TRANSFER_IN_PROGRESS, ENABLE_DISPLAY
+} transferState = IDLE;
 
 static uint8_t pixelmapBuffer1[1156];
 static uint8_t pixelmapBuffer2[1156];
@@ -185,7 +188,7 @@ void DMA1_Stream5_IRQHandler(void) {
 		}
 	}
 	DMA1->HIFCR = (uint32_t)((DMA_IT_TCIF5|DMA_IT_DMEIF5|DMA_IT_FEIF5|DMA_IT_HTIF5|DMA_IT_TEIF5) & RESERVED_MASK);
-		DMA1->HIFCR = (uint32_t)((DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_HTIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5) & RESERVED_MASK);
+	DMA1->HIFCR = (uint32_t)((DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_HTIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5) & RESERVED_MASK);
 }
 
 void DMA2_Stream1_IRQHandler(void) {
@@ -304,16 +307,16 @@ void TIM4_IRQHandler(void) {
 	}
 }
 
-void EXTI2_IRQHandler(void)
-{
-	if ((EXTI->PR & EXTI_Line2) != RESET) {
-		pixelColumnCounter = 62;
-		interlacing = DISPLAY_ODD_SIDE;
-		TIM4->CR1 &= ~TIM_CR1_CEN;
-		TIM4->CR1 |= TIM_CR1_CEN;
-		EXTI->PR = EXTI_Line2;
-	}
-}
+//void EXTI2_IRQHandler(void)
+//{
+//	if ((EXTI->PR & EXTI_Line2) != RESET) {
+////		pixelColumnCounter = 62;
+////		interlacing = DISPLAY_ODD_SIDE;
+////		TIM4->CR1 &= ~TIM_CR1_CEN;
+////		TIM4->CR1 |= TIM_CR1_CEN;
+//		EXTI->PR = (uint32_t) EXTI_Line2;
+//	}
+//}
 
 
 int main(void) {
@@ -532,20 +535,20 @@ int main(void) {
 	//----------------------------------External Interrupt INIT-----------------------------------------------------
 	if(debug) console->sendString("Initiating EXTI...\n\r");
 	EXTI_InitTypeDef EXTI_InitStruct;
-
-	//PULSE PB2 for EXTI_Line2
-	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOB, EXTI_PinSource2);
-
-	/* PB2 is connected to EXTI_Line2 */
-	EXTI_InitStruct.EXTI_Line = EXTI_Line2;
-	/* Enable interrupt */
-	EXTI_InitStruct.EXTI_LineCmd = ENABLE;
-	/* Interrupt mode */
-	EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;
-	/* Triggers on rising and falling edge */
-	EXTI_InitStruct.EXTI_Trigger =  EXTI_Trigger_Falling;
-	/* Add to EXTI */
-	EXTI_Init(&EXTI_InitStruct);
+	//
+	//	//PULSE PB2 for EXTI_Line2
+	//	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOB, EXTI_PinSource2);
+	//
+	//	/* PB2 is connected to EXTI_Line2 */
+	//	EXTI_InitStruct.EXTI_Line = EXTI_Line2;
+	//	/* Enable interrupt */
+	//	EXTI_InitStruct.EXTI_LineCmd = ENABLE;
+	//	/* Interrupt mode */
+	//	EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;
+	//	/* Triggers on rising and falling edge */
+	//	EXTI_InitStruct.EXTI_Trigger =  EXTI_Trigger_Falling;
+	//	/* Add to EXTI */
+	//	EXTI_Init(&EXTI_InitStruct);
 	if(debug) console->sendString("Done.\n\r");
 
 	//----------------------------------Nested Vectored Interrupt Controller INIT-----------------------------------------------------
@@ -607,8 +610,9 @@ int main(void) {
 	add.page = 99;
 
 	flash->init();
-//	flash->getPixelColumnDMA(2,(pixelColumnCounter+1),pixelmapBuffer2);
-//	flash->getPixelColumnDMA(2,(pixelColumnCounter+1),pixelmapBuffer1);
+	imageNumber = 0;
+	//	flash->getPixelColumnDMA(2,(pixelColumnCounter+1),pixelmapBuffer2);
+	//	flash->getPixelColumnDMA(2,(pixelColumnCounter+1),pixelmapBuffer1);
 
 	if(debug) console->sendString("Done.\n\r");
 
@@ -650,33 +654,71 @@ int main(void) {
 	if(debug) console->sendString("All systems nominal.\n\r");
 
 	STM32F411USART1* wifi = STM32F411USART1::getInstance();
-
+	if(debug) console->sendByte16ToBinaryString(flash->getPositionOfPresentImagesInCarrousel());
 	while (1) {
 
 
-//		if(cnt>=100)
-//		{
-//			imageNumber++;
-//			if(imageNumber>=3) imageNumber=0;
-//			cnt = 0;
-//		}
+		if(cnt>=100)
+		{
+			imageNumber++;
+			if(imageNumber>=7) imageNumber=0;
+			cnt = 0;
+		}
 
-//	wifi->incommingDataDecoder(flash);
+		wifi->incommingDataDecoder(flash);
+
+		switch (transferState) {
+		case IDLE:
+			if (wifi->isReadyToTransfer)
+				transferState = DISABLE_DISPLAY;
+			break;
+		case DISABLE_DISPLAY:
+			if (debug)
+				console->sendString("Disabling display...");
+			TIM4->CR1 &= ~TIM_CR1_CEN;
+			DMA2_Stream2->CR &= ~(uint32_t) DMA_SxCR_EN;
+			DMA1_Stream4->CR &= ~(uint32_t) DMA_SxCR_EN;
+			DMA1_Stream5->CR &= ~(uint32_t) DMA_SxCR_EN;
+			DMA2_Stream1->CR &= ~(uint32_t) DMA_SxCR_EN;
+			flagRefreshBuffer = false;
+			//	EXTI_InitStruct.EXTI_LineCmd = DISABLE;
+			//	EXTI_Init(&EXTI_InitStruct);
+			wifi->isOkToTransfer = true;
+			transferState = TRANSFER_IN_PROGRESS;
+			break;
+		case TRANSFER_IN_PROGRESS:
+			if (!wifi->isReadyToTransfer) {
+				if (debug)
+					console->sendString("Transfer Completed...");
+				transferState = ENABLE_DISPLAY;
+			}
+			break;
+		case ENABLE_DISPLAY:
+			if (debug)
+				console->sendString("Enabling display...");
+		//	imageNumber = flash->getNumberOfImagesInCarrousel();
+//			EXTI_InitStruct.EXTI_LineCmd = ENABLE;
+//			EXTI_Init(&EXTI_InitStruct);
+			TIM4->CR1 |= TIM_CR1_CEN;
+			wifi->isOkToTransfer = false;
+			transferState = IDLE;
+			break;
+		}
+
 
 		if(flagRefreshBuffer)
 		{
-
-			if(pixelColumnCounter<255)
-			{
-				if (bufferIndex==BUFFER_1) flash->getPixelColumnDMA(0,(pixelColumnCounter+1),pixelmapBuffer2);
-				else flash->getPixelColumnDMA(0,(pixelColumnCounter+1),pixelmapBuffer1);
-			}
-			else if(pixelColumnCounter==255)
-			{
-				if (bufferIndex==BUFFER_1) flash->getPixelColumnDMA(0,0,pixelmapBuffer2);
-				else flash->getPixelColumnDMA(0,0,pixelmapBuffer1);
-			}
-			flagRefreshBuffer = false;
+						if(pixelColumnCounter<255)
+						{
+							if (bufferIndex==BUFFER_1) flash->getPixelColumnDMA(imageNumber,(pixelColumnCounter+1),pixelmapBuffer2);
+							else flash->getPixelColumnDMA(imageNumber,(pixelColumnCounter+1),pixelmapBuffer1);
+						}
+						else if(pixelColumnCounter==255)
+						{
+							if (bufferIndex==BUFFER_1) flash->getPixelColumnDMA(imageNumber,0,pixelmapBuffer2);
+							else flash->getPixelColumnDMA(imageNumber,0,pixelmapBuffer1);
+						}
+						flagRefreshBuffer = false;
 
 		}
 		if(pixelColumnCounter>256) pixelColumnCounter = 0;
