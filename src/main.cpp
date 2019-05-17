@@ -406,9 +406,9 @@ int main(void) {
 	tlc.setRGBPinOrder(0, 1, 2);
 
 	tlc.setAllDcData(127);
-	tlc.setMaxCurrent(5, 5, 5);
+	tlc.setMaxCurrent(0, 0, 0);
 	tlc.setFunctionControlData(false, true, true, true, true);
-	tlc.setBrightnessCurrent(127, 10, 15);
+	tlc.setBrightnessCurrent(127, 5, 10);
 	tlc.updateControl();
 
 	if(debug) console->sendString("Done.\n\r");
@@ -661,7 +661,7 @@ int main(void) {
 //			cnt = 0;
 //		}
 
-	//wifi->incommingDataDecoder(flash);
+//	wifi->incommingDataDecoder(flash);
 
 		if(flagRefreshBuffer)
 		{
