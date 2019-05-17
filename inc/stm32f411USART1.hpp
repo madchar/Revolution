@@ -27,9 +27,7 @@ public:
 	virtual ~STM32F411USART1();
 	void write(uint8_t data);
 	void sendBytes(uint8_t *data, uint32_t nBytes);
-	void sendByteToString(uint8_t byte);
-	void sendbyteToString(uint16_t byte);
-	void sendbyteToString(uint32_t byte);
+	void sendByteToString(uint32_t byte);
 	void sendByte8ToBinaryString(uint8_t data);
 	void sendByte16ToBinaryString(uint16_t data);
 	void sendByte32ToBinaryString(uint32_t data);
@@ -43,8 +41,8 @@ public:
 	void parseTram(Flash *flash);
 	void sendFilenameList(Flash *flash);
 
-	bool readyTotransfer;
-	bool okToTransfer;
+	bool isReadyToTransfer;
+	bool isOkToTransfer;
 private:
 
 	STM32F411USART1();

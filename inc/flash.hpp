@@ -1,4 +1,3 @@
-
 /*
  * flash.hpp
  *
@@ -15,12 +14,11 @@
 
 class Flash {
 public:
-	uint32_t positionOfPresentImages = 0;
+	uint16_t positionOfPresentImages = 0;
 	uint8_t redMaxCurrent = 127;
 	uint8_t greenMaxCurrent = 127;
 	uint8_t blueMaxCurrent = 127;
 	uint8_t globalBrightness = 127;
-
 
 	struct address_t {
 		uint16_t page = 0;
@@ -34,12 +32,10 @@ public:
 	static constexpr uint16_t ColumnPixelArraySize = 1156;			//in bytes
 	static constexpr uint32_t ImageFileSize = 295936;				//in bytes
 
-	static constexpr uint16_t PagesPerImage = 578;					//Flash memory pages per image
-	static constexpr uint8_t FirstImagePageAddress = 99;			//First age where image are stored
-	static constexpr uint16_t PageSize = 512;						//Physical flash memory page size in bytes
+	static constexpr uint16_t PagesPerImage = 578;//Flash memory pages per image
+	static constexpr uint8_t FirstImagePageAddress = 99;//First age where image are stored
+	static constexpr uint16_t PageSize = 512;//Physical flash memory page size in bytes
 	static constexpr uint16_t MaxColumnCount = 256;
-
-
 
 	~Flash();
 	/**
@@ -82,11 +78,11 @@ public:
 
 	uint8_t readByte(const address_t *add);
 	void writeByte(const address_t *add, uint8_t byte);
-	void writeByte(const address_t *add, int byte);
-	void writeByte(const address_t *add, uint16_t byte);
-	void writeByte(const address_t *add, uint32_t byte);
-	void writeByte(const address_t *add, uint8_t *byte, uint16_t nByte, uint16_t offsetByte = 0);
+	void writeByte(const address_t *add, uint8_t *byte, uint16_t nByte,
+			uint16_t offsetByte = 0);
 	void writeByte(const address_t *add, const char *byte, uint16_t nByte);
+	void writeByteU16(const address_t *add, uint16_t byte);
+	void writeByteU32(const address_t *add, uint32_t byte);
 
 	void readByte(const address_t *add, uint8_t *buffer, uint16_t nBytes);
 	void readByte(const address_t *add, char *buffer, uint16_t nBytes);
@@ -100,7 +96,7 @@ public:
 	void readControlRegister();
 	void writeControlRegister();
 
-	uint32_t getPositionOfPresentImagesInCarrousel();
+	uint16_t getPositionOfPresentImagesInCarrousel();
 	void savePositionOfPresentImagesInCarrousel();
 
 	void setImageInCarrousel(uint8_t imageNo);
@@ -114,7 +110,8 @@ public:
 	void setFilename(uint8_t imageNo, uint8_t *fileName);
 	void resetFilename(uint8_t imageNo);
 
-	bool getPixelColumnDMA(uint8_t imageNo, uint8_t columnNo,uint8_t* spiBuffer);
+	bool getPixelColumnDMA(uint8_t imageNo, uint8_t columnNo,
+			uint8_t* spiBuffer);
 	bool getPixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* spiBuffer);
 	bool savePixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* source);
 	void getPixelColumnToString(uint8_t imageNo, uint8_t columnNo);
@@ -126,7 +123,6 @@ private:
 	Flash(bool debugEnable);
 
 	static Flash* instance;
-
 
 	/**
 	 * Flash read/write and SPI command
@@ -149,26 +145,25 @@ private:
 
 	static constexpr uint8_t BinaryPageSize[4] = { 0x3D, 0x2A, 0x80, 0xA6 };
 	static constexpr uint8_t ChipErase[4] = { 0xC7, 0x94, 0x80, 0x9A };
-	static constexpr uint8_t DisableSectorProtect[4] = {0x3D, 0x2A, 0x7F, 0x9A};
+	static constexpr uint8_t DisableSectorProtect[4] =
+			{ 0x3D, 0x2A, 0x7F, 0x9A };
 
 	/**
 	 * Static configuration addresses
 	 */
 
 	/*
-	 * Page 9 is reserved for BMP file names: 15 * 16 char = 240 bytes ex:123456789012.bmp
+	 * Page 9 is reserved for BMP file names: 14 * 16 char = 240 bytes ex:123456789012.bmp
 	 */
 
-	const address_t FilenamePage = { 9, 0 };								//15 images * 34 char = 510 bytes
-	const address_t GlobalBrightnessSettingAddress = { 10, 0 };				//2 bytes
-	const address_t RedMaxCurrentSettingAddress = { 10, 2 };				//2 bytes
-	const address_t GreenMaxCurrentSettingAddress = { 10, 4 };				//2 bytes
-	const address_t BlueMaxCurrentSettingAddress = { 10, 6 };				//2 Bytes
-	const address_t PositionOfPresentImagesInCarrouselAddress = { 10, 7 };	//4 bytes
+	const address_t FilenamePage = { 9, 0 };//14 images * 16 char = 226 bytes
+	const address_t GlobalBrightnessSettingAddress = { 10, 0 };		//2 bytes
+	const address_t RedMaxCurrentSettingAddress = { 10, 2 };		//2 bytes
+	const address_t GreenMaxCurrentSettingAddress = { 10, 4 };		//2 bytes
+	const address_t BlueMaxCurrentSettingAddress = { 10, 6 };		//2 Bytes
+	const address_t PositionOfPresentImagesInCarrouselAddress = { 10, 8 };//2 bytes
 
-	bool buff1_Buff2 = true;
 	bool debug = false;
-
 
 };
 

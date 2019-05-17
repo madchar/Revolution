@@ -8,6 +8,7 @@
 #include "stm32f4xx_rcc.h"
 #include <string.h>
 #include <cstdlib>
+#include <stdio.h>
 
 STM32F411USART2::STM32F411USART2() {
 	// Activer les horloges
@@ -113,28 +114,10 @@ void STM32F411USART2::write(uint8_t data) {
 
 }
 
-void STM32F411USART2::sendByteToString(uint8_t byte) {
-	char buffer[33];
-	itoa((int) byte, buffer, 10);
+void STM32F411USART2::sendByteToString(uint32_t byte) {
+	char buffer[12];
+	sprintf(buffer, "%lu",byte);
 	sendString(buffer);
-}
-
-void STM32F411USART2::sendbyteToString(uint16_t byte) {
-	char buffer[33];
-	itoa(byte, buffer, 10);
-	sendString(buffer);
-}
-
-void STM32F411USART2::sendbyteToString(uint32_t byte) {
-	char upperBuffer[33];
-	char lowerBuffer[66];
-	uint16_t up;
-	up = byte;
-	uint16_t low = byte;
-	itoa(up, upperBuffer, 10);
-	itoa(low, lowerBuffer, 10);
-	//strcat(upperBuffer, lowerBuffer);
-	sendString(upperBuffer);
 }
 
 void STM32F411USART2::sendBytes(uint8_t* data, uint32_t nBytes) {
@@ -212,3 +195,12 @@ void USART2_IRQHandler(void) {
 	}
 }
 
+//char upperBuffer[33];
+//	char lowerBuffer[66];
+//	uint16_t up;
+//	up = byte;
+//	uint16_t low = byte;
+//	itoa(up, upperBuffer, 10);
+//	itoa(low, lowerBuffer, 10);
+//	//strcat(upperBuffer, lowerBuffer);
+//	sendString(upperBuffer);
