@@ -2,10 +2,10 @@
 /**
  ******************************************************************************
  * @file    main.c
- * @author  MadChar
+ * @author  Matthieu Madran et Alexandre Charrier
  * @version V1.0
- * @date    01-December-2013
- * @brief   Default main function.
+ * @date    25-Janvier-2019
+ * @brief   Programme principal
  ******************************************************************************
  */
 
@@ -229,12 +229,12 @@ void TIM4_IRQHandler(void) {
 
 		pixelColumnCounter++;
 
-		if(interlacing==DISPLAY_ODD_SIDE)
+		if(interlacing==DISPLAY_EVEN_SIDE)
 		{
 			if((pixelColumnCounter%2)==0) displayState = OFF;
 			else displayState = ON;
 		}
-		else if(interlacing==DISPLAY_EVEN_SIDE)
+		else if(interlacing==DISPLAY_ODD_SIDE)
 		{
 			if((pixelColumnCounter%2)==0) displayState = ON;
 			else displayState = OFF;
@@ -243,14 +243,14 @@ void TIM4_IRQHandler(void) {
 		if(pixelColumnCounter==255)displayState = OFF;
 		else if(pixelColumnCounter==256)
 		{
-			if(interlacing==DISPLAY_ODD_SIDE)
-			{
-				interlacing = DISPLAY_EVEN_SIDE;
-				displayState = OFF;
-			}
-			else if(interlacing==DISPLAY_EVEN_SIDE)
+			if(interlacing==DISPLAY_EVEN_SIDE)
 			{
 				interlacing = DISPLAY_ODD_SIDE;
+				displayState = OFF;
+			}
+			else if(interlacing==DISPLAY_ODD_SIDE)
+			{
+				interlacing = DISPLAY_EVEN_SIDE;
 				displayState = OFF;
 			}
 			pixelColumnCounter = 0;
@@ -310,8 +310,12 @@ void TIM4_IRQHandler(void) {
 //void EXTI2_IRQHandler(void)
 //{
 //	if ((EXTI->PR & EXTI_Line2) != RESET) {
+////		flagRefreshBuffer = false;
+////
+////		SPI5_NSS_GPIO->BSRRL = SPI5_NSS_Pin;
 ////		pixelColumnCounter = 62;
-////		interlacing = DISPLAY_ODD_SIDE;
+////		interlacing = DISPLAY_EVEN_SIDE;
+////		displayState = ON;
 ////		TIM4->CR1 &= ~TIM_CR1_CEN;
 ////		TIM4->CR1 |= TIM_CR1_CEN;
 //		EXTI->PR = (uint32_t) EXTI_Line2;
@@ -535,20 +539,20 @@ int main(void) {
 	//----------------------------------External Interrupt INIT-----------------------------------------------------
 	if(debug) console->sendString("Initiating EXTI...\n\r");
 	EXTI_InitTypeDef EXTI_InitStruct;
-	//
-	//	//PULSE PB2 for EXTI_Line2
-	//	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOB, EXTI_PinSource2);
-	//
-	//	/* PB2 is connected to EXTI_Line2 */
-	//	EXTI_InitStruct.EXTI_Line = EXTI_Line2;
-	//	/* Enable interrupt */
-	//	EXTI_InitStruct.EXTI_LineCmd = ENABLE;
-	//	/* Interrupt mode */
-	//	EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;
-	//	/* Triggers on rising and falling edge */
-	//	EXTI_InitStruct.EXTI_Trigger =  EXTI_Trigger_Falling;
-	//	/* Add to EXTI */
-	//	EXTI_Init(&EXTI_InitStruct);
+
+//		//PULSE PB2 for EXTI_Line2
+//		SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOB, EXTI_PinSource2);
+//
+//		/* PB2 is connected to EXTI_Line2 */
+//		EXTI_InitStruct.EXTI_Line = EXTI_Line2;
+//		/* Enable interrupt */
+//		EXTI_InitStruct.EXTI_LineCmd = ENABLE;
+//		/* Interrupt mode */
+//		EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;
+//		/* Triggers on rising and falling edge */
+//		EXTI_InitStruct.EXTI_Trigger =  EXTI_Trigger_Falling;
+//		/* Add to EXTI */
+//		EXTI_Init(&EXTI_InitStruct);
 	if(debug) console->sendString("Done.\n\r");
 
 	//----------------------------------Nested Vectored Interrupt Controller INIT-----------------------------------------------------
@@ -595,12 +599,12 @@ int main(void) {
 	NVIC_Init(&NVIC_InitStructure);
 	//
 	// Enable EXTI2 Interrupt
-	NVIC_InitStructure.NVIC_IRQChannel = EXTI2_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStructure);
-	NVIC_EnableIRQ(EXTI2_IRQn);
+//	NVIC_InitStructure.NVIC_IRQChannel = EXTI2_IRQn;
+//	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+//	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+//	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+//	NVIC_Init(&NVIC_InitStructure);
+//	NVIC_EnableIRQ(EXTI2_IRQn);
 	if(debug) console->sendString("Done.\n\r");
 
 	//----------------------------------FLASH INIT---------------------------------------------------------
@@ -681,8 +685,8 @@ int main(void) {
 			DMA1_Stream5->CR &= ~(uint32_t) DMA_SxCR_EN;
 			DMA2_Stream1->CR &= ~(uint32_t) DMA_SxCR_EN;
 			flagRefreshBuffer = false;
-			//	EXTI_InitStruct.EXTI_LineCmd = DISABLE;
-			//	EXTI_Init(&EXTI_InitStruct);
+//				EXTI_InitStruct.EXTI_LineCmd = DISABLE;
+//				EXTI_Init(&EXTI_InitStruct);
 			wifi->isOkToTransfer = true;
 			transferState = TRANSFER_IN_PROGRESS;
 			break;

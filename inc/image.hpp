@@ -1,8 +1,8 @@
-/*
+/**
  * image.hpp
  *
  *  Created on: 15 mai 2019
- *      Author: 200828272
+ *      Author: Matthieu Madran
  */
 
 #ifndef IMAGE_HPP_
