@@ -692,7 +692,7 @@ bool Flash::getPixelColumnDMA(uint8_t imageNo, uint8_t columnNo,
 	DMA2_Stream4->CR |= (uint32_t) DMA_SxCR_EN;
 	DMA2_Stream5->CR |= (uint32_t) DMA_SxCR_EN;
 	//while(DMA_GetFlagStatus(DMA2_Stream5, DMA_FLAG_TCIF5)==RESET);
-	while(((DMA2->HISR&RESERVED_MASK)&(DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5))==RESET);
+	while((((DMA2->HISR&RESERVED_MASK)&(DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5))==(uint32_t)RESET)&&(((DMA2->HISR&RESERVED_MASK)&(DMA_FLAG_DMEIF4|DMA_FLAG_TCIF4|DMA_FLAG_TEIF4))==(uint32_t)RESET));
 	DMA2_Stream4->CR &= ~(uint32_t)DMA_SxCR_EN;
 	DMA2_Stream5->CR &= ~(uint32_t)DMA_SxCR_EN;
 	DMA2->HIFCR = (uint32_t)((DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_HTIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5) & RESERVED_MASK);
@@ -707,7 +707,7 @@ bool Flash::getPixelColumnDMA(uint8_t imageNo, uint8_t columnNo,
 	SPI5->CR2 |= SPI_I2S_DMAReq_Tx;
 	DMA2_Stream4->CR |= (uint32_t) DMA_SxCR_EN;
 	DMA2_Stream5->CR |= (uint32_t) DMA_SxCR_EN;
-	while(((DMA2->HISR&RESERVED_MASK)&(DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5))==RESET);
+	while((((DMA2->HISR&RESERVED_MASK)&(DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5))==(uint32_t)RESET)&&(((DMA2->HISR&RESERVED_MASK)&(DMA_FLAG_DMEIF4|DMA_FLAG_TCIF4|DMA_FLAG_TEIF4))==(uint32_t)RESET));
 	//while(DMA_GetFlagStatus(DMA2_Stream5, DMA_FLAG_TCIF5)==RESET);
 	DMA2_Stream4->CR &= ~(uint32_t)DMA_SxCR_EN;
 	DMA2_Stream5->CR &= ~(uint32_t)DMA_SxCR_EN;
@@ -723,7 +723,7 @@ bool Flash::getPixelColumnDMA(uint8_t imageNo, uint8_t columnNo,
 	SPI5->CR2 |= SPI_I2S_DMAReq_Tx;
 	DMA2_Stream4->CR |= (uint32_t) DMA_SxCR_EN;
 	DMA2_Stream5->CR |= (uint32_t) DMA_SxCR_EN;
-	while(((DMA2->HISR&RESERVED_MASK)&(DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5))==RESET);
+	while((((DMA2->HISR&RESERVED_MASK)&(DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5))==(uint32_t)RESET)&&(((DMA2->HISR&RESERVED_MASK)&(DMA_FLAG_DMEIF4|DMA_FLAG_TCIF4|DMA_FLAG_TEIF4))==(uint32_t)RESET));
 
 	DMA2_Stream4->CR &= ~(uint32_t)DMA_SxCR_EN;
 	DMA2_Stream5->CR &= ~(uint32_t)DMA_SxCR_EN;
@@ -739,7 +739,8 @@ bool Flash::getPixelColumnDMA(uint8_t imageNo, uint8_t columnNo,
 	SPI5->CR2 |= SPI_I2S_DMAReq_Tx;
 	DMA2_Stream4->CR |= (uint32_t) DMA_SxCR_EN;
 	DMA2_Stream5->CR |= (uint32_t) DMA_SxCR_EN;
-	while(((DMA2->HISR&RESERVED_MASK)&(DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5))==RESET);
+	while((((DMA2->HISR&RESERVED_MASK)&(DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5))==(uint32_t)RESET)&&(((DMA2->HISR&RESERVED_MASK)&(DMA_FLAG_DMEIF4|DMA_FLAG_TCIF4|DMA_FLAG_TEIF4))==(uint32_t)RESET));
+
 
 	DMA2_Stream4->CR &= ~(uint32_t)DMA_SxCR_EN;
 	DMA2_Stream5->CR &= ~(uint32_t)DMA_SxCR_EN;
@@ -750,7 +751,7 @@ bool Flash::getPixelColumnDMA(uint8_t imageNo, uint8_t columnNo,
 	terminal->sendString("buffer4 done\n\r");
 #endif
 
-	//setCS(false);
+
 	  SPI5_NSS_GPIO->BSRRL = SPI5_NSS_Pin;
 #ifdef DDEBUG
 	if (debug)

@@ -39,6 +39,7 @@ uint8_t bufferSpiRx[1156];
 uint8_t imageNumber = 0;
 uint16_t cnt = 0;
 
+bool resyncDisplay = false;
 bool flagRefreshBuffer = false;
 bool flagDMA_TX_Complete1 = false;
 bool flagDMA_TX_Complete2 = false;
@@ -228,7 +229,12 @@ void TIM4_IRQHandler(void) {
 		TIM4->SR = (uint16_t) ~TIM_IT_Update;
 
 		pixelColumnCounter++;
-
+		if(resyncDisplay==true)
+		{
+			interlacing = DISPLAY_EVEN_SIDE;
+			pixelColumnCounter = 62;
+			resyncDisplay = false;
+		}
 		if(interlacing==DISPLAY_EVEN_SIDE)
 		{
 			if((pixelColumnCounter%2)==0) displayState = OFF;
@@ -307,20 +313,21 @@ void TIM4_IRQHandler(void) {
 	}
 }
 
-//void EXTI2_IRQHandler(void)
-//{
-//	if ((EXTI->PR & EXTI_Line2) != RESET) {
-////		flagRefreshBuffer = false;
-////
-////		SPI5_NSS_GPIO->BSRRL = SPI5_NSS_Pin;
-////		pixelColumnCounter = 62;
-////		interlacing = DISPLAY_EVEN_SIDE;
-////		displayState = ON;
-////		TIM4->CR1 &= ~TIM_CR1_CEN;
-////		TIM4->CR1 |= TIM_CR1_CEN;
-//		EXTI->PR = (uint32_t) EXTI_Line2;
-//	}
-//}
+void EXTI2_IRQHandler(void)
+{
+	if ((EXTI->PR & EXTI_Line2) != RESET) {
+		resyncDisplay = true;
+//		flagRefreshBuffer = false;
+//
+//		SPI5_NSS_GPIO->BSRRL = SPI5_NSS_Pin;
+//		pixelColumnCounter = 62;
+//		interlacing = DISPLAY_EVEN_SIDE;
+//		displayState = ON;
+//		TIM4->CR1 &= ~TIM_CR1_CEN;
+//		TIM4->CR1 |= TIM_CR1_CEN;
+		EXTI->PR = (uint32_t) EXTI_Line2;
+	}
+}
 
 
 int main(void) {
@@ -540,19 +547,19 @@ int main(void) {
 	if(debug) console->sendString("Initiating EXTI...\n\r");
 	EXTI_InitTypeDef EXTI_InitStruct;
 
-//		//PULSE PB2 for EXTI_Line2
-//		SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOB, EXTI_PinSource2);
-//
-//		/* PB2 is connected to EXTI_Line2 */
-//		EXTI_InitStruct.EXTI_Line = EXTI_Line2;
-//		/* Enable interrupt */
-//		EXTI_InitStruct.EXTI_LineCmd = ENABLE;
-//		/* Interrupt mode */
-//		EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;
-//		/* Triggers on rising and falling edge */
-//		EXTI_InitStruct.EXTI_Trigger =  EXTI_Trigger_Falling;
-//		/* Add to EXTI */
-//		EXTI_Init(&EXTI_InitStruct);
+		//PULSE PB2 for EXTI_Line2
+		SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOB, EXTI_PinSource2);
+
+		/* PB2 is connected to EXTI_Line2 */
+		EXTI_InitStruct.EXTI_Line = EXTI_Line2;
+		/* Enable interrupt */
+		EXTI_InitStruct.EXTI_LineCmd = ENABLE;
+		/* Interrupt mode */
+		EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;
+		/* Triggers on rising and falling edge */
+		EXTI_InitStruct.EXTI_Trigger =  EXTI_Trigger_Falling;
+		/* Add to EXTI */
+		EXTI_Init(&EXTI_InitStruct);
 	if(debug) console->sendString("Done.\n\r");
 
 	//----------------------------------Nested Vectored Interrupt Controller INIT-----------------------------------------------------
@@ -599,12 +606,13 @@ int main(void) {
 	NVIC_Init(&NVIC_InitStructure);
 	//
 	// Enable EXTI2 Interrupt
-//	NVIC_InitStructure.NVIC_IRQChannel = EXTI2_IRQn;
-//	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-//	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-//	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-//	NVIC_Init(&NVIC_InitStructure);
-//	NVIC_EnableIRQ(EXTI2_IRQn);
+	NVIC_InitStructure.NVIC_IRQChannel = EXTI2_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
+	NVIC_EnableIRQ(EXTI2_IRQn);
+
 	if(debug) console->sendString("Done.\n\r");
 
 	//----------------------------------FLASH INIT---------------------------------------------------------
@@ -626,8 +634,8 @@ int main(void) {
 	gsclkTimer.enablePWM(1,50);
 	gsclkTimer.startTimer();
 
-	//STM32F4Timer latchTimer(TIM4,10,10,false);
-	STM32F4Timer latchTimer(TIM4,5800,0,false); // 5973
+	//STM32F4Timer latchTimer(TIM4,10,65535,false);
+	STM32F4Timer latchTimer(TIM4,5800,0,false); // 5800
 
 	NVIC_EnableIRQ(TIM4_IRQn);
 
@@ -662,12 +670,12 @@ int main(void) {
 	while (1) {
 
 
-		if(cnt>=100)
-		{
-			imageNumber++;
-			if(imageNumber>=7) imageNumber=0;
-			cnt = 0;
-		}
+//		if(cnt>=100)
+//		{
+//			imageNumber++;
+//			if(imageNumber>=7) imageNumber=0;
+//			cnt = 0;
+//		}
 
 		wifi->incommingDataDecoder(flash);
 
