@@ -1,8 +1,8 @@
-/*
- sd eh7 * hardware.h
+/**
+ * hardware.h
  *
  *  Created on: Feb 28, 2019
- *      Author: Zandwich
+ *      Author: Matthieu Madran
  */
 
 #ifndef HARDWARE_H_

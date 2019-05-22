@@ -1,8 +1,20 @@
-/*
+/**
+ * @file 	STM32F446Timer.h
+ * @brief	Classe générique pour configurer un timer du STM32F446
+ * 			Implément aussi les méthodes pour gérer le PWM
+ * 			Supporte actuellelement Timer 2 à 5
+ * @author  Marc.Juneau
+ * @version	0.01
+ * @date	15 mars 2019
+ * @warning	Vous devez définir le gestionnaire d'interruption dans votre code
+ * @section Exemple Exemple de gestionnaire d'interruption pour le timer 2
+ */
+
+/**
  * stm32f4timer.hpp
  *
  *  Created on: Apr 5, 2019
- *      Author: Matthieu Madran
+ *      Author: Modifications par Matthieu Madran
  */
 
 #ifndef STM32F4TIMER_HPP_

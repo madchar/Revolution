@@ -2,7 +2,8 @@
  * stm32spi1.hpp
  *
  *  Created on: Feb 28, 2019
- *      Author: Zandwich
+ *  Author: Matthieu Madran
+ *  Desc: Classe SPI1 pour le STM32F4
  */
 
 #ifndef STM32SPI1_HPP_
