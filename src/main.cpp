@@ -37,14 +37,15 @@ Flash *flash = Flash::getInstance(false);
 uint8_t bufferSpiTx[1156];
 uint8_t bufferSpiRx[1156];
 uint8_t imageNumber = 0;
-uint16_t cnt = 0;
+uint8_t carrouselCycle = 0;
 
 bool resyncDisplay = false;
-bool flagRefreshBuffer = false;
-bool flagDMA_TX_Complete1 = false;
-bool flagDMA_TX_Complete2 = false;
-bool flagDMA_TX_Complete3 = false;
-bool flagDMA_TX_Complete4 = false;
+bool changeCarrouselImage = false;
+bool refreshBuffer = false;
+bool DMA_TX_Complete1 = false;
+bool DMA_TX_Complete2 = false;
+bool DMA_TX_Complete3 = false;
+bool DMA_TX_Complete4 = false;
 
 volatile uint16_t pixelColumnCounter = 0;
 
@@ -96,15 +97,16 @@ extern "C" void DMA1_Stream5_IRQHandler(void);
 extern "C" void DMA2_Stream1_IRQHandler(void);
 extern "C" void TIM4_IRQHandler(void);
 extern "C" void EXTI2_IRQHandler(void);
+extern "C" void TIM5_IRQHandler(void);
 
 void DMA2_Stream2_IRQHandler(void) {
 
 	if((DMA2->LISR & DMA_IT_TCIF2) != RESET ) {
 
-		flagDMA_TX_Complete1 = true;
+		DMA_TX_Complete1 = true;
 		DMA2_Stream2->CR &= ~(uint32_t)DMA_SxCR_EN;
 
-		if (flagDMA_TX_Complete1&&flagDMA_TX_Complete2&&flagDMA_TX_Complete3&&flagDMA_TX_Complete4)
+		if (DMA_TX_Complete1&&DMA_TX_Complete2&&DMA_TX_Complete3&&DMA_TX_Complete4)
 		{
 			if(interlacing==DISPLAY_ODD_SIDE)
 			{
@@ -118,10 +120,10 @@ void DMA2_Stream2_IRQHandler(void) {
 				TLC_LAT2_GPIO->BSRRL = TLC_LAT2_Pin;
 				TLC_LAT2_GPIO->BSRRH = TLC_LAT2_Pin;
 			}
-			flagDMA_TX_Complete1 = false;
-			flagDMA_TX_Complete2 = false;
-			flagDMA_TX_Complete3 = false;
-			flagDMA_TX_Complete4 = false;
+			DMA_TX_Complete1 = false;
+			DMA_TX_Complete2 = false;
+			DMA_TX_Complete3 = false;
+			DMA_TX_Complete4 = false;
 		}
 	}
 	DMA2->LIFCR = (uint32_t)((DMA_IT_TCIF2|DMA_IT_DMEIF2|DMA_IT_FEIF2|DMA_IT_HTIF2|DMA_IT_TEIF2) & RESERVED_MASK);
@@ -132,11 +134,11 @@ void DMA2_Stream2_IRQHandler(void) {
 void DMA1_Stream4_IRQHandler(void) {
 	if (DMA_GetITStatus(DMA1_Stream4, DMA_IT_TCIF4) == SET) {
 
-		flagDMA_TX_Complete2 = true;
+		DMA_TX_Complete2 = true;
 		DMA1_Stream4->CR &= ~(uint32_t) DMA_SxCR_EN;
 
 
-		if (flagDMA_TX_Complete1&&flagDMA_TX_Complete2&&flagDMA_TX_Complete3&&flagDMA_TX_Complete4)
+		if (DMA_TX_Complete1&&DMA_TX_Complete2&&DMA_TX_Complete3&&DMA_TX_Complete4)
 		{
 			if(interlacing==DISPLAY_ODD_SIDE)
 			{
@@ -152,10 +154,10 @@ void DMA1_Stream4_IRQHandler(void) {
 				TLC_LAT2_GPIO->BSRRH = TLC_LAT2_Pin;
 			}
 
-			flagDMA_TX_Complete1 = false;
-			flagDMA_TX_Complete2 = false;
-			flagDMA_TX_Complete3 = false;
-			flagDMA_TX_Complete4 = false;
+			DMA_TX_Complete1 = false;
+			DMA_TX_Complete2 = false;
+			DMA_TX_Complete3 = false;
+			DMA_TX_Complete4 = false;
 		}
 	}
 	DMA1->HIFCR = (uint32_t)((DMA_IT_TCIF4|DMA_IT_DMEIF4|DMA_IT_FEIF4|DMA_IT_HTIF4|DMA_IT_TEIF4) & RESERVED_MASK);
@@ -165,10 +167,10 @@ void DMA1_Stream4_IRQHandler(void) {
 void DMA1_Stream5_IRQHandler(void) {
 	if (DMA_GetITStatus(DMA1_Stream5, DMA_IT_TCIF5) == SET) {
 
-		flagDMA_TX_Complete3 = true;
+		DMA_TX_Complete3 = true;
 		DMA1_Stream5->CR &= ~(uint32_t) DMA_SxCR_EN;
 
-		if (flagDMA_TX_Complete1&&flagDMA_TX_Complete2&&flagDMA_TX_Complete3&&flagDMA_TX_Complete4)
+		if (DMA_TX_Complete1&&DMA_TX_Complete2&&DMA_TX_Complete3&&DMA_TX_Complete4)
 		{
 			if(interlacing==DISPLAY_ODD_SIDE)
 			{
@@ -182,10 +184,10 @@ void DMA1_Stream5_IRQHandler(void) {
 				TLC_LAT2_GPIO->BSRRL = TLC_LAT2_Pin;
 				TLC_LAT2_GPIO->BSRRH = TLC_LAT2_Pin;
 			}
-			flagDMA_TX_Complete1 = false;
-			flagDMA_TX_Complete2 = false;
-			flagDMA_TX_Complete3 = false;
-			flagDMA_TX_Complete4 = false;
+			DMA_TX_Complete1 = false;
+			DMA_TX_Complete2 = false;
+			DMA_TX_Complete3 = false;
+			DMA_TX_Complete4 = false;
 		}
 	}
 	DMA1->HIFCR = (uint32_t)((DMA_IT_TCIF5|DMA_IT_DMEIF5|DMA_IT_FEIF5|DMA_IT_HTIF5|DMA_IT_TEIF5) & RESERVED_MASK);
@@ -195,10 +197,10 @@ void DMA1_Stream5_IRQHandler(void) {
 void DMA2_Stream1_IRQHandler(void) {
 	if (DMA_GetITStatus(DMA2_Stream1, DMA_IT_TCIF1) == SET) {
 
-		flagDMA_TX_Complete4 = true;
+		DMA_TX_Complete4 = true;
 		DMA2_Stream1->CR &= ~(uint32_t) DMA_SxCR_EN;
 
-		if (flagDMA_TX_Complete1&&flagDMA_TX_Complete2&&flagDMA_TX_Complete3&&flagDMA_TX_Complete4)
+		if (DMA_TX_Complete1&&DMA_TX_Complete2&&DMA_TX_Complete3&&DMA_TX_Complete4)
 		{
 			if(interlacing==DISPLAY_ODD_SIDE)
 			{
@@ -213,10 +215,10 @@ void DMA2_Stream1_IRQHandler(void) {
 				TLC_LAT2_GPIO->BSRRH = TLC_LAT2_Pin;
 			}
 
-			flagDMA_TX_Complete1 = false;
-			flagDMA_TX_Complete2 = false;
-			flagDMA_TX_Complete3 = false;
-			flagDMA_TX_Complete4 = false;
+			DMA_TX_Complete1 = false;
+			DMA_TX_Complete2 = false;
+			DMA_TX_Complete3 = false;
+			DMA_TX_Complete4 = false;
 		}
 	}
 	DMA2->LIFCR = (uint32_t)((DMA_IT_TCIF1|DMA_IT_DMEIF1|DMA_IT_FEIF1|DMA_IT_HTIF1|DMA_IT_TEIF1) & RESERVED_MASK);
@@ -260,7 +262,6 @@ void TIM4_IRQHandler(void) {
 				displayState = OFF;
 			}
 			pixelColumnCounter = 0;
-			cnt++;
 		}
 
 		//Disable DMA
@@ -287,7 +288,7 @@ void TIM4_IRQHandler(void) {
 			}
 			if(bufferIndex==BUFFER_2) bufferIndex = BUFFER_1;
 			else bufferIndex = BUFFER_2;
-			flagRefreshBuffer = true;
+			refreshBuffer = true;
 			break;
 			case OFF:
 				DMA2_Stream2->M0AR = (uint32_t)&blackRow;
@@ -313,18 +314,18 @@ void TIM4_IRQHandler(void) {
 	}
 }
 
+void TIM5_IRQHandler(void) {
+	if ((TIM5->SR & TIM_IT_Update) != RESET) {
+		changeCarrouselImage = true;
+		TIM5->SR = (uint16_t) ~TIM_IT_Update;
+	}
+}
+
 void EXTI2_IRQHandler(void)
 {
 	if ((EXTI->PR & EXTI_Line2) != RESET) {
 		resyncDisplay = true;
-//		flagRefreshBuffer = false;
-//
-//		SPI5_NSS_GPIO->BSRRL = SPI5_NSS_Pin;
-//		pixelColumnCounter = 62;
-//		interlacing = DISPLAY_EVEN_SIDE;
-//		displayState = ON;
-//		TIM4->CR1 &= ~TIM_CR1_CEN;
-//		TIM4->CR1 |= TIM_CR1_CEN;
+		changeCarrouselImage = true;
 		EXTI->PR = (uint32_t) EXTI_Line2;
 	}
 }
@@ -547,19 +548,19 @@ int main(void) {
 	if(debug) console->sendString("Initiating EXTI...\n\r");
 	EXTI_InitTypeDef EXTI_InitStruct;
 
-		//PULSE PB2 for EXTI_Line2
-		SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOB, EXTI_PinSource2);
+	//PULSE PB2 for EXTI_Line2
+	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOB, EXTI_PinSource2);
 
-		/* PB2 is connected to EXTI_Line2 */
-		EXTI_InitStruct.EXTI_Line = EXTI_Line2;
-		/* Enable interrupt */
-		EXTI_InitStruct.EXTI_LineCmd = ENABLE;
-		/* Interrupt mode */
-		EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;
-		/* Triggers on rising and falling edge */
-		EXTI_InitStruct.EXTI_Trigger =  EXTI_Trigger_Falling;
-		/* Add to EXTI */
-		EXTI_Init(&EXTI_InitStruct);
+	/* PB2 is connected to EXTI_Line2 */
+	EXTI_InitStruct.EXTI_Line = EXTI_Line2;
+	/* Enable interrupt */
+	EXTI_InitStruct.EXTI_LineCmd = ENABLE;
+	/* Interrupt mode */
+	EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;
+	/* Triggers on rising and falling edge */
+	EXTI_InitStruct.EXTI_Trigger =  EXTI_Trigger_Falling;
+	/* Add to EXTI */
+	EXTI_Init(&EXTI_InitStruct);
 	if(debug) console->sendString("Done.\n\r");
 
 	//----------------------------------Nested Vectored Interrupt Controller INIT-----------------------------------------------------
@@ -604,7 +605,14 @@ int main(void) {
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
-	//
+
+	// Enable Timer5 Interrupt
+	NVIC_InitStructure.NVIC_IRQChannel = TIM5_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStructure);
+
 	// Enable EXTI2 Interrupt
 	NVIC_InitStructure.NVIC_IRQChannel = EXTI2_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
@@ -623,8 +631,7 @@ int main(void) {
 
 	flash->init();
 	imageNumber = 0;
-	//	flash->getPixelColumnDMA(2,(pixelColumnCounter+1),pixelmapBuffer2);
-	//	flash->getPixelColumnDMA(2,(pixelColumnCounter+1),pixelmapBuffer1);
+
 
 	if(debug) console->sendString("Done.\n\r");
 
@@ -638,7 +645,6 @@ int main(void) {
 	STM32F4Timer latchTimer(TIM4,5800,0,false); // 5800
 
 	NVIC_EnableIRQ(TIM4_IRQn);
-
 	//Enable timer4 interrupt
 	TIM4->DIER |= ENABLE;
 	//Start TIMER4
@@ -669,13 +675,29 @@ int main(void) {
 	if(debug) console->sendByte16ToBinaryString(flash->getPositionOfPresentImagesInCarrousel());
 	while (1) {
 
+		if (changeCarrouselImage)
+		{
+			carrouselCycle++;
+			if(carrouselCycle==55)
+			{
+				imageNumber++;
+				while((flash->positionOfPresentImages&(0x01<<imageNumber))==0)
+					{
+						imageNumber++;
+						if (imageNumber>13) imageNumber = 0;
+					}
 
-//		if(cnt>=100)
-//		{
-//			imageNumber++;
-//			if(imageNumber>=7) imageNumber=0;
-//			cnt = 0;
-//		}
+				if(debug)
+				{
+					console->sendString("Image number : ");
+					console->sendByte8ToBinaryString(imageNumber);
+					console->sendString("\n\r");
+				}
+				if (imageNumber>13) imageNumber = 0;
+				carrouselCycle = 0;
+			}
+			changeCarrouselImage = false;
+		}
 
 		wifi->incommingDataDecoder(flash);
 
@@ -684,6 +706,7 @@ int main(void) {
 			if (wifi->isReadyToTransfer)
 				transferState = DISABLE_DISPLAY;
 			break;
+
 		case DISABLE_DISPLAY:
 			if (debug)
 				console->sendString("Disabling display...");
@@ -692,9 +715,9 @@ int main(void) {
 			DMA1_Stream4->CR &= ~(uint32_t) DMA_SxCR_EN;
 			DMA1_Stream5->CR &= ~(uint32_t) DMA_SxCR_EN;
 			DMA2_Stream1->CR &= ~(uint32_t) DMA_SxCR_EN;
-			flagRefreshBuffer = false;
-//				EXTI_InitStruct.EXTI_LineCmd = DISABLE;
-//				EXTI_Init(&EXTI_InitStruct);
+			refreshBuffer = false;
+			EXTI_InitStruct.EXTI_LineCmd = DISABLE;
+			EXTI_Init(&EXTI_InitStruct);
 			wifi->isOkToTransfer = true;
 			transferState = TRANSFER_IN_PROGRESS;
 			break;
@@ -708,9 +731,8 @@ int main(void) {
 		case ENABLE_DISPLAY:
 			if (debug)
 				console->sendString("Enabling display...");
-		//	imageNumber = flash->getNumberOfImagesInCarrousel();
-//			EXTI_InitStruct.EXTI_LineCmd = ENABLE;
-//			EXTI_Init(&EXTI_InitStruct);
+			EXTI_InitStruct.EXTI_LineCmd = ENABLE;
+			EXTI_Init(&EXTI_InitStruct);
 			TIM4->CR1 |= TIM_CR1_CEN;
 			wifi->isOkToTransfer = false;
 			transferState = IDLE;
@@ -719,19 +741,19 @@ int main(void) {
 
 
 
-		if(flagRefreshBuffer)
+		if(refreshBuffer)
 		{
-						if(pixelColumnCounter<255)
-						{
-							if (bufferIndex==BUFFER_1) flash->getPixelColumnDMA(imageNumber,(pixelColumnCounter+1),pixelmapBuffer2);
-							else flash->getPixelColumnDMA(imageNumber,(pixelColumnCounter+1),pixelmapBuffer1);
-						}
-						else if(pixelColumnCounter==255)
-						{
-							if (bufferIndex==BUFFER_1) flash->getPixelColumnDMA(imageNumber,0,pixelmapBuffer2);
-							else flash->getPixelColumnDMA(imageNumber,0,pixelmapBuffer1);
-						}
-						flagRefreshBuffer = false;
+			if(pixelColumnCounter<255)
+			{
+				if (bufferIndex==BUFFER_1) flash->getPixelColumnDMA(imageNumber,(pixelColumnCounter+1),pixelmapBuffer2);
+				else flash->getPixelColumnDMA(imageNumber,(pixelColumnCounter+1),pixelmapBuffer1);
+			}
+			else if(pixelColumnCounter==255)
+			{
+				if (bufferIndex==BUFFER_1) flash->getPixelColumnDMA(imageNumber,0,pixelmapBuffer2);
+				else flash->getPixelColumnDMA(imageNumber,0,pixelmapBuffer1);
+			}
+			refreshBuffer = false;
 
 		}
 		if(pixelColumnCounter>256) pixelColumnCounter = 0;
