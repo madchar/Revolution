@@ -20,7 +20,7 @@ extern "C" void USART1_IRQHandler(void);
 class STM32F411USART1 {
 public:
 	/**
-	 * Méthode static du singleton qui retourne l'instance de l'objet si elle est libre.
+	 * Mï¿½thode static du singleton qui retourne l'instance de l'objet si elle est libre.
 	 * @return Retourne l'instance de l'objet
 	 */
 	static STM32F411USART1* getInstance();
@@ -30,63 +30,63 @@ public:
 	virtual ~STM32F411USART1();
 	/**
 	 * Envoie un byte dans le port de communication
-	 * @param data à envoyer
+	 * @param data ï¿½ envoyer
 	 */
 	void write(uint8_t data);
 	/**
-	 * Envoie une série de Bytes dans le port de communication
-	 * @param data Tableau à envoyer
-	 * @param nBytes nombre de byte à envoyer
+	 * Envoie une sï¿½rie de Bytes dans le port de communication
+	 * @param data Tableau ï¿½ envoyer
+	 * @param nBytes nombre de byte ï¿½ envoyer
 	 */
 	void sendBytes(uint8_t *data, uint32_t nBytes);
 	/**
-	 * Envoie la valeur décimal de la variable vers le port de communication
-	 * @param byte Variable à envoyer
+	 * Envoie la valeur dï¿½cimal de la variable vers le port de communication
+	 * @param byte Variable ï¿½ envoyer
 	 */
 	void sendByteToString(uint32_t byte);
 	/**
 	 * Envoie la valeur binaire de la variable ver le port de communication
-	 * @param data Variabl à envoyer
+	 * @param data Variabl ï¿½ envoyer
 	 * Ex: 2 ---> 00000010
 	 */
 	void sendByte8ToBinaryString(uint8_t data);
 	/**
 	 * Envoie la valeur binaire de la variable ver le port de communication
-	 * @param data Variabl à envoyer
+	 * @param data Variabl ï¿½ envoyer
 	 * Ex: 2 ---> 0000000000000010
 	 */
 	void sendByte16ToBinaryString(uint16_t data);
 	/**
 	 * Envoie la valeur binaire de la variable ver le port de communication
-	 * @param data Variabl à envoyer
+	 * @param data Variabl ï¿½ envoyer
 	 * Ex: 2 ---> 00000000000000000000000000000010
 	 */
 	void sendByte32ToBinaryString(uint32_t data);
 	/**
-	 * Envoie un chaine de caractère terminé par un Null vers le port de communication
-	 * @param s La chainne de caractères
+	 * Envoie un chaine de caractï¿½re terminï¿½ par un Null vers le port de communication
+	 * @param s La chainne de caractï¿½res
 	 */
 	void sendString(const char *s);
 	/**
-	 * Envoie un chaine de caractère terminé par un Null vers le port de communication
-	 * @param s La chainne de caractères
+	 * Envoie un chaine de caractï¿½re terminï¿½ par un Null vers le port de communication
+	 * @param s La chainne de caractï¿½res
 	 */
 	void sendString(uint8_t *u);
 	/**
-	 * Lie la donné reçu dans le port de communication
+	 * Lie la donnï¿½ reï¿½u dans le port de communication
 	 * @return
 	 */
 	uint8_t read();
 	/**
-	 * Cette méthode surveille le port de communication entre le seveur et le Révolution
-	 * @param flash pointeur de la flash pour pouvoir y accéder directement
-	 * Cette méthode surveille et filtre les trams de communication entrantent du serveur.
-	 * Elle s'occupe également du transfère d'images entre le serveur et le Révolution
+	 * Cette mï¿½thode surveille le port de communication entre le seveur et le Rï¿½volution
+	 * @param flash pointeur de la flash pour pouvoir y accï¿½der directement
+	 * Cette mï¿½thode surveille et filtre les trams de communication entrantent du serveur.
+	 * Elle s'occupe ï¿½galement du transfï¿½re d'images entre le serveur et le Rï¿½volution
 	 */
 	void incommingDataDecoder(Flash* flash);
 	/**
-	 * Retourne vrai lorsu'un donnée est disponible dans le port de communication
-	 * @return 1 lorsqu'un donnée est disponible.
+	 * Retourne vrai lorsu'un donnï¿½e est disponible dans le port de communication
+	 * @return 1 lorsqu'un donnï¿½e est disponible.
 	 */
 	bool dataAvailable();
 	/**
@@ -95,18 +95,18 @@ public:
 	 */
 	void setBaudRate(uint32_t baudrate);
 	/**
-	 * Active l'écho de réception pour fin de déverminage
+	 * Active l'ï¿½cho de rï¿½ception pour fin de dï¿½verminage
 	 * @param state 1 = on, 0 = off
 	 */
 	void setEcho(bool state);
 	/**
-	 * Décode la trame entrante
-	 * @param flash pointeur de flahs pour accéder à la mémoire directement
+	 * Dï¿½code la trame entrante
+	 * @param flash pointeur de flahs pour accï¿½der ï¿½ la mï¿½moire directement
 	 */
 	void parseTram(Flash *flash);
 	/**
-	 * Génaire et envoie la liste de fichier présent dans le carrousel vers le serveur
-	 * @param flash Pointeru de flash pour accéder directement la mémoire
+	 * Gï¿½naire et envoie la liste de fichier prï¿½sent dans le carrousel vers le serveur
+	 * @param flash Pointeru de flash pour accï¿½der directement la mï¿½moire
 	 */
 	void sendFilenameList(Flash *flash);
 
@@ -125,7 +125,7 @@ private:
 	friend void TIM3_IRQHandler(void);
 
 	/**
-	 * Énumération d'état pour la lecture de trames
+	 * ï¿½numï¿½ration d'ï¿½tat pour la lecture de trames
 	 */
 	enum parseTram_e {
 		WAIT,     //!< WAIT
@@ -133,7 +133,7 @@ private:
 		VALIDATE  //!< VALIDATE
 	} parseRxTram = WAIT;
 	/**
-	 * Énumération d'état pour les étapes de tranfères
+	 * ï¿½numï¿½ration d'ï¿½tat pour les ï¿½tapes de tranfï¿½res
 	 */
 	enum commState_e {
 		IDLE,               //!< IDLE
@@ -188,6 +188,6 @@ private:
 
 	//STM32F4Timer *commTimeOut;
 
-};
 
+};
 #endif /* STM32F411USART1_HPP_ */

@@ -1,4 +1,4 @@
-/*
+/**
  * stm32f4timer.cpp
  *
  *  Created on: Apr 5, 2019

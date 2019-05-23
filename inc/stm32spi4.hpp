@@ -1,8 +1,9 @@
-/*
+/**
  * stm32spi4.hpp
  *
  *  Created on: Feb 28, 2019
- *      Author: Zandwich
+ *  Author: Matthieu Madran
+ *  Desc: Classe SPI4 pour le STM32F4
  */
 
 #ifndef STM32SPI4_HPP_
