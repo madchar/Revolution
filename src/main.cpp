@@ -1,4 +1,3 @@
-
 /**
  ******************************************************************************
  * @file    main.c
@@ -31,6 +30,7 @@
 #include "stm32f411USART2.hpp"
 #include "flash.hpp"
 
+
 Flash *flash = Flash::getInstance(false);
 
 
@@ -61,8 +61,7 @@ enum transferState_e {
 static uint8_t pixelmapBuffer1[1156];
 static uint8_t pixelmapBuffer2[1156];
 
-
-static constexpr uint8_t blackRow[289] =  {
+static constexpr uint8_t blackRow[289] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -90,6 +89,7 @@ static constexpr uint8_t blackRow[289] =  {
 		0x00
 };
 
+
 extern "C" void SysTick_Handler(void);
 extern "C" void DMA2_Stream2_IRQHandler(void);
 extern "C" void DMA1_Stream4_IRQHandler(void);
@@ -110,12 +110,11 @@ void DMA2_Stream2_IRQHandler(void) {
 		{
 			if(interlacing==DISPLAY_ODD_SIDE)
 			{
+
 				TLC_LAT1_GPIO->BSRRH = TLC_LAT1_Pin;
 				TLC_LAT1_GPIO->BSRRL = TLC_LAT1_Pin;
 				TLC_LAT1_GPIO->BSRRH = TLC_LAT1_Pin;
-			}
-			else
-			{
+			} else {
 				TLC_LAT2_GPIO->BSRRH = TLC_LAT2_Pin;
 				TLC_LAT2_GPIO->BSRRL = TLC_LAT2_Pin;
 				TLC_LAT2_GPIO->BSRRH = TLC_LAT2_Pin;
@@ -137,18 +136,14 @@ void DMA1_Stream4_IRQHandler(void) {
 		DMA_TX_Complete2 = true;
 		DMA1_Stream4->CR &= ~(uint32_t) DMA_SxCR_EN;
 
-
 		if (DMA_TX_Complete1&&DMA_TX_Complete2&&DMA_TX_Complete3&&DMA_TX_Complete4)
 		{
 			if(interlacing==DISPLAY_ODD_SIDE)
 			{
-
 				TLC_LAT1_GPIO->BSRRH = TLC_LAT1_Pin;
 				TLC_LAT1_GPIO->BSRRL = TLC_LAT1_Pin;
 				TLC_LAT1_GPIO->BSRRH = TLC_LAT1_Pin;
-			}
-			else
-			{
+			} else {
 				TLC_LAT2_GPIO->BSRRH = TLC_LAT2_Pin;
 				TLC_LAT2_GPIO->BSRRL = TLC_LAT2_Pin;
 				TLC_LAT2_GPIO->BSRRH = TLC_LAT2_Pin;
@@ -177,9 +172,7 @@ void DMA1_Stream5_IRQHandler(void) {
 				TLC_LAT1_GPIO->BSRRH = TLC_LAT1_Pin;
 				TLC_LAT1_GPIO->BSRRL = TLC_LAT1_Pin;
 				TLC_LAT1_GPIO->BSRRH = TLC_LAT1_Pin;
-			}
-			else
-			{
+			} else {
 				TLC_LAT2_GPIO->BSRRH = TLC_LAT2_Pin;
 				TLC_LAT2_GPIO->BSRRL = TLC_LAT2_Pin;
 				TLC_LAT2_GPIO->BSRRH = TLC_LAT2_Pin;
@@ -197,6 +190,7 @@ void DMA1_Stream5_IRQHandler(void) {
 void DMA2_Stream1_IRQHandler(void) {
 	if (DMA_GetITStatus(DMA2_Stream1, DMA_IT_TCIF1) == SET) {
 
+
 		DMA_TX_Complete4 = true;
 		DMA2_Stream1->CR &= ~(uint32_t) DMA_SxCR_EN;
 
@@ -207,9 +201,7 @@ void DMA2_Stream1_IRQHandler(void) {
 				TLC_LAT1_GPIO->BSRRH = TLC_LAT1_Pin;
 				TLC_LAT1_GPIO->BSRRL = TLC_LAT1_Pin;
 				TLC_LAT1_GPIO->BSRRH = TLC_LAT1_Pin;
-			}
-			else
-			{
+			} else {
 				TLC_LAT2_GPIO->BSRRH = TLC_LAT2_Pin;
 				TLC_LAT2_GPIO->BSRRL = TLC_LAT2_Pin;
 				TLC_LAT2_GPIO->BSRRH = TLC_LAT2_Pin;
@@ -265,10 +257,10 @@ void TIM4_IRQHandler(void) {
 		}
 
 		//Disable DMA
-		DMA2_Stream2->CR &= ~(uint32_t)DMA_SxCR_EN;
-		DMA1_Stream4->CR &= ~(uint32_t)DMA_SxCR_EN;
-		DMA1_Stream5->CR &= ~(uint32_t)DMA_SxCR_EN;
-		DMA2_Stream1->CR &= ~(uint32_t)DMA_SxCR_EN;
+		DMA2_Stream2->CR &= ~(uint32_t) DMA_SxCR_EN;
+		DMA1_Stream4->CR &= ~(uint32_t) DMA_SxCR_EN;
+		DMA1_Stream5->CR &= ~(uint32_t) DMA_SxCR_EN;
+		DMA2_Stream1->CR &= ~(uint32_t) DMA_SxCR_EN;
 
 		switch (displayState){
 		case ON:
@@ -310,9 +302,9 @@ void TIM4_IRQHandler(void) {
 		SPI4->CR2 |= SPI_I2S_DMAReq_Tx;
 		DMA2_Stream1->CR |= (uint32_t) DMA_SxCR_EN;
 
-
 	}
 }
+
 
 void TIM5_IRQHandler(void) {
 	if ((TIM5->SR & TIM_IT_Update) != RESET) {
@@ -330,9 +322,7 @@ void EXTI2_IRQHandler(void)
 	}
 }
 
-
 int main(void) {
-
 
 	//----------------------------------RCC INIT-----------------------------------------------------
 	//Enable SPIs clocks
@@ -353,9 +343,9 @@ int main(void) {
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
 
 	//Enable Timers clocks
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2,ENABLE);
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3,ENABLE);
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4,ENABLE);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
 
 	//Enable SYSCFG clock
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
@@ -393,12 +383,13 @@ int main(void) {
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_25MHz;
 	GPIO_Init(TLC_LAT2_GPIO, &GPIO_InitStructure);
 
-
-	//----------------------------------COM-----------------------------------------------------------------------------
+	//----------------------------------COM---------------------------------------------------------------------
+	STM32F411USART1 *wifi = STM32F411USART1::getInstance();
 	STM32F411USART2 *console = STM32F411USART2::getInstance();
 
 	//----------------------------------SPI INIT-----------------------------------------------------
-	if(debug) console->sendString("Initiating SPI...\n\r");
+	if (debug)
+		console->sendString("Initiating SPI...\n\r");
 	STM32SPI1 spi1;
 	STM32SPI2 spi2;
 	STM32SPI3 spi3;
@@ -409,11 +400,13 @@ int main(void) {
 	spi3.init();
 	spi4.init();
 
-	if(debug) console->sendString("Done.\n\r");
+	if (debug)
+		console->sendString("Done.\n\r");
 
 	//----------------------------------TLC5955 INIT-----------------------------------------------------
 
-	if(debug) console->sendString("Initiating TLC5955...\n\r");
+	if (debug)
+		console->sendString("Initiating TLC5955...\n\r");
 	TLC5955 tlc;
 
 	tlc.init(&spi1, &spi2, &spi3, &spi4);
@@ -426,14 +419,17 @@ int main(void) {
 	tlc.setBrightnessCurrent(127, 5, 10);
 	tlc.updateControl();
 
-	if(debug) console->sendString("Done.\n\r");
+	if (debug)
+		console->sendString("Done.\n\r");
 
 	//----------------------------------DMA INIT-----------------------------------------------------
-	if(debug) console->sendString("Initiating DMA...\n\r");
+	if (debug)
+		console->sendString("Initiating DMA...\n\r");
 	DMA_InitTypeDef dma_spi;
 
 	//DMA SPI1
 	dma_spi.DMA_Channel = DMA_Channel_2;
+
 	dma_spi.DMA_Memory0BaseAddr = (uint32_t)&pixelmapBuffer2;
 	dma_spi.DMA_PeripheralBaseAddr = (uint32_t) (&(SPI1->DR));
 	dma_spi.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
@@ -444,13 +440,14 @@ int main(void) {
 	dma_spi.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
 	dma_spi.DMA_BufferSize = 289;
 	dma_spi.DMA_Priority = DMA_Priority_High;
-	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single ;
+	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single;
 	dma_spi.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	dma_spi.DMA_FIFOMode = DMA_FIFOMode_Disable;
 	DMA_Init(DMA2_Stream2, &dma_spi);
 
 	//DMA SPI2
 	dma_spi.DMA_Channel = DMA_Channel_0;
+
 	dma_spi.DMA_Memory0BaseAddr = (uint32_t)&pixelmapBuffer2[289];
 	dma_spi.DMA_PeripheralBaseAddr = (uint32_t) (&(SPI2->DR));
 	dma_spi.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
@@ -461,13 +458,14 @@ int main(void) {
 	dma_spi.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
 	dma_spi.DMA_BufferSize = 289;
 	dma_spi.DMA_Priority = DMA_Priority_High;
-	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single ;
+	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single;
 	dma_spi.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	dma_spi.DMA_FIFOMode = DMA_FIFOMode_Disable;
 	DMA_Init(DMA1_Stream4, &dma_spi);
 
 	//DMA SPI3
 	dma_spi.DMA_Channel = DMA_Channel_0;
+
 	dma_spi.DMA_Memory0BaseAddr = (uint32_t)&pixelmapBuffer2[578];
 	dma_spi.DMA_PeripheralBaseAddr = (uint32_t) (&(SPI3->DR));
 	dma_spi.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
@@ -478,13 +476,14 @@ int main(void) {
 	dma_spi.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
 	dma_spi.DMA_BufferSize = 289;
 	dma_spi.DMA_Priority = DMA_Priority_High;
-	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single ;
+	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single;
 	dma_spi.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	dma_spi.DMA_FIFOMode = DMA_FIFOMode_Disable;
 	DMA_Init(DMA1_Stream5, &dma_spi);
 
 	//DMA SPI4
 	dma_spi.DMA_Channel = DMA_Channel_4;
+
 	dma_spi.DMA_Memory0BaseAddr = (uint32_t)&pixelmapBuffer2[867];
 	dma_spi.DMA_PeripheralBaseAddr = (uint32_t) (&(SPI4->DR));
 	dma_spi.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
@@ -495,13 +494,14 @@ int main(void) {
 	dma_spi.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
 	dma_spi.DMA_BufferSize = 289;
 	dma_spi.DMA_Priority = DMA_Priority_High;
-	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single ;
+	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single;
 	dma_spi.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	dma_spi.DMA_FIFOMode = DMA_FIFOMode_Disable;
 	DMA_Init(DMA2_Stream1, &dma_spi);
 
 	//DMA SPI5 RX
 	dma_spi.DMA_Channel = DMA_Channel_7;
+
 	dma_spi.DMA_Memory0BaseAddr = (uint32_t)&pixelmapBuffer2[867];
 	dma_spi.DMA_PeripheralBaseAddr = (uint32_t) (&(SPI5->DR));
 	dma_spi.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
@@ -512,13 +512,14 @@ int main(void) {
 	dma_spi.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
 	dma_spi.DMA_BufferSize = 289;
 	dma_spi.DMA_Priority = DMA_Priority_High;
-	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single ;
+	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single;
 	dma_spi.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	dma_spi.DMA_FIFOMode = DMA_FIFOMode_Disable;
 	DMA_Init(DMA2_Stream5, &dma_spi);
 
 	//DMA SPI5 TX
 	dma_spi.DMA_Channel = DMA_Channel_2;
+
 	dma_spi.DMA_Memory0BaseAddr = (uint32_t)&pixelmapBuffer2[867];
 	dma_spi.DMA_PeripheralBaseAddr = (uint32_t) (&(SPI5->DR));
 	dma_spi.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
@@ -529,23 +530,23 @@ int main(void) {
 	dma_spi.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
 	dma_spi.DMA_BufferSize = 289;
 	dma_spi.DMA_Priority = DMA_Priority_High;
-	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single ;
+	dma_spi.DMA_MemoryBurst = DMA_MemoryBurst_Single;
 	dma_spi.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;
 	dma_spi.DMA_FIFOMode = DMA_FIFOMode_Disable;
 	DMA_Init(DMA2_Stream4, &dma_spi);
 
-
-
 	//Enable the transfer complete interrupt
-	DMA_ITConfig(DMA2_Stream2,DMA_IT_TC,ENABLE);
-	DMA_ITConfig(DMA2_Stream1,DMA_IT_TC,ENABLE);
-	DMA_ITConfig(DMA1_Stream4,DMA_IT_TC,ENABLE);
-	DMA_ITConfig(DMA1_Stream5,DMA_IT_TC,ENABLE);
+	DMA_ITConfig(DMA2_Stream2, DMA_IT_TC, ENABLE);
+	DMA_ITConfig(DMA2_Stream1, DMA_IT_TC, ENABLE);
+	DMA_ITConfig(DMA1_Stream4, DMA_IT_TC, ENABLE);
+	DMA_ITConfig(DMA1_Stream5, DMA_IT_TC, ENABLE);
 
-	if(debug) console->sendString("Done.\n\r");
+	if (debug)
+		console->sendString("Done.\n\r");
 
 	//----------------------------------External Interrupt INIT-----------------------------------------------------
-	if(debug) console->sendString("Initiating EXTI...\n\r");
+	if (debug)
+		console->sendString("Initiating EXTI...\n\r");
 	EXTI_InitTypeDef EXTI_InitStruct;
 
 	//PULSE PB2 for EXTI_Line2
@@ -558,13 +559,15 @@ int main(void) {
 	/* Interrupt mode */
 	EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;
 	/* Triggers on rising and falling edge */
-	EXTI_InitStruct.EXTI_Trigger =  EXTI_Trigger_Falling;
+	EXTI_InitStruct.EXTI_Trigger = EXTI_Trigger_Falling;
 	/* Add to EXTI */
 	EXTI_Init(&EXTI_InitStruct);
-	if(debug) console->sendString("Done.\n\r");
+	if (debug)
+		console->sendString("Done.\n\r");
 
 	//----------------------------------Nested Vectored Interrupt Controller INIT-----------------------------------------------------
-	if(debug) console->sendString("Initiating NVIC...\n\r");
+	if (debug)
+		console->sendString("Initiating NVIC...\n\r");
 	NVIC_InitTypeDef NVIC_InitStructure;
 
 	//Enable the DMA2 Stream2 (SPI1_TX) Interrupt
@@ -636,10 +639,12 @@ int main(void) {
 	if(debug) console->sendString("Done.\n\r");
 
 	//----------------------------------TIMER INIT-----------------------------------------------------
-	if(debug) console->sendString("Starting timers...\n\r");
-	STM32F4Timer gsclkTimer(TIM2,1000000,0,0);
-	gsclkTimer.enablePWM(1,50);
+	if (debug)
+		console->sendString("Starting timers...\n\r");
+	STM32F4Timer gsclkTimer(TIM2, 1000000, 0, 0);
+	gsclkTimer.enablePWM(1, 50);
 	gsclkTimer.startTimer();
+
 
 	//STM32F4Timer latchTimer(TIM4,10,65535,false);
 	STM32F4Timer latchTimer(TIM4,5800,0,false); // 5800
@@ -650,22 +655,25 @@ int main(void) {
 	//Start TIMER4
 	TIM4->CR1 |= TIM_CR1_CEN;
 
-	if(debug) console->sendString("Done.\n\r");
+	if (debug)
+		console->sendString("Done.\n\r");
+
 
 
 	if(debug) console->sendString("Starting DMA...\n\r");
 
 	//Start DMA2 Stream2
 	SPI1->CR2 |= SPI_I2S_DMAReq_Tx;
-	DMA2_Stream2->CR |= (uint32_t)DMA_SxCR_EN;
+	DMA2_Stream2->CR |= (uint32_t) DMA_SxCR_EN;
 	//Start DMA1 Stream4
 	SPI2->CR2 |= SPI_I2S_DMAReq_Tx;
-	DMA1_Stream4->CR |= (uint32_t)DMA_SxCR_EN;
+	DMA1_Stream4->CR |= (uint32_t) DMA_SxCR_EN;
 	//Start DMA1 Stream5
 	SPI3->CR2 |= SPI_I2S_DMAReq_Tx;
-	DMA1_Stream5->CR |= (uint32_t)DMA_SxCR_EN;
+	DMA1_Stream5->CR |= (uint32_t) DMA_SxCR_EN;
 	//Start DMA2 Stream1
 	SPI4->CR2 |= SPI_I2S_DMAReq_Tx;
+
 	DMA2_Stream1->CR |= (uint32_t)DMA_SxCR_EN;
 
 	if(debug) console->sendString("Done.\n\r");
@@ -739,8 +747,6 @@ int main(void) {
 			break;
 		}
 
-
-
 		if(refreshBuffer)
 		{
 			if(pixelColumnCounter<255)
@@ -757,9 +763,5 @@ int main(void) {
 
 		}
 		if(pixelColumnCounter>256) pixelColumnCounter = 0;
-
 	}
-
 }
-
-

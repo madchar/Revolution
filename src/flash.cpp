@@ -1,4 +1,3 @@
-
 /*
  * flash.cpp
  *
@@ -43,16 +42,18 @@ void Flash::init() {
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	//GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
 	GPIO_Init(SPI5_CLK_GPIO, &GPIO_InitStructure);
 	GPIO_PinAFConfig(SPI5_CLK_GPIO, SPI5_CLK_PinSource,
-			SPI5_ALTERNATE_FUNCTION);
+	SPI5_ALTERNATE_FUNCTION);
 
 	GPIO_InitStructure.GPIO_Pin = SPI5_NSS_Pin;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	//GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
 	GPIO_Init(SPI5_NSS_GPIO, &GPIO_InitStructure);
 
 	//------------------------ GPIO_A MOSI MISO------------------------------------------
@@ -61,13 +62,14 @@ void Flash::init() {
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	//GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
 
 	GPIO_PinAFConfig(SPI5_MOSI_GPIO, SPI5_MOSI_PinSource,
-			SPI5_ALTERNATE_FUNCTION);
+	SPI5_ALTERNATE_FUNCTION);
 	GPIO_PinAFConfig(SPI5_MISO_GPIO, SPI5_MISO_PinSource,
-			SPI5_ALTERNATE_FUNCTION);
+	SPI5_ALTERNATE_FUNCTION);
 
 	GPIO_SetBits(SPI5_NSS_GPIO, SPI5_NSS_Pin);
 
@@ -78,7 +80,8 @@ void Flash::init() {
 	SPI_InitStruct.SPI_CPOL = SPI_CPOL_Low;
 	SPI_InitStruct.SPI_CPHA = SPI_CPHA_1Edge;
 	SPI_InitStruct.SPI_CRCPolynomial = 7;
-	SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;
+	//SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;
+	SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_16;
 	SPI_InitStruct.SPI_FirstBit = SPI_FirstBit_MSB;
 	SPI_InitStruct.SPI_NSS = SPI_NSS_Soft;
 
@@ -90,7 +93,10 @@ void Flash::init() {
 		;
 
 	positionOfPresentImages = getPositionOfPresentImagesInCarrousel();
+	numberOfImageInCarrousel = getNumberOfImagesInCarrousel();
 	readControlRegister();
+
+
 
 	if (debug)
 		terminal->sendString("\n\rFlash initialization completed.\n\r");
@@ -327,7 +333,8 @@ void Flash::writeByte(const address_t *add, uint8_t byte) {
 	while (!(readStatusRegister() & BusyFlag))
 		;
 }
-void Flash::writeByte(const address_t *add, int byte) {
+
+void Flash::writeByteU16(const address_t *add, uint16_t byte) {
 	uint32_t address = 0;
 	address = add->page;
 	address = address << 9;
@@ -338,13 +345,14 @@ void Flash::writeByte(const address_t *add, int byte) {
 	spiTransfer((address & 0x00FF0000) >> 16);
 	spiTransfer((address & 0x0000FF00) >> 8);
 	spiTransfer((address & 0x000000FF));
+	spiTransfer(byte >> 8);
 	spiTransfer(byte);
 	setCS(false);
 
 	while (!(readStatusRegister() & BusyFlag))
 		;
 }
-void Flash::writeByte(const address_t *add, uint16_t byte) {
+void Flash::writeByteU32(const address_t* add, uint32_t byte) {
 	uint32_t address = 0;
 	address = add->page;
 	address = address << 9;
@@ -355,28 +363,10 @@ void Flash::writeByte(const address_t *add, uint16_t byte) {
 	spiTransfer((address & 0x00FF0000) >> 16);
 	spiTransfer((address & 0x0000FF00) >> 8);
 	spiTransfer((address & 0x000000FF));
-	for (int i = 0; i < 2; i++) {
-		spiTransfer(byte >> (16 - (8 * i)));
-	}
-	setCS(false);
-
-	while (!(readStatusRegister() & BusyFlag))
-		;
-}
-void Flash::writeByte(const address_t* add, uint32_t byte) {
-	uint32_t address = 0;
-	address = add->page;
-	address = address << 9;
-	address |= add->byte;
-
-	setCS(true);
-	spiTransfer(WrtitePagesThroughBuf1BIE);
-	spiTransfer((address & 0x00FF0000) >> 16);
-	spiTransfer((address & 0x0000FF00) >> 8);
-	spiTransfer((address & 0x000000FF));
-	for (int i = 0; i < 4; i++) {
-		spiTransfer(byte >> (24 - (8 * i)));
-	}
+	spiTransfer(byte >> 24);
+	spiTransfer(byte >> 16);
+	spiTransfer(byte >> 8);
+	spiTransfer(byte);
 	setCS(false);
 
 	while (!(readStatusRegister() & BusyFlag))
@@ -431,7 +421,7 @@ void Flash::writeByte(const address_t *add, const char *byte, uint16_t nByte) {
 		terminal->sendString("Done. \n\r\r");
 }
 
-void Flash::erasePage(const address_t *add) {
+void Flash::formatPage(const address_t *add) {
 	uint32_t address = 0;
 	address = add->page;
 	address = address << 9;
@@ -454,7 +444,7 @@ void Flash::erasePage(const address_t *add) {
 
 }
 
-void Flash::eraseChip() {
+void Flash::formatChip() {
 	if (debug)
 
 		terminal->sendString("Erasing Chip...\n\r");
@@ -501,14 +491,13 @@ void Flash::writeControlRegister() {
 	writeByte(&GlobalBrightnessSettingAddress, globalBrightness);
 }
 
-uint32_t Flash::getPositionOfPresentImagesInCarrousel() {
-	uint8_t bytes[4];
-	uint32_t result;
-	readPageArray(&PositionOfPresentImagesInCarrouselAddress, bytes, 4);
+uint16_t Flash::getPositionOfPresentImagesInCarrousel() {
+	uint8_t bytes[2];
+	uint16_t result;
+	readPageArray(&PositionOfPresentImagesInCarrouselAddress, bytes, 2);
 	result = bytes[0];
 	result = (result << 8) | bytes[1];
-	result = (result << 8) | bytes[2];
-	result = (result << 8) | bytes[3];
+
 	return result;
 }
 
@@ -519,7 +508,7 @@ void Flash::setImageInCarrousel(uint8_t imageNo) {
 }
 
 void Flash::savePositionOfPresentImagesInCarrousel() {
-	writeByte(&PositionOfPresentImagesInCarrouselAddress,
+	writeByteU16(&PositionOfPresentImagesInCarrouselAddress,
 			positionOfPresentImages);
 }
 
@@ -624,12 +613,12 @@ bool Flash::getPixelColumn(uint8_t imageNo, uint8_t columnNo,
 	for (uint32_t i = 0; i < SPIBufferSize; i++)
 		spiBuffer[i] = spiTransfer(DummyByte);
 	for (uint32_t i = 0; i < SPIBufferSize; i++)
-		spiBuffer[i+289] = spiTransfer(DummyByte);
+		spiBuffer[i + 289] = spiTransfer(DummyByte);
 	for (uint32_t i = 0; i < SPIBufferSize; i++)
-		spiBuffer[i+578] = spiTransfer(DummyByte);
+		spiBuffer[i + 578] = spiTransfer(DummyByte);
 	for (uint32_t i = 0; i < SPIBufferSize; i++)
 
-	setCS(false);
+		setCS(false);
 
 	if (debug)
 
@@ -642,7 +631,7 @@ bool Flash::getPixelColumnDMA(uint8_t imageNo, uint8_t columnNo,
 #ifdef DDEBUG
 	if (debug)
 
-		terminal->sendString("Loading pixel column from flash...\n\r");
+	terminal->sendString("Loading pixel column from flash...\n\r");
 #endif
 	imageNo = imageNo % MaxImageStored;
 
@@ -682,15 +671,16 @@ bool Flash::getPixelColumnDMA(uint8_t imageNo, uint8_t columnNo,
 	spiTransfer(DummyByte);
 	spiTransfer(DummyByte);
 
-	#ifdef DDEBUG
+#ifdef DDEBUG
 	terminal->sendString("starting DMA\n\r");
 #endif
 
-	DMA2_Stream5->M0AR = (uint32_t)&spiBuffer[0];
+	DMA2_Stream5->M0AR = (uint32_t) &spiBuffer[0];
 	SPI5->CR2 |= SPI_I2S_DMAReq_Rx;
 	SPI5->CR2 |= SPI_I2S_DMAReq_Tx;
 	DMA2_Stream4->CR |= (uint32_t) DMA_SxCR_EN;
 	DMA2_Stream5->CR |= (uint32_t) DMA_SxCR_EN;
+
 	//while(DMA_GetFlagStatus(DMA2_Stream5, DMA_FLAG_TCIF5)==RESET);
 	while((((DMA2->HISR&RESERVED_MASK)&(DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5))==(uint32_t)RESET)&&(((DMA2->HISR&RESERVED_MASK)&(DMA_FLAG_DMEIF4|DMA_FLAG_TCIF4|DMA_FLAG_TEIF4))==(uint32_t)RESET));
 	DMA2_Stream4->CR &= ~(uint32_t)DMA_SxCR_EN;
@@ -702,11 +692,12 @@ bool Flash::getPixelColumnDMA(uint8_t imageNo, uint8_t columnNo,
 	terminal->sendString("buffer1 done\n\r");
 #endif
 
-	DMA2_Stream5->M0AR = (uint32_t)&spiBuffer[289];
+	DMA2_Stream5->M0AR = (uint32_t) &spiBuffer[289];
 	SPI5->CR2 |= SPI_I2S_DMAReq_Rx;
 	SPI5->CR2 |= SPI_I2S_DMAReq_Tx;
 	DMA2_Stream4->CR |= (uint32_t) DMA_SxCR_EN;
 	DMA2_Stream5->CR |= (uint32_t) DMA_SxCR_EN;
+
 	while((((DMA2->HISR&RESERVED_MASK)&(DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5))==(uint32_t)RESET)&&(((DMA2->HISR&RESERVED_MASK)&(DMA_FLAG_DMEIF4|DMA_FLAG_TCIF4|DMA_FLAG_TEIF4))==(uint32_t)RESET));
 	//while(DMA_GetFlagStatus(DMA2_Stream5, DMA_FLAG_TCIF5)==RESET);
 	DMA2_Stream4->CR &= ~(uint32_t)DMA_SxCR_EN;
@@ -714,15 +705,17 @@ bool Flash::getPixelColumnDMA(uint8_t imageNo, uint8_t columnNo,
 	DMA2->HIFCR = (uint32_t)((DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_HTIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5) & RESERVED_MASK);
 	DMA2->HIFCR = (uint32_t)((DMA_FLAG_DMEIF4|DMA_FLAG_FEIF4|DMA_FLAG_HTIF4|DMA_FLAG_TCIF4|DMA_FLAG_TEIF4) & RESERVED_MASK);
 
-	#ifdef DDEBUG
+
+#ifdef DDEBUG
 	terminal->sendString("buffer2 done\n\r");
 #endif
 
-	DMA2_Stream5->M0AR = (uint32_t)&spiBuffer[578];
+	DMA2_Stream5->M0AR = (uint32_t) &spiBuffer[578];
 	SPI5->CR2 |= SPI_I2S_DMAReq_Rx;
 	SPI5->CR2 |= SPI_I2S_DMAReq_Tx;
 	DMA2_Stream4->CR |= (uint32_t) DMA_SxCR_EN;
 	DMA2_Stream5->CR |= (uint32_t) DMA_SxCR_EN;
+
 	while((((DMA2->HISR&RESERVED_MASK)&(DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5))==(uint32_t)RESET)&&(((DMA2->HISR&RESERVED_MASK)&(DMA_FLAG_DMEIF4|DMA_FLAG_TCIF4|DMA_FLAG_TEIF4))==(uint32_t)RESET));
 
 	DMA2_Stream4->CR &= ~(uint32_t)DMA_SxCR_EN;
@@ -730,15 +723,17 @@ bool Flash::getPixelColumnDMA(uint8_t imageNo, uint8_t columnNo,
 	DMA2->HIFCR = (uint32_t)((DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_HTIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5) & RESERVED_MASK);
 	DMA2->HIFCR = (uint32_t)((DMA_FLAG_DMEIF4|DMA_FLAG_FEIF4|DMA_FLAG_HTIF4|DMA_FLAG_TCIF4|DMA_FLAG_TEIF4) & RESERVED_MASK);
 
-	#ifdef DDEBUG
+
+#ifdef DDEBUG
 	terminal->sendString("buffer3 done\n\r");
 #endif
 
-	DMA2_Stream5->M0AR = (uint32_t)&spiBuffer[867];
+	DMA2_Stream5->M0AR = (uint32_t) &spiBuffer[867];
 	SPI5->CR2 |= SPI_I2S_DMAReq_Rx;
 	SPI5->CR2 |= SPI_I2S_DMAReq_Tx;
 	DMA2_Stream4->CR |= (uint32_t) DMA_SxCR_EN;
 	DMA2_Stream5->CR |= (uint32_t) DMA_SxCR_EN;
+
 	while((((DMA2->HISR&RESERVED_MASK)&(DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5))==(uint32_t)RESET)&&(((DMA2->HISR&RESERVED_MASK)&(DMA_FLAG_DMEIF4|DMA_FLAG_TCIF4|DMA_FLAG_TEIF4))==(uint32_t)RESET));
 
 
@@ -747,22 +742,22 @@ bool Flash::getPixelColumnDMA(uint8_t imageNo, uint8_t columnNo,
 	DMA2->HIFCR = (uint32_t)((DMA_FLAG_DMEIF5|DMA_FLAG_FEIF5|DMA_FLAG_HTIF5|DMA_FLAG_TCIF5|DMA_FLAG_TEIF5) & RESERVED_MASK);
 	DMA2->HIFCR = (uint32_t)((DMA_FLAG_DMEIF4|DMA_FLAG_FEIF4|DMA_FLAG_HTIF4|DMA_FLAG_TCIF4|DMA_FLAG_TEIF4) & RESERVED_MASK);
 
-	#ifdef DDEBUG
+
+#ifdef DDEBUG
 	terminal->sendString("buffer4 done\n\r");
 #endif
 
-
 	  SPI5_NSS_GPIO->BSRRL = SPI5_NSS_Pin;
+
 #ifdef DDEBUG
 	if (debug)
 
-		terminal->sendString("Column loaded from flash...\n\r");
+	terminal->sendString("Column loaded from flash...\n\r");
 #endif
 	return true;
 }
 
-
-void Flash::getPixelColumnToString(uint8_t imageNo, uint8_t columnNo){
+void Flash::getPixelColumnToString(uint8_t imageNo, uint8_t columnNo) {
 
 	imageNo = imageNo % MaxImageStored;
 
@@ -808,8 +803,9 @@ void Flash::getPixelColumnToString(uint8_t imageNo, uint8_t columnNo){
 		terminal->write(spiTransfer(DummyByte));
 	setCS(false);
 
-	if (debug);
-		//terminal->sendString("\n\rColumn loaded from flash...\n\r");
+	if (debug)
+		;
+	//terminal->sendString("\n\rColumn loaded from flash...\n\r");
 }
 
 void Flash::setDebug(bool debug) {
@@ -827,7 +823,7 @@ uint8_t Flash::countSetBits(uint32_t n) {
 
 void Flash::resetImageInCarrousel(uint8_t imageNo) {
 	positionOfPresentImages &= ~(1 << (imageNo));
-	writeByte(&PositionOfPresentImagesInCarrouselAddress,
+	writeByteU16(&PositionOfPresentImagesInCarrouselAddress,
 			positionOfPresentImages);
 }
 
@@ -835,34 +831,12 @@ void Flash::setFilename(uint8_t imageNo, uint8_t* fileName) {
 	imageNo = imageNo % MaxImageStored;
 	address_t add = FilenamePage;
 	add.byte = imageNo * FilenameSize;
-	//writeByte(&add, fileName, sizeof(fileName));
-	uint16_t nByte = sizeof(fileName);
-	uint8_t data;
+	uint16_t nBytes = (sizeof(fileName) - 1);
+	if (nBytes > FilenameSize)
+		nBytes = FilenameSize;
+	writeByte(&add, fileName, nBytes);
 
-	if (debug)
-		terminal->sendString("Writing byte\n\r\r");
-
-	uint32_t address = 0;
-	address = add.page;
-	address = address << 9;
-	address |= add.byte;
-
-	setCS(true);
-	spiTransfer(WrtitePagesThroughBuf2BIE);
-	spiTransfer((address & 0x00FF0000) >> 16);
-	spiTransfer((address & 0x0000FF00) >> 8);
-	spiTransfer((address & 0x000000FF));
-	for (uint16_t i = 0; i < nByte; i++) {
-		data = (uint8_t) fileName[i];
-		spiTransfer(data);
-	}
-	setCS(false);
-	while (!(readStatusRegister() & BusyFlag))
-		;
-	if (debug)
-		terminal->sendString("Done. \n\r\r");
-	if (debug)
-		terminal->sendString("setFilename\n\r");
+	terminal->sendString("setFilename\n\r");
 }
 void Flash::resetFilename(uint8_t imageNo) {
 	imageNo = imageNo % MaxImageStored;
@@ -904,5 +878,4 @@ uint8_t Flash::getNextFreeImageSlot() {
 
 	return counter - 1;
 }
-
 
