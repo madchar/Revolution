@@ -1,4 +1,3 @@
-
 /*
  * com.hpp
  *
@@ -15,30 +14,100 @@
 #include "flash.hpp"
 #include "stm32f4timer.hpp"
 
-
 extern "C" void TIM3_IRQHandler(void);
 extern "C" void USART1_IRQHandler(void);
 
-
 class STM32F411USART1 {
 public:
-
+	/**
+	 * Méthode static du singleton qui retourne l'instance de l'objet si elle est libre.
+	 * @return Retourne l'instance de l'objet
+	 */
 	static STM32F411USART1* getInstance();
+	/**
+	 * Destructeur
+	 */
 	virtual ~STM32F411USART1();
+	/**
+	 * Envoie un byte dans le port de communication
+	 * @param data à envoyer
+	 */
 	void write(uint8_t data);
+	/**
+	 * Envoie une série de Bytes dans le port de communication
+	 * @param data Tableau à envoyer
+	 * @param nBytes nombre de byte à envoyer
+	 */
 	void sendBytes(uint8_t *data, uint32_t nBytes);
+	/**
+	 * Envoie la valeur décimal de la variable vers le port de communication
+	 * @param byte Variable à envoyer
+	 */
 	void sendByteToString(uint32_t byte);
+	/**
+	 * Envoie la valeur binaire de la variable ver le port de communication
+	 * @param data Variabl à envoyer
+	 * Ex: 2 ---> 00000010
+	 */
 	void sendByte8ToBinaryString(uint8_t data);
+	/**
+	 * Envoie la valeur binaire de la variable ver le port de communication
+	 * @param data Variabl à envoyer
+	 * Ex: 2 ---> 0000000000000010
+	 */
 	void sendByte16ToBinaryString(uint16_t data);
+	/**
+	 * Envoie la valeur binaire de la variable ver le port de communication
+	 * @param data Variabl à envoyer
+	 * Ex: 2 ---> 00000000000000000000000000000010
+	 */
 	void sendByte32ToBinaryString(uint32_t data);
+	/**
+	 * Envoie un chaine de caractère terminé par un Null vers le port de communication
+	 * @param s La chainne de caractères
+	 */
 	void sendString(const char *s);
+	/**
+	 * Envoie un chaine de caractère terminé par un Null vers le port de communication
+	 * @param s La chainne de caractères
+	 */
 	void sendString(uint8_t *u);
+	/**
+	 * Lie la donné reçu dans le port de communication
+	 * @return
+	 */
 	uint8_t read();
+	/**
+	 * Cette méthode surveille le port de communication entre le seveur et le Révolution
+	 * @param flash pointeur de la flash pour pouvoir y accéder directement
+	 * Cette méthode surveille et filtre les trams de communication entrantent du serveur.
+	 * Elle s'occupe également du transfère d'images entre le serveur et le Révolution
+	 */
 	void incommingDataDecoder(Flash* flash);
+	/**
+	 * Retourne vrai lorsu'un donnée est disponible dans le port de communication
+	 * @return 1 lorsqu'un donnée est disponible.
+	 */
 	bool dataAvailable();
+	/**
+	 * Ajuste la vitesse de communication du port
+	 * @param baudrate
+	 */
 	void setBaudRate(uint32_t baudrate);
+	/**
+	 * Active l'écho de réception pour fin de déverminage
+	 * @param state 1 = on, 0 = off
+	 */
 	void setEcho(bool state);
+	/**
+	 * Décode la trame entrante
+	 * @param flash pointeur de flahs pour accéder à la mémoire directement
+	 */
 	void parseTram(Flash *flash);
+	/**
+	 * Génaire et envoie la liste de fichier présent dans le carrousel vers le serveur
+	 * @param flash Pointeru de flash pour accéder directement la mémoire
+	 */
 	void sendFilenameList(Flash *flash);
 
 	bool isReadyToTransfer;
@@ -52,17 +121,28 @@ private:
 	Buffer<uint8_t, 1024> txBuffer;
 	static STM32F411USART1* instance;
 
-
-
 	friend void USART1_IRQHandler(void);
 	friend void TIM3_IRQHandler(void);
 
+	/**
+	 * Énumération d'état pour la lecture de trames
+	 */
 	enum parseTram_e {
-		WAIT, RXPAYLOAD, VALIDATE
+		WAIT,     //!< WAIT
+		RXPAYLOAD,     //!< RXPAYLOAD
+		VALIDATE  //!< VALIDATE
 	} parseRxTram = WAIT;
-
+	/**
+	 * Énumération d'état pour les étapes de tranfères
+	 */
 	enum commState_e {
-		IDLE, WAIT_OK_TO_TRANSFER, ASK_FILE_TO_SERVER, SAVE_FILE, SAVE_FILENAME, TRANSFER_COMPLETED, TRANSFER_FAILED
+		IDLE,               //!< IDLE
+		WAIT_OK_TO_TRANSFER,               //!< WAIT_OK_TO_TRANSFER
+		ASK_FILE_TO_SERVER, //!< ASK_FILE_TO_SERVER
+		SAVE_FILE,          //!< SAVE_FILE
+		SAVE_FILENAME,      //!< SAVE_FILENAME
+		TRANSFER_COMPLETED, //!< TRANSFER_COMPLETED
+		TRANSFER_FAILED     //!< TRANSFER_FAILED
 	} commState = IDLE;
 
 	uint16_t commRxCnt = 0;
@@ -82,6 +162,7 @@ private:
 	static constexpr uint8_t TIME_OUT = 2;
 	static constexpr uint8_t MAX_RETRY = 3;
 
+	const char CMD_ImageQuantity[7] = { "imgqty" };
 	const char CMD_ImageReadyToTransfer[7] = { "imgrdy" };
 	const char CMD_GetFilenameList[7] = { "getlst" };
 	const char CMD_Filename[7] = { "lfname" };

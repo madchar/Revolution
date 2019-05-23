@@ -23,6 +23,8 @@
 
 class Flash {
 public:
+	///Nombre d'image à afficher dans le carrousel
+	uint8_t numberOfImageInCarrousel = 0;
 	///Positions des images dans le carrousel. Ex:xx00000000000101 = Images 0 et 2 présentes.
 	uint16_t positionOfPresentImages = 0;
 	///Paramètre de courrant Maximum pour le TLC5955
@@ -264,63 +266,108 @@ public:
 	 * @param imageNo : Numéro de l'image
 	 * @param columnNo : Numéro de la colonne
 	 * @param spiBuffer : Tableau dans lequel les données sont transférés
-	 * @return
+	 * @return 1 quand le transfère est complété
 	 */
 	bool getPixelColumnDMA(uint8_t imageNo, uint8_t columnNo,
 			uint8_t* spiBuffer);
+	/**
+	 * Lie une colonne d'affichage emagasiné dans la flash
+	 * @param imageNo : Numéro de l'image
+	 * @param columnNo : Numéro de la colonne
+	 * @param spiBuffer : Tableau dans lequel les données sont transférés
+	 * @return 1 quand le transfère est complété
+	 */
 	bool getPixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* spiBuffer);
+	/**
+	 * Sauvegarde une colonne d'affichage dans la flash
+	 * @param imageNo : Numéro de l'image
+	 * @param columnNo : Numéro de la colonne
+	 * @param spiBuffer : Tableau dans lequel les données sont transférés
+	 * @return 1 quand le transfère est complété
+	 */
 	bool savePixelColumn(uint8_t imageNo, uint8_t columnNo, uint8_t* source);
+	/**
+	 * Transmet un colonne d'image n format texte vers la console de déverminage
+	 * @param imageNo : Numéro de l'image
+	 * @param columnNo : Numéro de la colonne
+	 */
 	void getPixelColumnToString(uint8_t imageNo, uint8_t columnNo);
+	/**
+	 * Permet la sortie des message de déverminage vers la console
+	 * @param debug 1 = Fonctionnel, 0 = Non fonctionnel
+	 */
 	void setDebug(bool debug);
+	/**
+	 * Compte le nombe de set bits dans une variable
+	 * @param n La variable à comter
+	 * @return le nombre de bits à 1 dans la variable
+	 */
 	uint8_t countSetBits(uint32_t n);
 
 private:
+	/**
+	 * Constructeur par défaut
+	 */
 	Flash();
+	/**
+	 * Contructeur optionnel
+	 * @param debugEnable Configure la console de déverminage
+	 */
 	Flash(bool debugEnable);
-
+	/**
+	 * Membre static d'instance de l'objet
+	 */
 	static Flash* instance;
 
 	/**
 	 * Flash read/write and SPI command
 	 */
 
+	///Commande SPI FLASH BusyFlag
 	static constexpr uint16_t BusyFlag = 0x8080;
+	///Commande SPI FLASH ReadWrite Error flag
 	static constexpr uint16_t ReadWriteErrorFlag = 0x0020;
-
+	///Commande SPI FLASH Dummybyte pour la lecture de la flash
 	static constexpr uint8_t DummyByte = 0x00;
-
+	///Commande SPI FLASH Lecture de la mémoire flash
 	static constexpr uint8_t MainMemmoryPageRead = 0xD2;
+	///Commande SPI FLASH Lecture en continue avec incrémentation automatique de page
 	static constexpr uint8_t ContinuousPageRead = 0x1B;
+	///Commande SPI FLASH Écriture dans la flash via le Buffer 1
 	static constexpr uint8_t WrtitePagesThroughBuf1BIE = 0x82;
+	///Commande SPI FLASH Écriture dans la flash via le Buffer 2
 	static constexpr uint8_t WrtitePagesThroughBuf2BIE = 0x85;
-	static constexpr uint8_t WrtiteBytesThroughBuf1NoBIE = 0x02;
+	///Commande SPI FLASH pour effacer un page de mémoire
 	static constexpr uint8_t PageErase = 0x81;
+	///Commande SPI FLASH pour lire le numéro d'identification du manifacturier de la flash
 	static constexpr uint8_t DeviceID = 0x9F;
+	///Commande SPI FLASH pour lire le registre d'état de la flash
 	static constexpr uint8_t StatusRegisterRead = 0xD7;
+	///Commande SPI FLASH pour lire le registre de configuration de la flash
 	static constexpr uint8_t ConfigurationRegisterRead = 0x3F;
-
+	///Commande SPI FLASH pour configurer les pages de mémoire en bloc de 512 Bytes
 	static constexpr uint8_t BinaryPageSize[4] = { 0x3D, 0x2A, 0x80, 0xA6 };
+	///Commande SPI FLASH pour formater la flash
 	static constexpr uint8_t ChipErase[4] = { 0xC7, 0x94, 0x80, 0x9A };
+	///Commande SPI FLASH pour désactiver la protection de secteurs
 	static constexpr uint8_t DisableSectorProtect[4] =
 			{ 0x3D, 0x2A, 0x7F, 0x9A };
 
-	/**
-	 * Static configuration addresses
-	 */
 
-	/*
-	 * Page 9 is reserved for BMP file names: 14 * 16 char = 240 bytes ex:123456789012.bmp
-	 */
-
-	const address_t FilenamePage = { 9, 0 }; //14 images * 16 char = 226 bytes
-	const address_t GlobalBrightnessSettingAddress = { 10, 0 };		//2 bytes
-	const address_t RedMaxCurrentSettingAddress = { 10, 2 };		//2 bytes
-	const address_t GreenMaxCurrentSettingAddress = { 10, 4 };		//2 bytes
-	const address_t BlueMaxCurrentSettingAddress = { 10, 6 };		//2 Bytes
-	const address_t PositionOfPresentImagesInCarrouselAddress = { 10, 8 };//2 bytes
-
+	///Pages de mémoires alouées au nom de fichiers. 14 noms * 16 bytes = 226 Bytes Total
+	const address_t FilenamePage = { 9, 0 }; 								//14 images * 16 char = 226 bytes
+	///Mémoire allouée pour la variable de GlogalBrightness du carrousel
+	const address_t GlobalBrightnessSettingAddress = { 10, 0 };				//2 bytes
+	///Mémoire allouée pour la variable de RedMaxCurrentSetting du carrousel
+	const address_t RedMaxCurrentSettingAddress = { 10, 2 };				//2 bytes
+	///Mémoire allouée pour la variable de GreenMaxCurrentSetting du carrousel
+	const address_t GreenMaxCurrentSettingAddress = { 10, 4 };				//2 bytes
+	///Mémoire allouée pour la variable de BlueMaxCurrentSetting du carrousel
+	const address_t BlueMaxCurrentSettingAddress = { 10, 6 };				//2 Bytes
+	///Mémoire allouée pour la variable de images présentes dans le carrousel
+	const address_t PositionOfPresentImagesInCarrouselAddress = { 10, 8 };	//2 bytes
+	///Déverminage on ou off
 	bool debug = false;
-
 };
 
 #endif /* FLASH_HPP_ */

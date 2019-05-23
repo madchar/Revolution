@@ -92,7 +92,9 @@ void Flash::init() {
 		;
 
 	positionOfPresentImages = getPositionOfPresentImagesInCarrousel();
+	numberOfImageInCarrousel = getNumberOfImagesInCarrousel();
 	readControlRegister();
+
 
 	if (debug)
 		terminal->sendString("\n\rFlash initialization completed.\n\r");
