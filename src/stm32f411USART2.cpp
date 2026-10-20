@@ -24,7 +24,7 @@ STM32F411USART2::STM32F411USART2() {
 
 	// Par default la configuration est 8N1
 	USART2->CR1 |= USART_CR1_RE | USART_CR1_TE; // Active RX et TX
-	setBaudRate(921600);
+	setBaudRate(115200);
 
 	NVIC_InitTypeDef NVIC_InitStructure;
 	//Enable the USART2 Interrupt
@@ -101,11 +101,15 @@ uint8_t STM32F411USART2::read() {
 void STM32F411USART2::write(uint8_t data) {
 	while (txBuffer.isFull())
 		;
-	txBuffer.add(data);
-	if (!isTransmitting) {
+	if (isTransmitting) {
+		USART2->CR1 &= ~USART_CR1_TXEIE;
+		txBuffer.add(data);
+	} else {
+		txBuffer.add(data);
 		isTransmitting = true;
-		USART2->CR1 |= USART_CR1_TXEIE; // active l'interruption.
+
 	}
+	USART2->CR1 |= USART_CR1_TXEIE;
 
 }
 
@@ -121,6 +125,18 @@ void STM32F411USART2::sendbyteToString(uint16_t byte) {
 	sendString(buffer);
 }
 
+void STM32F411USART2::sendbyteToString(uint32_t byte) {
+	char upperBuffer[33];
+	char lowerBuffer[66];
+	uint16_t up;
+	up = byte;
+	uint16_t low = byte;
+	itoa(up, upperBuffer, 10);
+	itoa(low, lowerBuffer, 10);
+	//strcat(upperBuffer, lowerBuffer);
+	sendString(upperBuffer);
+}
+
 void STM32F411USART2::sendBytes(uint8_t* data, uint32_t nBytes) {
 	for (uint32_t i = 0; i < nBytes; i++) {
 		write(*data++);
@@ -132,7 +148,7 @@ void STM32F411USART2::sendByte8ToBinaryString(uint8_t data) {
 				STM32F411USART2::getInstance()->write('1') :
 				STM32F411USART2::getInstance()->write('0');
 	}
-	STM32F411USART2::getInstance()->write('\n\r');
+	STM32F411USART2::getInstance()->sendString("\n\r");
 }
 
 void STM32F411USART2::sendByte16ToBinaryString(uint16_t data) {
@@ -142,7 +158,7 @@ void STM32F411USART2::sendByte16ToBinaryString(uint16_t data) {
 		else
 			STM32F411USART2::getInstance()->write('0');
 	}
-	STM32F411USART2::getInstance()->write('\n\r');
+	STM32F411USART2::getInstance()->sendString("\n\r");
 }
 
 void STM32F411USART2::sendByte32ToBinaryString(uint32_t data) {
@@ -152,7 +168,7 @@ void STM32F411USART2::sendByte32ToBinaryString(uint32_t data) {
 		else
 			STM32F411USART2::getInstance()->write('0');
 	}
-	STM32F411USART2::getInstance()->write('\n\r');
+	STM32F411USART2::getInstance()->sendString("\n\r");
 }
 
 void STM32F411USART2::sendString(const char *s) {
@@ -179,6 +195,8 @@ void USART2_IRQHandler(void) {
 	// RX Data
 	if (isr & USART_SR_RXNE) {
 		USART2->SR &= ~USART_SR_RXNE;
+		while (STM32F411USART2::instance->rxBuffer.isFull())
+			;
 		STM32F411USART2::instance->rxBuffer.add(USART2->DR);
 	}
 	// TX Done

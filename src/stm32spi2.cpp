@@ -134,11 +134,7 @@ void STM32SPI2::assert()
 	//SPI_Cmd(SPI2,ENABLE);
 	SPI_NSSInternalSoftwareConfig(SPI2,SPI_NSSInternalSoft_Set);
 }
-void STM32SPI2::deassert()
-{
-	SPI_NSSInternalSoftwareConfig(SPI2,SPI_NSSInternalSoft_Reset);
-	//SPI_Cmd(SPI2,DISABLE);
-}
+
 
 void STM32SPI2::setBitBang()
 {
